@@ -1,0 +1,30 @@
+@{
+    ViewData["Title"] = "Super Admin Dashboard";
+    Layout = "_DashboardLayout";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Super Admin Dashboard</h2>
+    <span class="badge bg-primary">Super Admin</span>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-4">
+        <a asp-area="Admin" asp-controller="Users" asp-action="Index" class="card text-decoration-none p-3">
+            <h5>Users</h5>
+            <small class="text-muted">Create, edit and deactivate users</small>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a asp-area="Admin" asp-controller="Roles" asp-action="Index" class="card text-decoration-none p-3">
+            <h5>Roles</h5>
+            <small class="text-muted">Create roles and rename custom roles</small>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a asp-area="Admin" asp-controller="Permissions" asp-action="Index" class="card text-decoration-none p-3">
+            <h5>Permissions</h5>
+            <small class="text-muted">Define permissions and assign to roles</small>
+        </a>
+    </div>
+</div>

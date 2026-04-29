@@ -1,0 +1,55 @@
+@page
+@model LoginModel
+@{
+    ViewData["Title"] = "Log in";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 text-center">
+                <h3>@OptimumCoaching.web.Program.ProjectName()</h3>
+                <h6 class="text-muted">Log In</h6>
+            </div>
+            <div class="card-body">
+                <form id="account" method="post">
+                    <div asp-validation-summary="All" class="text-danger"></div>
+
+                    <div class="form-group mb-3">
+                        <label asp-for="Input.Email" class="form-label">Email</label>
+                        <input asp-for="Input.Email" class="form-control" autofocus />
+                        <span asp-validation-for="Input.Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label asp-for="Input.Password" class="form-label">Password</label>
+                        <input asp-for="Input.Password" class="form-control" type="password" />
+                        <span asp-validation-for="Input.Password" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group form-check mb-3">
+                        <input asp-for="Input.RememberMe" class="form-check-input" />
+                        <label asp-for="Input.RememberMe" class="form-check-label">Remember me?</label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">Login</button>
+                </form>
+
+                <hr />
+                <div class="text-center">
+                    <a asp-page="./ForgotPassword">Forgot your password?</a>
+                </div>
+                <div class="text-center mt-2">
+                    Don't have an account? <a asp-page="./Register">Register</a>
+                </div>
+                <p class="text-center text-muted mt-3 small">
+                    Version: @OptimumCoaching.web.Program.AppVersion()
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

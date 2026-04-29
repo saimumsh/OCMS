@@ -1,0 +1,32 @@
+@{
+    ViewData["Title"] = "Developer Dashboard";
+    Layout = "_DashboardLayout";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Developer Dashboard</h2>
+    <span class="badge bg-danger">Dev — Full Access</span>
+</div>
+
+<p class="text-muted">As a developer you have unrestricted access to every area of the system.</p>
+
+<div class="row g-3">
+    <div class="col-md-3">
+        <a asp-area="Admin" asp-controller="Users" asp-action="Index" class="card text-decoration-none p-3">
+            <h5>Users</h5>
+            <small class="text-muted">Manage user accounts</small>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a asp-area="Admin" asp-controller="Roles" asp-action="Index" class="card text-decoration-none p-3">
+            <h5>Roles</h5>
+            <small class="text-muted">Manage roles</small>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a asp-area="Admin" asp-controller="Permissions" asp-action="Index" class="card text-decoration-none p-3">
+            <h5>Permissions</h5>
+            <small class="text-muted">Manage permissions</small>
+        </a>
+    </div>
+</div>

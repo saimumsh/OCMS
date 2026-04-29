@@ -1,0 +1,43 @@
+@model EditRoleViewModel
+@{
+    ViewData["Title"] = "Edit Role";
+}
+
+<h2>Edit Role</h2>
+
+@if (Model.IsSystemRole)
+{
+    <div class="alert alert-warning">System roles cannot be modified.</div>
+}
+
+<form method="post" asp-action="Edit" class="col-md-5">
+    @Html.AntiForgeryToken()
+    <input asp-for="Id" type="hidden" />
+    <input asp-for="IsSystemRole" type="hidden" />
+    <div asp-validation-summary="All" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="Name" class="form-label"></label>
+        @if (Model.IsSystemRole)
+        {
+            <input asp-for="Name" class="form-control" disabled />
+        }
+        else
+        {
+            <input asp-for="Name" class="form-control" />
+        }
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    @if (Model.IsSystemRole)
+    {
+        <button type="submit" class="btn btn-primary" disabled>Save</button>
+    }
+    else
+    {
+        <button type="submit" class="btn btn-primary">Save</button>
+    }
+    <a class="btn btn-link" asp-action="Index">Cancel</a>
+</form>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

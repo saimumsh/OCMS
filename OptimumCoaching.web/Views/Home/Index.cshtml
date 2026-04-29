@@ -1,0 +1,43 @@
+@{
+    ViewData["Title"] = "Welcome";
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<section class="text-center py-5">
+    <h1 class="display-4 fw-bold">Welcome to @OptimumCoaching.web.Program.ProjectName()</h1>
+    <p class="lead text-muted">Your journey to optimum performance starts here.</p>
+
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <a class="btn btn-primary btn-lg mt-3" asp-controller="Home" asp-action="Dashboard">Go to Dashboard</a>
+    }
+    else
+    {
+        <div class="mt-3">
+            <a class="btn btn-primary btn-lg me-2" asp-area="Identity" asp-page="/Account/Login">Log in</a>
+            <a class="btn btn-outline-primary btn-lg" asp-area="Identity" asp-page="/Account/Register">Register</a>
+        </div>
+    }
+</section>
+
+<section class="row text-center py-4">
+    <div class="col-md-4">
+        <h4>Personalised Coaching</h4>
+        <p class="text-muted">Programs tailored to your goals and skill level.</p>
+    </div>
+    <div class="col-md-4">
+        <h4>Track Your Progress</h4>
+        <p class="text-muted">Stay accountable with detailed performance metrics.</p>
+    </div>
+    <div class="col-md-4">
+        <h4>Expert Guidance</h4>
+        <p class="text-muted">Learn from coaches who understand your sport.</p>
+    </div>
+</section>

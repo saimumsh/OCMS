@@ -1,0 +1,100 @@
+@model RolePermissionsViewModel
+@{
+    ViewData["Title"] = "Role Permissions";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Permissions: @Model.RoleName</h2>
+    <a class="btn btn-link" asp-action="Index">Back to Roles</a>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+<form method="post" asp-action="Permissions">
+    @Html.AntiForgeryToken()
+    <input asp-for="RoleId" type="hidden" />
+    <input asp-for="RoleName" type="hidden" />
+
+    @if (!Model.Tree.Items.Any())
+    {
+        <div class="alert alert-info">No permissions defined in the catalog.</div>
+    }
+
+    <div class="row g-3">
+        @foreach (var group in Model.Tree.Items)
+        {
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <strong>@group.Title</strong>
+                        <div class="form-check m-0">
+                            <input class="form-check-input perm-group" type="checkbox"
+                                   id="grp_@group.Id"
+                                   data-group="@group.Id"
+                                   @(group.IsSelected ? "checked" : "") />
+                            <label class="form-check-label small text-muted" for="grp_@group.Id">Select all</label>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        @foreach (var child in group.Children)
+                        {
+                            <div class="form-check">
+                                <input class="form-check-input perm-child"
+                                       type="checkbox"
+                                       name="SelectedPermissions"
+                                       value="@child.Name"
+                                       id="perm_@child.Id"
+                                       data-group="@group.Id"
+                                       @(child.IsSelected ? "checked" : "") />
+                                <label class="form-check-label" for="perm_@child.Id">
+                                    @child.Title
+                                    <code class="ms-2 text-muted small">@child.Name</code>
+                                </label>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="mt-3">
+        <button type="submit" class="btn btn-primary">Save</button>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        (function () {
+            function syncGroup(groupId) {
+                var children = document.querySelectorAll('.perm-child[data-group="' + groupId + '"]');
+                if (!children.length) return;
+                var allChecked = true;
+                children.forEach(function (c) { if (!c.checked) allChecked = false; });
+                var grp = document.querySelector('.perm-group[data-group="' + groupId + '"]');
+                if (grp) grp.checked = allChecked;
+            }
+
+            document.querySelectorAll('.perm-group').forEach(function (g) {
+                g.addEventListener('change', function () {
+                    var groupId = g.getAttribute('data-group');
+                    document.querySelectorAll('.perm-child[data-group="' + groupId + '"]')
+                        .forEach(function (c) { c.checked = g.checked; });
+                });
+            });
+
+            document.querySelectorAll('.perm-child').forEach(function (c) {
+                c.addEventListener('change', function () {
+                    syncGroup(c.getAttribute('data-group'));
+                });
+            });
+        })();
+    </script>
+}
