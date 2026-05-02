@@ -1,8 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OptimumCoaching.core;
 using OptimumCoaching.service;
 using OptimumCoaching.web.Areas.Admin.Models;
+using OptimumCoaching.web.Core;
 
 namespace OptimumCoaching.web.Areas.Admin.Controllers
 {
@@ -10,13 +13,16 @@ namespace OptimumCoaching.web.Areas.Admin.Controllers
     {
         private readonly IApplicationUserService _userService;
         private readonly IApplicationRoleService _roleService;
+        private readonly IWebHostEnvironment _env;
 
         public UsersController(
             IApplicationUserService userService,
-            IApplicationRoleService roleService)
+            IApplicationRoleService roleService,
+            IWebHostEnvironment env)
         {
             _userService = userService;
             _roleService = roleService;
+            _env = env;
         }
 
         [Authorize(Permissions.Users.ListView)]
@@ -31,6 +37,7 @@ namespace OptimumCoaching.web.Areas.Admin.Controllers
                     Id = u.Id,
                     FullName = u.FullName,
                     Email = u.Email ?? string.Empty,
+                    ImageUrl = u.ImageUrl,
                     IsActive = u.IsActive,
                     Status = u.Status,
                     Roles = await _userService.GetRolesAsync(u)
@@ -59,11 +66,21 @@ namespace OptimumCoaching.web.Areas.Admin.Controllers
                 return View(model);
             }
 
+            var imageId = Guid.NewGuid();
+            var (imgOk, imgMsg, imgUrl) = await UploadHelper.TrySaveImageAsync(_env, model.Image, "users", imageId);
+            if (!imgOk)
+            {
+                ModelState.AddModelError(nameof(model.Image), imgMsg);
+                model.AllRoles = (await _roleService.GetAllAsync()).Select(r => r.Name ?? string.Empty).ToList();
+                return View(model);
+            }
+
             var (success, message, _) = await _userService.CreateAsync(
-                model.FullName, model.Email, model.Password, model.SelectedRoles ?? new());
+                model.FullName, model.Email, model.Password, model.SelectedRoles ?? new(), imgUrl);
 
             if (!success)
             {
+                if (!string.IsNullOrEmpty(imgUrl)) UploadHelper.TryDeleteImage(_env, imgUrl);
                 ModelState.AddModelError(string.Empty, message);
                 model.AllRoles = (await _roleService.GetAllAsync()).Select(r => r.Name ?? string.Empty).ToList();
                 return View(model);
@@ -87,6 +104,7 @@ namespace OptimumCoaching.web.Areas.Admin.Controllers
                 Id = user.Id,
                 FullName = user.FullName,
                 Email = user.Email ?? string.Empty,
+                ImageUrl = user.ImageUrl,
                 IsActive = user.IsActive,
                 Status = user.Status,
                 SelectedRoles = userRoles.ToList(),
@@ -104,18 +122,50 @@ namespace OptimumCoaching.web.Areas.Admin.Controllers
                 return View(model);
             }
 
-            var update = await _userService.UpdateAsync(model.Id, model.FullName, model.IsActive, model.Status);
+            var existing = await _userService.FindByIdAsync(model.Id);
+            if (existing == null) return NotFound();
+
+            string? newImageUrl = null;       // null  = leave unchanged
+            string? oldImageToRemove = null;
+
+            if (model.RemoveImage)
+            {
+                newImageUrl = string.Empty;   // empty = clear
+                oldImageToRemove = existing.ImageUrl;
+            }
+
+            if (model.Image != null)
+            {
+                var (imgOk, imgMsg, imgUrl) = await UploadHelper.TrySaveImageAsync(_env, model.Image, "users", model.Id);
+                if (!imgOk)
+                {
+                    ModelState.AddModelError(nameof(model.Image), imgMsg);
+                    model.ImageUrl = existing.ImageUrl;
+                    model.AllRoles = (await _roleService.GetAllAsync()).Select(r => r.Name ?? string.Empty).ToList();
+                    return View(model);
+                }
+                newImageUrl = imgUrl;
+                oldImageToRemove = existing.ImageUrl;
+            }
+
+            var update = await _userService.UpdateAsync(model.Id, model.FullName, model.IsActive, model.Status, newImageUrl);
             if (!update.Success)
             {
+                if (!string.IsNullOrEmpty(newImageUrl)) UploadHelper.TryDeleteImage(_env, newImageUrl);
                 ModelState.AddModelError(string.Empty, update.Message);
+                model.ImageUrl = existing.ImageUrl;
                 model.AllRoles = (await _roleService.GetAllAsync()).Select(r => r.Name ?? string.Empty).ToList();
                 return View(model);
             }
+
+            if (!string.IsNullOrEmpty(oldImageToRemove) && oldImageToRemove != newImageUrl)
+                UploadHelper.TryDeleteImage(_env, oldImageToRemove);
 
             var setRoles = await _userService.SetRolesAsync(model.Id, model.SelectedRoles ?? new());
             if (!setRoles.Success)
             {
                 ModelState.AddModelError(string.Empty, setRoles.Message);
+                model.ImageUrl = newImageUrl ?? existing.ImageUrl;
                 model.AllRoles = (await _roleService.GetAllAsync()).Select(r => r.Name ?? string.Empty).ToList();
                 return View(model);
             }
@@ -156,5 +206,6 @@ namespace OptimumCoaching.web.Areas.Admin.Controllers
             TempData[success ? "SuccessMessage" : "ErrorMessage"] = message;
             return RedirectToAction(nameof(Index));
         }
+
     }
 }

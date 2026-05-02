@@ -1,209 +1,581 @@
-html {
-  font-size: 14px;
-}
+/* OCMS site overrides — VitalityCash modern admin theme */
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
-}
-
-body {
-  margin-bottom: 60px;
-}
-
-/* User menu avatar */
-.avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: #6c757d;
-  color: #fff;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  font-size: 14px;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-.avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.user-menu-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  padding: 4px 10px;
-  border-radius: 6px;
-}
-.user-menu-toggle:hover {
-  background: rgba(0, 0, 0, 0.05);
-}
-.user-menu-toggle::after {
-  display: none;
-}
-.user-menu .dropdown-menu {
-  min-width: 240px;
-}
-.user-menu .dropdown-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-}
-.user-menu .dropdown-header .avatar {
-  width: 42px;
-  height: 42px;
-  font-size: 16px;
-}
-
-/* Dashboard layout with collapsible sidebar */
-.dashboard-container {
-  padding-left: 0;
-  padding-right: 0;
-}
-.dashboard-shell {
-  display: flex;
-  align-items: stretch;
-  gap: 0;
-  min-height: calc(100vh - 140px);
-}
-.dashboard-sidebar {
-  flex: 0 0 240px;
-  width: 240px;
-  background: #f8f9fa;
-  border-right: 1px solid #e5e5e5;
-  transition: width 0.2s ease, flex-basis 0.2s ease;
-  display: flex;
-  flex-direction: column;
-}
-.dashboard-sidebar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  border-bottom: 1px solid #e5e5e5;
-  min-height: 52px;
-}
-.dashboard-sidebar-title {
-  font-weight: 600;
-  font-size: 15px;
-  color: #333;
-  white-space: nowrap;
-  overflow: hidden;
-}
-.dashboard-sidebar-toggle {
-  background: transparent;
-  border: 1px solid #ced4da;
-  color: #495057;
-  border-radius: 6px;
-  padding: 4px 6px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.2s ease, background 0.15s ease;
-  flex-shrink: 0;
-}
-.dashboard-sidebar-toggle:hover {
-  background: #e9ecef;
-}
-.dashboard-sidebar-nav {
-  padding: 8px 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-.dashboard-sidebar-nav ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-.dashboard-sidebar-nav li > a {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 16px;
-  color: #333;
-  text-decoration: none;
-  white-space: nowrap;
-  border-left: 3px solid transparent;
-}
-.dashboard-sidebar-nav li > a:hover {
-  background: #e9ecef;
-  border-left-color: #1b6ec2;
-}
-.dashboard-sidebar-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  flex-shrink: 0;
-}
-.dashboard-sidebar-section {
-  padding: 12px 16px 4px;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #6c757d;
-  font-weight: 600;
-}
-.dashboard-content {
-  flex: 1 1 auto;
-  min-width: 0;
-  padding: 24px;
-}
-
-/* Collapsed state */
-.dashboard-shell.dashboard-collapsed .dashboard-sidebar {
-  flex-basis: 64px;
-  width: 64px;
-}
-.dashboard-shell.dashboard-collapsed .dashboard-sidebar-title,
-.dashboard-shell.dashboard-collapsed .dashboard-sidebar-label {
-  display: none;
-}
-.dashboard-shell.dashboard-collapsed .dashboard-sidebar-header {
-  justify-content: center;
-}
-.dashboard-shell.dashboard-collapsed .dashboard-sidebar-nav li > a {
-  justify-content: center;
-  padding: 10px 0;
-}
-.dashboard-shell.dashboard-collapsed .dashboard-sidebar-section {
-  text-align: center;
-  padding: 12px 4px 4px;
-}
-.dashboard-shell.dashboard-collapsed .dashboard-sidebar-toggle {
-  transform: rotate(180deg);
-}
-
-/* Mobile: collapse by default and overlay */
-@media (max-width: 767.98px) {
-  .dashboard-shell {
+/* table header fixed */
+#table-fixed-header {
+    max-width: 100%;
+    max-height: 425px;
+    overflow: scroll;
     position: relative;
-  }
-  .dashboard-sidebar {
-    flex-basis: 64px;
-    width: 64px;
-  }
-  .dashboard-shell:not(.dashboard-collapsed) .dashboard-sidebar-title,
-  .dashboard-shell:not(.dashboard-collapsed) .dashboard-sidebar-label {
-    display: none;
-  }
-  .dashboard-content {
-    padding: 16px;
-  }
 }
+
+table {
+    position: relative;
+    border-collapse: collapse;
+}
+
+td,
+th {
+    padding: 0.25em;
+}
+
+thead {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    background: #BABFC7;
+    color: #404E67;
+    font-weight: bold;
+}
+
+thead:first-child {
+    left: 0;
+    z-index: 1;
+}
+
+tbody th {
+    position: -webkit-sticky;
+    position: sticky;
+    left: 0;
+}
+
+/* fieldset legend */
+legend {
+    margin-bottom: 0px !important;
+}
+
+fieldset.row-bordered {
+    padding: 10px;
+    margin-bottom: 10px;
+    position: relative;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+
+.sectionLegend {
+    font-size: 15px;
+    font-weight: 500;
+    color: #434a54;
+    width: 27%;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 1px 3px 1px 10px;
+    background-color: #fafafa;
+}
+
+.sectionLegendDetail {
+    font-size: 14px;
+    font-weight: 500;
+    color: #434a54;
+    width: auto;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    padding: 3px;
+}
+
+body.vertical-layout.vertical-menu-modern.menu-expanded .main-menu .navigation > li > a > i {
+    margin-right: 7px !important;
+}
+
+.main-menu.menu-dark .navigation > li > a {
+    padding: 5px 8px 5px 5px;
+}
+
+.main-menu.menu-dark .navigation > li ul li > a {
+    padding: 5px 7px 7px 5px !important;
+}
+
+.btn-custom {
+    padding: 6px;
+    color: #FFFFFF !important;
+    background: #404E67 !important;
+}
+
+.btn-custom-default {
+    padding: 6px;
+    color: #333 !important;
+    background: #ccc !important;
+}
+
+.bg-custom {
+    color: #FFFFFF !important;
+    background: #404E67 !important;
+}
+
+.border-custom {
+    border: 1px solid #404E67 !important;
+    border-radius: 3px !important;
+}
+
+.required::after {
+    content: " *";
+    color: red;
+}
+
+.serial {
+    width: 5%;
+}
+
+.action {
+    width: 5%;
+}
+
+.display-hidden {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+.pagination {
+    margin: 5px 0 !important;
+}
+
+.table-condensed > thead > tr > th, .table-condensed > tbody > tr > th, .table-condensed > tfoot > tr > th, .table-condensed > thead > tr > td, .table-condensed > tbody > tr > td, .table-condensed > tfoot > tr > td {
+    padding: 3px;
+}
+
+.card-header {
+    padding: 7px 10px !important;
+}
+
+.card-header .heading-elements, .card-header .heading-elements-toggle {
+    top: 3px !important;
+}
+
+.card-footer {
+    padding: 7px 10px !important;
+}
+
+.hr-mar-reduce {
+    margin: 0;
+}
+
+.label-text {
+    font-weight: bold;
+}
+
+.border-light {
+    border: 1px solid #BABFC7 !important;
+}
+
+.label-control {
+    text-align: left !important;
+}
+
+.btn-medium {
+    padding: 7px !important;
+}
+
+.form-control-medium {
+    padding: 6px !important;
+}
+
+select.form-control:not([size]):not([multiple]) {
+    height: -webkit-calc(0) !important;
+    height: -moz-calc(0) !important;
+    height: calc(2.25rem) !important;
+}
+
+.input-group-text {
+    padding: 0rem 1rem !important;
+}
+
+.form-group {
+    margin-bottom: 0.75rem !important;
+}
+
+form .form-group {
+    margin-bottom: 0.75rem !important;
+}
+
+.input-medium {
+    padding: 5px !important;
+}
+
+.text-bold {
+    font-weight: bold;
+}
+
+.select2-container--classic .select2-selection--single, .select2-container--default .select2-selection--single {
+    height: 32px !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 20px !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow b {
+    margin-top: -5px !important;
+}
+
+.select2-search--dropdown .select2-search__field {
+    padding: 7px !important;
+}
+
+.main-menu.menu-dark .navigation > li ul .active > a {
+    padding-left: 23px !important;
+}
+
+.input-xs {
+    padding: 3px !important;
+}
+
+html body .content .content-wrapper {
+    padding: 1.25rem !important;
+}
+
+@media (min-width: 1200px) and (max-width: 1500px) {
+    .card-icon {
+        margin-right: 0.5rem !important;
+    }
+}
+
+.widget-timeline .timeline-items {
+    padding: 0.5rem 0 !important;
+}
+
+.grouped-multiple-statistics-card .heading-text {
+    font-size: 1.1rem !important;
+    letter-spacing: 1px !important;
+}
+
+.h1, .h2, .h3, .h4, .h5, .h6, code, h1, h2, h3, h4, h5, h6, kbd, pre, samp {
+    font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.separator {
+    display: block;
+    width: 350px;
+    height: 1.3px;
+    background-image: -moz-linear-gradient(0deg, white 0%, #2272B7 50%, white 100%);
+    background-image: -webkit-linear-gradient(0deg, white 0%, #2272B7 50%, white 100%);
+    background-image: -ms-linear-gradient(0deg, white 0%, #2272B7 50%, white 100%);
+    margin: 0 auto;
+    margin-bottom: 20px;
+}
+
+.border-dark {
+    border: 1px solid #1B2942 !important;
+    border-radius: 7px !important;
+}
+
+.page-title {
+    font-size: 22px;
+    color: #283891;
+    text-align: center !important;
+    font-weight: bold;
+    text-transform: capitalize;
+}
+
+/* Academic records — compact editable table */
+.academic-records-table {
+    counter-reset: academic-row;
+}
+.academic-records-table > thead > tr > th {
+    background: #F5F7FA;
+    color: #1B2942;
+    font-weight: 600;
+    font-size: 0.85rem;
+    border-bottom: 2px solid #E4E7ED;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    padding: 8px 10px;
+}
+.academic-records-table > tbody > tr {
+    counter-increment: academic-row;
+    transition: background 0.12s ease;
+}
+.academic-records-table > tbody > tr:hover {
+    background: #F8FAFC;
+}
+.academic-records-table > tbody > tr > td {
+    padding: 6px 10px;
+    vertical-align: middle;
+}
+.academic-records-table .row-number::before {
+    content: counter(academic-row);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 26px;
+    height: 26px;
+    padding: 0 6px;
+    border-radius: 13px;
+    background: #E4E7ED;
+    color: #1B2942;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+.academic-records-table .form-control-sm {
+    height: calc(1.6em + 0.5rem + 2px);
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+.academic-records-table input[type="number"]::-webkit-outer-spin-button,
+.academic-records-table input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Profile-choice landing cards (Student / Guardian) */
+.profile-choice-card {
+    border: 1px solid #E4E7ED;
+    border-radius: 8px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.profile-choice-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+.profile-choice-icon {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 2.4rem;
+}
+
+/* Pending-approval card avatar (large, for the gallery view) */
+.pending-student-card {
+    border-radius: 8px;
+}
+.pending-avatar {
+    width: 96px !important;
+    height: 96px !important;
+    font-size: 28px !important;
+}
+.pending-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* User photo card (Create / Edit User) */
+.user-photo-card .user-photo-preview {
+    display: inline-block;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 4px solid #e6e9ef;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    background: #f5f7fa;
+}
+
+.user-photo-card .user-photo-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Users list — avatar, table polish */
+.user-table .user-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #404E67;
+    color: #fff;
+    font-weight: 600;
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+.user-table .user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.user-table .user-avatar-initials {
+    line-height: 40px;
+}
+
+.user-table > thead > tr > th,
+.user-table > tbody > tr > td {
+    padding: 0.6rem 0.75rem;
+    vertical-align: middle;
+}
+
+.user-table .action-cell .btn {
+    padding: 4px 8px;
+    margin-left: 2px;
+}
+
+.user-search input {
+    min-width: 240px;
+}
+
+/* ------------------------------------------------------------
+   Responsive shell layout — guarantee content / footer / navbar
+   container shift to make room for the sidebar at every width.
+   Base theme rules sometimes lose to vendor / media-query rules,
+   so we restate them with stronger selectors.
+   ------------------------------------------------------------ */
+
+/* Desktop & tablet: sidebar pushes layout */
+@media (min-width: 768px) {
+    html body.vertical-layout.vertical-menu-modern.menu-expanded .content,
+    html body.vertical-layout.vertical-menu-modern.menu-expanded .footer {
+        margin-left: 240px !important;
+    }
+
+    html body.vertical-layout.vertical-menu-modern.menu-expanded .main-menu {
+        width: 240px !important;
+    }
+
+    html body.vertical-layout.vertical-menu-modern.menu-expanded .navbar .navbar-header {
+        width: 240px !important;
+    }
+
+    html body.vertical-layout.vertical-menu-modern.menu-expanded .navbar .navbar-container {
+        margin-left: 240px !important;
+    }
+
+    html body.vertical-layout.vertical-menu-modern.menu-collapsed .content,
+    html body.vertical-layout.vertical-menu-modern.menu-collapsed .footer {
+        margin-left: 60px !important;
+    }
+
+    html body.vertical-layout.vertical-menu-modern.menu-collapsed .main-menu {
+        width: 60px !important;
+    }
+
+    html body.vertical-layout.vertical-menu-modern.menu-collapsed .navbar .navbar-header {
+        width: 60px !important;
+    }
+
+    html body.vertical-layout.vertical-menu-modern.menu-collapsed .navbar .navbar-container {
+        margin-left: 60px !important;
+    }
+}
+
+/* Mobile: sidebar becomes an overlay so content stays full width */
+@media (max-width: 767.98px) {
+    html body.vertical-layout.vertical-menu-modern .content,
+    html body.vertical-layout.vertical-menu-modern .footer {
+        margin-left: 0 !important;
+    }
+
+    html body.vertical-layout.vertical-menu-modern .navbar .navbar-header {
+        width: 60px !important;
+    }
+
+    html body.vertical-layout.vertical-menu-modern .navbar .navbar-container {
+        margin-left: 60px !important;
+    }
+
+    html body.vertical-layout.vertical-menu-modern.menu-expanded .main-menu {
+        width: 240px !important;
+        z-index: 1100;
+    }
+
+    html body.vertical-layout.vertical-menu-modern.menu-collapsed .main-menu,
+    html body.vertical-layout.vertical-menu-modern.menu-hide .main-menu {
+        width: 0 !important;
+        overflow: hidden;
+    }
+
+    /* Dim background when sidebar overlays content */
+    html body.vertical-layout.vertical-menu-modern.menu-expanded::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 1050;
+    }
+}
+
+/* Sidebar transition so width animates smoothly */
+.main-menu {
+    transition: width 0.25s ease, margin 0.25s ease;
+}
+.content,
+.footer,
+.navbar .navbar-header,
+.navbar .navbar-container {
+    transition: margin-left 0.25s ease, width 0.25s ease;
+}
+
+/* ------------------------------------------------------------
+   Collapsed sidebar (60px rail) — pure icon rail, no growth.
+   Menu titles, badges and sub-menus are hidden completely so
+   nothing spills past the 60px width. On hover of an item, the
+   label appears as a small tooltip-style chip floating to the
+   right of the icon — never resizing the rail itself, so the
+   navbar / content / footer layout never shifts.
+   ------------------------------------------------------------ */
+@media (min-width: 768px) {
+    html body.vertical-layout.vertical-menu-modern.menu-collapsed
+        .main-menu .navigation > li > a > .menu-title,
+    html body.vertical-layout.vertical-menu-modern.menu-collapsed
+        .main-menu .navigation > li > a > .badge,
+    html body.vertical-layout.vertical-menu-modern.menu-collapsed
+        .main-menu .navigation > li .menu-content {
+        display: none !important;
+        opacity: 0 !important;
+        animation: none !important;
+    }
+
+    html body.vertical-layout.vertical-menu-modern.menu-collapsed
+        .main-menu .navigation > li > a {
+        white-space: nowrap;
+        overflow: hidden;
+        position: relative;
+    }
+
+    /* tooltip-style label that appears beside the icon on hover */
+    html body.vertical-layout.vertical-menu-modern.menu-collapsed
+        .main-menu .navigation > li > a:hover::after {
+        content: attr(data-title);
+        position: absolute;
+        left: 100%;
+        top: 50%;
+        transform: translateY(-50%);
+        margin-left: 8px;
+        padding: 4px 10px;
+        background: #1B2942;
+        color: #fff;
+        font-size: 0.85rem;
+        white-space: nowrap;
+        border-radius: 3px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        z-index: 1200;
+        pointer-events: none;
+    }
+}
+
+
+/* Brand text visibility — hide cleanly when sidebar collapsed
+   so the navbar header (60px) doesn't overflow. Hover restores it. */
+body.vertical-layout.vertical-menu-modern.menu-collapsed
+    .navbar .navbar-header:not(.expanded) .navbar-brand .brand-text {
+    display: none;
+}
+
+body.vertical-layout.vertical-menu-modern.menu-collapsed
+    .navbar .navbar-header.expanded .navbar-brand .brand-text {
+    display: inline-block;
+}
+
+/* Allow hover to expand the navbar-header so the toggle is reachable
+   when collapsed (matches VitalityCash theme behavior). */
+body.vertical-layout.vertical-menu-modern.menu-collapsed
+    .navbar .navbar-header:hover {
+    width: 240px;
+}
+body.vertical-layout.vertical-menu-modern.menu-collapsed
+    .navbar .navbar-header:hover .modern-nav-toggle {
+    display: block;
+}
+body.vertical-layout.vertical-menu-modern.menu-collapsed
+    .navbar .navbar-header:hover .navbar-brand .brand-text {
+    display: inline-block;
+}
+

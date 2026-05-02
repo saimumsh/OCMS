@@ -13,5 +13,10 @@ namespace OptimumCoaching.core
 
         [MaxLength(500)]
         public string? Description { get; set; }
+
+        // Whether this department belongs to the Academic (Science/Arts/Commerce)
+        // or Diploma (Electrical/Computer/Civil/...) stream.
+        [Display(Name = "Stream")]
+        public EducationStream Stream { get; set; } = EducationStream.Academic;
     }
 }

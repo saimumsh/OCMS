@@ -27,6 +27,11 @@ namespace OptimumCoaching.core
         [MaxLength(500)]
         public string? Address { get; set; }
 
+        // Optional formal link to a registered Guardian record.
+        public Guid? GuardianId { get; set; }
+        public Guardian? Guardian { get; set; }
+
+        // Lightweight contact fallback when there is no Guardian record yet.
         [MaxLength(150), Display(Name = "Parent / guardian name")]
         public string? GuardianName { get; set; }
 
@@ -36,10 +41,32 @@ namespace OptimumCoaching.core
         [Display(Name = "Enrollment date")]
         public DateTime? EnrollmentDate { get; set; }
 
+        // Department the student is enrolling into (required from self-registration onwards).
+        [Display(Name = "Department")]
+        public Guid? DepartmentId { get; set; }
+        public Department? Department { get; set; }
+
+        // Batch assignment — typically set by admin/CC after approval.
+        [Display(Name = "Batch")]
+        public Guid? BatchId { get; set; }
+        public Batch? Batch { get; set; }
+
+        // Free-form list of academic records (SSC, HSC, Diploma semesters, …).
+        // Students can add as many as they need.
+        public IList<StudentAcademicRecord> AcademicRecords { get; set; } = new List<StudentAcademicRecord>();
+
         [MaxLength(500), Display(Name = "Image URL")]
         public string? ImageUrl { get; set; }
 
         [MaxLength(1000)]
         public string? Notes { get; set; }
+
+        // Approval workflow.
+        public StudentApprovalStatus ApprovalStatus { get; set; } = StudentApprovalStatus.Pending;
+        public Guid? ApprovedBy { get; set; }
+        public DateTime? ApprovedAt { get; set; }
+
+        [MaxLength(500)]
+        public string? RejectionReason { get; set; }
     }
 }

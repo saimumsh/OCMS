@@ -1,5 +1,4 @@
 using OptimumCoaching.core.Core;
-using OptimumCoaching.core.Enum;
 using System.ComponentModel.DataAnnotations;
 
 namespace OptimumCoaching.core

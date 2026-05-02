@@ -15,9 +15,9 @@ namespace OptimumCoaching.service
         // Admin operations
         Task<IList<ApplicationUser>> GetAllAsync();
         Task<(bool Success, string Message, ApplicationUser? User)> CreateAsync(
-            string fullName, string email, string password, IEnumerable<string> roles);
+            string fullName, string email, string password, IEnumerable<string> roles, string? imageUrl = null);
         Task<(bool Success, string Message)> UpdateAsync(
-            Guid userId, string fullName, bool isActive, ApplicationUserStatus status);
+            Guid userId, string fullName, bool isActive, ApplicationUserStatus status, string? imageUrl = null);
         Task<(bool Success, string Message)> DeleteAsync(Guid userId);
         Task<(bool Success, string Message)> SetRolesAsync(Guid userId, IEnumerable<string> roles);
         Task<(bool Success, string Message)> ResetPasswordAsync(Guid userId, string newPassword);

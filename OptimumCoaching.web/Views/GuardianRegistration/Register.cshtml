@@ -1,0 +1,120 @@
+@model GuardianRegistrationViewModel
+@{
+    ViewData["Title"] = "Register as Guardian";
+    Layout = "_Layout";
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-12 mb-1">
+        <h3 class="content-header-title mb-0">Register as Guardian</h3>
+        <p class="text-muted mb-0">Tell us about yourself so we can link you with your child's profile.</p>
+    </div>
+</div>
+
+<section id="guardian-self-register">
+    <form method="post" asp-action="Register" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <div class="row">
+            <div class="col-lg-4 col-md-5 mb-3">
+                <div class="card user-photo-card">
+                    <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                        <h4 class="card-title mb-0">Profile Picture</h4>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="user-photo-preview mb-2">
+                            <img id="guardianPhotoPreview" src="~/images/no-image.jpg" alt="profile preview" />
+                        </div>
+                        <label class="btn btn-custom btn-medium mb-1" for="Image">
+                            <i class="fa fa-camera"></i> Choose Photo
+                        </label>
+                        <input type="file" asp-for="Image" id="Image" accept="image/*"
+                               class="d-none" onchange="previewGuardianPhoto(this)" />
+                        <span asp-validation-for="Image" class="text-danger d-block"></span>
+                        <p class="text-muted font-small-3 mt-1 mb-0">
+                            JPG, PNG, GIF or WebP &middot; up to 4 MB
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-8 col-md-7 mb-3">
+                <div class="card">
+                    <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                        <h4 class="card-title mb-0">Guardian Information</h4>
+                    </div>
+                    <div class="card-body">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-1"></div>
+
+                        <div class="form-group row">
+                            <label asp-for="FullName" class="col-sm-3 col-form-label label-control required"></label>
+                            <div class="col-sm-9">
+                                <input asp-for="FullName" class="form-control" />
+                                <span asp-validation-for="FullName" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label asp-for="PhoneNumber" class="col-sm-3 col-form-label label-control required"></label>
+                            <div class="col-sm-9">
+                                <input asp-for="PhoneNumber" class="form-control" />
+                                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label asp-for="Email" class="col-sm-3 col-form-label label-control"></label>
+                            <div class="col-sm-9">
+                                <input asp-for="Email" class="form-control" />
+                                <span asp-validation-for="Email" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label asp-for="Relationship" class="col-sm-3 col-form-label label-control"></label>
+                            <div class="col-sm-9">
+                                <input asp-for="Relationship" class="form-control" placeholder="e.g. Mother, Father, Uncle" />
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label asp-for="Occupation" class="col-sm-3 col-form-label label-control"></label>
+                            <div class="col-sm-9">
+                                <input asp-for="Occupation" class="form-control" />
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label asp-for="Address" class="col-sm-3 col-form-label label-control"></label>
+                            <div class="col-sm-9">
+                                <textarea asp-for="Address" class="form-control" rows="2"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end mt-1">
+                    <a class="btn btn-custom-default btn-medium mr-1" asp-controller="StudentRegistration" asp-action="Index">
+                        <i class="fa fa-arrow-left"></i> Back
+                    </a>
+                    <button type="submit" class="btn btn-custom btn-medium">
+                        <i class="fa fa-save"></i> Save Guardian Profile
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function previewGuardianPhoto(input) {
+            var preview = document.getElementById('guardianPhotoPreview');
+            if (input && input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function (e) { preview.src = e.target.result; };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>
+}

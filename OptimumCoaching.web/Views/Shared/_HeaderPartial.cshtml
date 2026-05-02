@@ -1,0 +1,92 @@
+@model System.Security.Principal.IIdentity
+@{
+    var fullName = string.IsNullOrEmpty(Model.FullName()) ? Model.UserName() : Model.FullName();
+    if (string.IsNullOrEmpty(fullName)) { fullName = "Guest"; }
+    var imageUrl = string.IsNullOrEmpty(Model.ImageUrl()) ? "/images/no-image.jpg" : Model.ImageUrl();
+}
+<nav class="header-navbar navbar-expand-md navbar navbar-with-menu fixed-top navbar-semi-dark navbar-shadow">
+    <div class="navbar-wrapper">
+        <div class="navbar-header">
+            <ul class="nav navbar-nav flex-row position-relative">
+                <li class="nav-item mobile-menu d-md-none mr-auto">
+                    <a class="nav-link nav-menu-main menu-toggle hidden-xs" href="#"><i class="ft-menu font-large-1"></i></a>
+                </li>
+                <li class="nav-item mr-auto">
+                    <a class="navbar-brand" href="@Url.Action("Index", "Home", new { area = "" })">
+                        @* <h3 class="brand-text">@OptimumCoaching.web.Program.ProjectName().ToUpper()</h3> *@
+                    </a>
+                </li>
+                <li class="nav-item d-none d-md-block nav-toggle">
+                    <a class="nav-link modern-nav-toggle pr-0" data-toggle="collapse">
+                        <i class="toggle-icon ft-toggle-right font-medium-3 white" data-ticon="ft-toggle-right"></i>
+                    </a>
+                </li>
+                <li class="nav-item d-md-none">
+                    <a class="nav-link open-navbar-container" data-toggle="collapse" data-target="#navbar-mobile">
+                        <i class="fa fa-ellipsis-v"></i>
+                    </a>  
+                </li>
+            </ul>
+        </div>
+        <div class="navbar-container content">
+            <div class="collapse navbar-collapse" id="navbar-mobile">
+                <div class="nav navbar-nav mr-auto float-left">
+                    @* <span class="font-size-large font-weight-bold">@OptimumCoaching.web.Program.ProjectName()</span> *@
+                </div>
+
+                <ul class="nav navbar-nav float-right">
+                    @if (Model != null && Model.IsAuthenticated)
+                    {
+                        <li class="dropdown dropdown-notification nav-item">
+                            <a class="nav-link nav-link-label" href="#" data-toggle="dropdown" aria-expanded="true">
+                                <i class="ficon ft-bell"></i>
+                                <span class="badge badge-pill badge-default badge-danger badge-default badge-up"></span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-media dropdown-menu-right show">
+                                <li class="dropdown-menu-header">
+                                    <h6 class="dropdown-header m-0">
+                                        <span class="grey darken-2">Notifications</span>
+                                        <span class="notification-tag badge badge-default badge-danger float-right m-0">New</span>
+                                    </h6>
+                                </li>
+                                <li class="dropdown-menu-footer">
+                                    <a class="dropdown-item text-muted text-center" href="javascript:void(0)">Read all notifications</a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <li class="dropdown dropdown-user nav-item">
+                            <a class="dropdown-toggle nav-link dropdown-user-link" href="#" data-toggle="dropdown">
+                                <span class="avatar avatar-online">
+                                    <img src="@Url.Content(imageUrl)" alt="avatar"><i></i>
+                                </span>
+                                <span class="user-name">@fullName</span>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a class="dropdown-item" asp-area="Identity" asp-page="/Account/ChangePassword">
+                                    <i class="ft-edit-2"></i> Change Password
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <form id="logoutForm" method="post" asp-area="Identity" asp-page="/Account/Logout"
+                                      asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                                    <button id="logout" type="submit" class="dropdown-item">
+                                        <i class="ft-power"></i> Logout
+                                    </button>
+                                </form>
+                            </div>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="Identity" asp-page="/Account/Login">
+                                <i class="ft-log-in"></i> <span class="user-name">Login</span>
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>
+<!-- /header fixed-top -->

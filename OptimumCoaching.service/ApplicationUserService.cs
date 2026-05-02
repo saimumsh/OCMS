@@ -92,7 +92,7 @@ namespace OptimumCoaching.service
                 .ContinueWith(t => (IList<ApplicationUser>)t.Result);
 
         public async Task<(bool Success, string Message, ApplicationUser? User)> CreateAsync(
-            string fullName, string email, string password, IEnumerable<string> roles)
+            string fullName, string email, string password, IEnumerable<string> roles, string? imageUrl = null)
         {
             if (string.IsNullOrWhiteSpace(fullName))
                 return (false, "Full name is required", null);
@@ -110,6 +110,7 @@ namespace OptimumCoaching.service
                 FullName = fullName,
                 Email = email,
                 UserName = email,
+                ImageUrl = string.IsNullOrWhiteSpace(imageUrl) ? null : imageUrl,
                 Status = ApplicationUserStatus.Active,
                 IsActive = true,
                 Created = DateTime.UtcNow
@@ -129,7 +130,7 @@ namespace OptimumCoaching.service
         }
 
         public async Task<(bool Success, string Message)> UpdateAsync(
-            Guid userId, string fullName, bool isActive, ApplicationUserStatus status)
+            Guid userId, string fullName, bool isActive, ApplicationUserStatus status, string? imageUrl = null)
         {
             var user = await _userManager.FindByIdAsync(userId.ToString());
             if (user == null) return (false, "User not found");
@@ -137,6 +138,7 @@ namespace OptimumCoaching.service
             user.FullName = fullName;
             user.IsActive = isActive;
             user.Status = status;
+            if (imageUrl != null) user.ImageUrl = string.IsNullOrWhiteSpace(imageUrl) ? null : imageUrl;
             user.LastModified = DateTime.UtcNow;
 
             var result = await _userManager.UpdateAsync(user);

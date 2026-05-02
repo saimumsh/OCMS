@@ -37,6 +37,14 @@ namespace OptimumCoaching.web
             services.AddTransient<IApplicationRoleService, ApplicationRoleService>();
             services.AddScoped<IPermissionService, PermissionService>();
 
+            // Domain services
+            services.AddScoped<ITeacherService, TeacherService>();
+            services.AddScoped<IStudentService, StudentService>();
+            services.AddScoped<IGuardianService, GuardianService>();
+            services.AddScoped<IDepartmentService, DepartmentService>();
+            services.AddScoped<IBatchService, BatchService>();
+            services.AddScoped<IBatchUpdateService, BatchUpdateService>();
+
             // Permission-based authorization (VitalityCash-style policy provider)
             services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
             services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
@@ -103,13 +111,15 @@ namespace OptimumCoaching.web
             {
                 app.UseExceptionHandler("/Home/Error");
                 app.UseHsts();
+                // Force HTTPS only in production. In dev, both http and https
+                // are served so the app is reachable without a trusted dev cert.
+                app.UseHttpsRedirection();
             }
             else
             {
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseHttpsRedirection();
             app.UseStaticFiles();
 
             app.UseRouting();
@@ -130,7 +140,7 @@ namespace OptimumCoaching.web
         }
 
         public static string AppVersion() => "1.0.0";
-        public static string ProjectName() => "Optimum Coaching";
+        public static string ProjectName() => "OCC";
         public static string ApplicantName() => "Optimum Coaching";
     }
 }

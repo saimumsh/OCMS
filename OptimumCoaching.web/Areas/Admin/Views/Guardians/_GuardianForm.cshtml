@@ -1,0 +1,112 @@
+@model GuardianFormViewModel
+@{
+    var currentImage = string.IsNullOrWhiteSpace(Model.ImageUrl) ? "/images/no-image.jpg" : Url.Content(Model.ImageUrl);
+    var isEdit = Model.Id != Guid.Empty;
+}
+
+<input asp-for="Id" type="hidden" />
+<input asp-for="ImageUrl" type="hidden" />
+
+<div class="row">
+    <div class="col-lg-4 col-md-5 mb-3">
+        <div class="card user-photo-card">
+            <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                <h4 class="card-title mb-0">Profile Picture</h4>
+            </div>
+            <div class="card-body text-center">
+                <div class="user-photo-preview mb-2">
+                    <img id="guardianPhotoPreview" src="@currentImage" alt="profile preview" />
+                </div>
+                <label class="btn btn-custom btn-medium mb-1" for="Image">
+                    <i class="fa fa-camera"></i> @(isEdit ? "Change" : "Choose") Photo
+                </label>
+                <input type="file" asp-for="Image" id="Image" accept="image/*"
+                       class="d-none" onchange="previewGuardianPhoto(this)" />
+                <span asp-validation-for="Image" class="text-danger d-block"></span>
+
+                @if (isEdit && !string.IsNullOrWhiteSpace(Model.ImageUrl))
+                {
+                    <div class="form-check d-inline-block mt-1">
+                        <input class="form-check-input" type="checkbox" asp-for="RemoveImage" id="RemoveImage" />
+                        <label class="form-check-label" for="RemoveImage">Remove current photo</label>
+                    </div>
+                }
+                <p class="text-muted font-small-3 mt-1 mb-0">
+                    JPG, PNG, GIF or WebP &middot; up to 4 MB
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8 col-md-7 mb-3">
+        <div class="card">
+            <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                <h4 class="card-title mb-0">Guardian Information</h4>
+            </div>
+            <div class="card-body">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-1"></div>
+
+                <div class="form-group row">
+                    <label asp-for="FullName" class="col-sm-3 col-form-label label-control required"></label>
+                    <div class="col-sm-9">
+                        <input asp-for="FullName" class="form-control" />
+                        <span asp-validation-for="FullName" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label asp-for="PhoneNumber" class="col-sm-3 col-form-label label-control required"></label>
+                    <div class="col-sm-9">
+                        <input asp-for="PhoneNumber" class="form-control" />
+                        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label asp-for="Email" class="col-sm-3 col-form-label label-control"></label>
+                    <div class="col-sm-9">
+                        <input asp-for="Email" class="form-control" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label asp-for="Relationship" class="col-sm-3 col-form-label label-control"></label>
+                    <div class="col-sm-9">
+                        <input asp-for="Relationship" class="form-control" placeholder="e.g. Father, Mother, Uncle" />
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label asp-for="Occupation" class="col-sm-3 col-form-label label-control"></label>
+                    <div class="col-sm-9">
+                        <input asp-for="Occupation" class="form-control" />
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label asp-for="Address" class="col-sm-3 col-form-label label-control"></label>
+                    <div class="col-sm-9">
+                        <textarea asp-for="Address" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label asp-for="Notes" class="col-sm-3 col-form-label label-control"></label>
+                    <div class="col-sm-9">
+                        <textarea asp-for="Notes" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end mt-1">
+            <a class="btn btn-custom-default btn-medium mr-1" asp-action="Index">
+                <i class="fa fa-times"></i> Cancel
+            </a>
+            <button type="submit" class="btn btn-custom btn-medium">
+                <i class="fa fa-save"></i> @(isEdit ? "Save Changes" : "Add Guardian")
+            </button>
+        </div>
+    </div>
+</div>

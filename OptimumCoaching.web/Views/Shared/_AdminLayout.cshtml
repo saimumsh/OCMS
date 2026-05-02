@@ -1,0 +1,140 @@
+@{
+    var currentUser = User.Identity;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    @* <title>@ViewData["Title"] - @OptimumCoaching.web.Program.ProjectName()</title>
+ *@
+    <link rel="icon" type="image/png" sizes="16x16" href="~/favicon.ico">
+
+    <!-- Font styles -->
+    <link href="~/themeCSS/fonts/feather/style.min.css" rel="stylesheet" />
+    <link href="~/themeCSS/fonts/flag-icon-css/css/flag-icon.min.css" rel="stylesheet" />
+    <link href="~/themeCSS/fonts/font-awesome/css/font-awesome.min.css" rel="stylesheet" />
+    <link href="~/themeCSS/fonts/meteocons/style.min.css" rel="stylesheet" />
+    <link href="~/themeCSS/fonts/simple-line-icons/style.min.css" rel="stylesheet" />
+    <!-- /font styles -->
+    <!-- Theme Styles -->
+    <link href="~/themeCSS/style.css" rel="stylesheet" />
+    <link href="~/themeCSS/css/colors.min.css" rel="stylesheet">
+    <link href="~/themeCSS/css/components.min.css" rel="stylesheet">
+    <link href="~/themeCSS/css/vendors.min.css" rel="stylesheet" />
+    <link href="~/themeCSS/css/core/menu/menu-types/vertical-menu-modern.css" rel="stylesheet" />
+    <link href="~/themeCSS/css/core/colors/palette-gradient.min.css" rel="stylesheet" />
+    <link href="~/themeCSS/css/pages/timeline.min.css" rel="stylesheet" />
+    <link href="~/themeCSS/css/app.min.css" rel="stylesheet" />
+    <link href="~/themeCSS/vendors/css/forms/selects/select2.css" rel="stylesheet" />
+    <!-- /theme Styles -->
+    <!-- Chart style -->
+    <link href="~/themeCSS/css/pages/card-statistics.min.css" rel="stylesheet">
+    <link href="~/themeCSS/css/pages/vertical-timeline.min.css" rel="stylesheet">
+    <!-- /chart style -->
+
+    <link href="~/css/bootstrap-datepicker.min.css" rel="stylesheet" />
+
+    <link href="~/css/site.css" rel="stylesheet" asp-append-version="true" />
+
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body class="vertical-layout vertical-menu-modern 2-columns menu-expanded fixed-navbar"
+      data-open="click" data-menu="vertical-menu-modern" data-col="2-columns">
+    <!-- Header partial -->
+    <partial name="_HeaderPartial" model="currentUser" />
+    <!-- /header partial -->
+    <!-- Sidebar partial -->
+    <partial name="_AdminSidebarPartial" model="currentUser" />
+    <!-- /sidebar partial -->
+
+    <div class="app-content content">
+        <div class="content-wrapper">
+            <div class="content-body">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer partial -->
+    <partial name="_FooterPartial" />
+    <!-- /footer partial -->
+
+    <!-- Core JS files -->
+    <script src="~/js/jquery-3.6.0.min.js"></script>
+    <!-- /core JS files -->
+    <!-- Theme JS files -->
+    <script src="~/themeJS/vendors/js/vendors.min.js"></script>
+    <script src="~/themeJS/vendors/js/extensions/unslider-min.js"></script>
+    <script src="~/themeJS/vendors/js/timeline/horizontal-timeline.js"></script>
+    <script src="~/themeJS/js/core/app-menu.js"></script>
+    <script src="~/themeJS/js/core/app.js"></script>
+    <script src="~/themeJS/js/scripts/customizer.js"></script>
+    <script src="~/themeJS/vendors/js/forms/select/select2.js"></script>
+    <!-- /theme JS files -->
+
+    <script src="~/js/bootstrap-datepicker.js"></script>
+
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+
+    <!--menu active + sidebar collapse fallback-->
+    <script type="text/javascript">
+        $(function ($) {
+            let url = window.location.href;
+            $('li a').each(function () {
+                if (this.href === url) {
+                    $(this).closest('li').addClass('active');
+                }
+            });
+
+            $('.main-menu .navigation > li > a').each(function () {
+                var $a = $(this);
+                var label = $.trim($a.find('.menu-title').first().text());
+                if (label) $a.attr('data-title', label);
+            });
+
+            try {
+                var stored = localStorage.getItem('oc.menuCollapsed');
+                var isSmall = window.matchMedia('(max-width: 767.98px)').matches;
+                var shouldCollapse = stored === '1' || (stored === null && isSmall);
+                if (shouldCollapse) {
+                    $('body').removeClass('menu-expanded').addClass('menu-collapsed');
+                    $('.modern-nav-toggle .toggle-icon')
+                        .removeClass('ft-toggle-right').addClass('ft-toggle-left');
+                }
+            } catch (e) { /* ignore */ }
+
+            $(document).on('click', '.modern-nav-toggle, .menu-toggle', function (e) {
+                e.preventDefault();
+                var $body = $('body');
+                var collapse = $body.hasClass('menu-expanded') || $body.hasClass('menu-open');
+                if (collapse) {
+                    $body.removeClass('menu-expanded menu-open').addClass('menu-collapsed');
+                    $('.modern-nav-toggle .toggle-icon')
+                        .removeClass('ft-toggle-right').addClass('ft-toggle-left');
+                } else {
+                    $body.removeClass('menu-collapsed menu-hide').addClass('menu-expanded');
+                    $('.modern-nav-toggle .toggle-icon')
+                        .removeClass('ft-toggle-left').addClass('ft-toggle-right');
+                }
+                try { localStorage.setItem('oc.menuCollapsed', collapse ? '1' : '0'); } catch (err) { /* ignore */ }
+            });
+
+            $(document).on('click', '.app-content, .footer', function () {
+                var isSmall = window.matchMedia('(max-width: 767.98px)').matches;
+                if (!isSmall) return;
+                var $body = $('body');
+                if ($body.hasClass('menu-expanded')) {
+                    $body.removeClass('menu-expanded').addClass('menu-collapsed');
+                    $('.modern-nav-toggle .toggle-icon')
+                        .removeClass('ft-toggle-right').addClass('ft-toggle-left');
+                    try { localStorage.setItem('oc.menuCollapsed', '1'); } catch (err) { /* ignore */ }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

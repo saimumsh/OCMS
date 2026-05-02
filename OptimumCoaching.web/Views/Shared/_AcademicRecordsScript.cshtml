@@ -1,0 +1,53 @@
+@* Add / remove / re-index academic record rows. *@
+<script>
+    (function () {
+        var host = document.getElementById('academicRowsHost');
+        var addBtn = document.getElementById('addAcademicRow');
+        var template = document.getElementById('academicRowTemplate');
+        var counter = document.getElementById('academicRecordsCount');
+        if (!host || !addBtn || !template) return;
+
+        function reindex() {
+            var rows = host.querySelectorAll('[data-row]');
+            rows.forEach(function (row, i) {
+                row.querySelectorAll('input, select, textarea').forEach(function (el) {
+                    var name = el.getAttribute('name');
+                    if (!name) return;
+                    el.setAttribute('name', name.replace(/AcademicRecords\[[^\]]*\]/, 'AcademicRecords[' + i + ']'));
+                });
+            });
+            if (counter) counter.textContent = rows.length;
+        }
+
+        addBtn.addEventListener('click', function () {
+            var html = template.innerHTML.replace(/__INDEX__/g, host.querySelectorAll('[data-row]').length);
+            // <template> holds a <tr> — wrap in a <tbody> so the parser handles
+            // the table fragment correctly.
+            var holder = document.createElement('tbody');
+            holder.innerHTML = html.trim();
+            var newRow = holder.firstElementChild;
+            host.appendChild(newRow);
+            reindex();
+            var firstInput = newRow.querySelector('input:not([type=hidden])');
+            if (firstInput) firstInput.focus();
+        });
+
+        host.addEventListener('click', function (e) {
+            var btn = e.target.closest('[data-remove-row]');
+            if (!btn) return;
+            var row = btn.closest('[data-row]');
+            if (!row) return;
+            // Always keep at least one row visible.
+            if (host.querySelectorAll('[data-row]').length <= 1) {
+                row.querySelectorAll('input').forEach(function (i) {
+                    if (i.type !== 'hidden') i.value = '';
+                });
+                return;
+            }
+            row.remove();
+            reindex();
+        });
+
+        reindex();
+    })();
+</script>

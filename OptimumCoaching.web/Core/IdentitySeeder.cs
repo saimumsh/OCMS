@@ -31,6 +31,57 @@ namespace OptimumCoaching.web.Core
             // 2) Permission catalog → DB rows
             await SyncPermissionCatalogAsync(db);
 
+            // 2b) Default Admin role grants — Teachers + Students + Guardians management
+            await EnsureRolePermissionsAsync(db, roleManager, Roles.Admin, new[]
+            {
+                Permissions.Teachers.ListView,
+                Permissions.Teachers.AddEdit,
+                Permissions.Teachers.Delete,
+                Permissions.Teachers.ActiveInactive,
+                Permissions.Students.ListView,
+                Permissions.Students.AddEdit,
+                Permissions.Students.Delete,
+                Permissions.Students.Approve,
+                Permissions.Guardians.ListView,
+                Permissions.Guardians.AddEdit,
+                Permissions.Guardians.Delete,
+                Permissions.Departments.ListView,
+                Permissions.Departments.AddEdit,
+                Permissions.Departments.Delete,
+                Permissions.Batches.ListView,
+                Permissions.Batches.AddEdit,
+                Permissions.Batches.Delete,
+                Permissions.Batches.AssignStudents,
+                Permissions.BatchUpdates.ListView,
+                Permissions.BatchUpdates.Post,
+                Permissions.BatchUpdates.Delete,
+                Permissions.Users.ListView,
+            });
+
+            // 2b-cc) Course Coordinator role grants — manages batches & posts updates.
+            await EnsureRolePermissionsAsync(db, roleManager, Roles.CC, new[]
+            {
+                Permissions.Batches.ListView,
+                Permissions.Batches.AddEdit,
+                Permissions.Batches.AssignStudents,
+                Permissions.BatchUpdates.ListView,
+                Permissions.BatchUpdates.Post,
+                Permissions.Students.ListView,
+                Permissions.Teachers.ListView,
+                Permissions.Departments.ListView,
+            });
+
+            // 2b-teacher) Teacher role grants — can post class updates for their batches.
+            await EnsureRolePermissionsAsync(db, roleManager, Roles.Teacher, new[]
+            {
+                Permissions.Batches.ListView,
+                Permissions.BatchUpdates.ListView,
+                Permissions.BatchUpdates.Post,
+            });
+
+            // 2c) Default departments per stream
+            await SeedDefaultDepartmentsAsync(db);
+
             // 3) Default SuperAdmin user
             var superEmail = config["SeedUsers:SuperAdminEmail"] ?? "superadmin@optimumcoaching.local";
             var superPassword = config["SeedUsers:SuperAdminPassword"] ?? "SuperAdmin@123";
@@ -106,6 +157,77 @@ namespace OptimumCoaching.web.Core
             string.IsNullOrEmpty(input)
                 ? input
                 : Regex.Replace(input, "([A-Z])", " $1").Trim();
+
+        // Seeds the canonical Department list per stream. Only inserts what's
+        // missing — admins may have customised the list via the UI, so we
+        // never delete or rename existing rows.
+        private static async Task SeedDefaultDepartmentsAsync(ApplicationDbContext db)
+        {
+            var defaults = new (string Name, string Code, EducationStream Stream)[]
+            {
+                ("Science",     "ACA-SCI", EducationStream.Academic),
+                ("Arts",        "ACA-ART", EducationStream.Academic),
+                ("Commerce",    "ACA-COM", EducationStream.Academic),
+                ("Electrical",  "DIP-EE",  EducationStream.Diploma),
+                ("Electronics", "DIP-ECE", EducationStream.Diploma),
+                ("Computer",    "DIP-CSE", EducationStream.Diploma),
+                ("Civil",       "DIP-CE",  EducationStream.Diploma),
+                ("Mechanical",  "DIP-ME",  EducationStream.Diploma),
+            };
+
+            foreach (var (name, code, stream) in defaults)
+            {
+                var exists = await db.Departments.AnyAsync(d =>
+                    d.Stream == stream && d.Name == name);
+                if (exists) continue;
+
+                db.Departments.Add(new Department
+                {
+                    Id = Guid.NewGuid(),
+                    Name = name,
+                    Code = code,
+                    Stream = stream,
+                    IsActive = true,
+                    IsDeleted = false,
+                    Created = DateTime.UtcNow
+                });
+            }
+            await db.SaveChangesAsync();
+        }
+
+        // Idempotently grants the given permissions to the role. Adds missing
+        // RolePermission rows; never removes or downgrades existing grants
+        // (admins may have customised them via the UI).
+        private static async Task EnsureRolePermissionsAsync(
+            ApplicationDbContext db,
+            RoleManager<ApplicationRole> roleManager,
+            string roleName,
+            IEnumerable<string> permissionNames)
+        {
+            var role = await roleManager.FindByNameAsync(roleName);
+            if (role == null) return;
+
+            var permissions = await db.Permissions
+                .Where(p => permissionNames.Contains(p.Name))
+                .ToListAsync();
+
+            var existing = await db.RolePermissions
+                .Where(rp => rp.RoleId == role.Id)
+                .Select(rp => rp.PermissionId)
+                .ToListAsync();
+            var existingSet = new HashSet<Guid>(existing);
+
+            foreach (var p in permissions.Where(p => !existingSet.Contains(p.Id)))
+            {
+                db.RolePermissions.Add(new RolePermission
+                {
+                    RoleId = role.Id,
+                    PermissionId = p.Id,
+                    Created = DateTime.UtcNow
+                });
+            }
+            await db.SaveChangesAsync();
+        }
 
         private static async Task EnsureUserAsync(
             UserManager<ApplicationUser> userManager,

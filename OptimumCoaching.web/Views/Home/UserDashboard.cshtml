@@ -1,11 +1,202 @@
+@model StudentDashboardViewModel
+@using OptimumCoaching.core
 @{
     ViewData["Title"] = "My Dashboard";
     Layout = "_DashboardLayout";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Welcome, @User.Identity?.Name</h2>
-    <span class="badge bg-secondary">User</span>
+<div class="content-header row">
+    <div class="content-header-left col-12 mb-1">
+        <h3 class="content-header-title mb-0">Welcome, @Model.FullName</h3>
+        @if (Model.Student != null)
+        {
+            <p class="text-muted mb-0">@(Model.Batch?.Name ?? "No batch assigned yet")</p>
+        }
+    </div>
 </div>
 
-<p class="text-muted">Your personal dashboard.</p>
+@if (Model.Student == null)
+{
+    <div class="card">
+        <div class="card-body text-center py-3">
+            <p class="text-muted mb-1">Your dashboard will appear here once your student profile is set up.</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row">
+        <div class="col-lg-7 mb-3">
+            <div class="card">
+                <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                    <h4 class="card-title mb-0">My Batch</h4>
+                </div>
+                <div class="card-body">
+                    @if (Model.Batch == null)
+                    {
+                        <p class="text-muted mb-0">
+                            <i class="fa fa-info-circle"></i> You haven't been assigned to a batch yet.
+                            An admin will place you into a batch shortly.
+                        </p>
+                    }
+                    else
+                    {
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4">Batch</dt>
+                            <dd class="col-sm-8"><strong>@Model.Batch.Name</strong>
+                                @if (!string.IsNullOrWhiteSpace(Model.Batch.Code))
+                                { <small class="badge badge-light ml-1">@Model.Batch.Code</small> }
+                            </dd>
+
+                            <dt class="col-sm-4">Department</dt>
+                            <dd class="col-sm-8">@(Model.Batch.Department?.Name ?? "—")</dd>
+
+                            <dt class="col-sm-4">Class</dt>
+                            <dd class="col-sm-8">@(Model.Batch.Class?.Name ?? "—")</dd>
+
+                            <dt class="col-sm-4">Subject</dt>
+                            <dd class="col-sm-8">@(Model.Batch.Subject?.Name ?? "—")</dd>
+
+                            <dt class="col-sm-4">Schedule</dt>
+                            <dd class="col-sm-8">
+                                @(Model.Batch.StartDate?.ToString("dd MMM yyyy") ?? "?")
+                                &mdash;
+                                @(Model.Batch.EndDate?.ToString("dd MMM yyyy") ?? "?")
+                            </dd>
+
+                            @if (!string.IsNullOrWhiteSpace(Model.Batch.Description))
+                            {
+                                <dt class="col-sm-4">About</dt>
+                                <dd class="col-sm-8">@Model.Batch.Description</dd>
+                            }
+                        </dl>
+                    }
+                </div>
+            </div>
+
+            <div class="card mt-1">
+                <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                    <h4 class="card-title mb-0">Class Updates <span class="badge badge-pill badge-secondary ml-1">@Model.Updates.Count</span></h4>
+                </div>
+                <div class="card-body">
+                    @if (!Model.Updates.Any())
+                    {
+                        <p class="text-muted mb-0">No updates yet. New updates from your teacher will appear here.</p>
+                    }
+                    else
+                    {
+                        <ul class="list-unstyled mb-0">
+                            @foreach (var u in Model.Updates)
+                            {
+                                <li class="batch-update-item">
+                                    <strong>@u.Title</strong>
+                                    <small class="text-muted d-block">
+                                        @u.PostedAt.ToString("dd MMM yyyy, HH:mm") &middot;
+                                        @(u.PostedByUser?.FullName ?? "Coaching Centre")
+                                    </small>
+                                    <div class="mt-1" style="white-space: pre-wrap">@u.Body</div>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5 mb-3">
+            <div class="card">
+                <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                    <h4 class="card-title mb-0">Teacher</h4>
+                </div>
+                <div class="card-body">
+                    @if (Model.Batch?.Teacher == null)
+                    {
+                        <p class="text-muted mb-0">No teacher assigned yet.</p>
+                    }
+                    else
+                    {
+                        var t = Model.Batch.Teacher;
+                        var avatar = string.IsNullOrWhiteSpace(t.ImageUrl) ? "/images/no-image.jpg" : Url.Content(t.ImageUrl);
+                        var initials = string.Concat(t.FullName
+                            .Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2)
+                            .Select(p => char.ToUpper(p[0])));
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="user-avatar pending-avatar mr-2">
+                                @if (!string.IsNullOrWhiteSpace(t.ImageUrl))
+                                { <img src="@avatar" alt="@t.FullName" /> }
+                                else
+                                { <span class="user-avatar-initials">@initials</span> }
+                            </span>
+                            <div>
+                                <div class="font-weight-bold">@t.FullName</div>
+                                @if (!string.IsNullOrWhiteSpace(t.Specialization))
+                                { <small class="text-muted">@t.Specialization</small> }
+                            </div>
+                        </div>
+                        <dl class="row mb-0">
+                            @if (!string.IsNullOrWhiteSpace(t.Email))
+                            {
+                                <dt class="col-sm-4">Email</dt>
+                                <dd class="col-sm-8"><a href="mailto:@t.Email">@t.Email</a></dd>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(t.PhoneNumber))
+                            {
+                                <dt class="col-sm-4">Phone</dt>
+                                <dd class="col-sm-8">@t.PhoneNumber</dd>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(t.Qualification))
+                            {
+                                <dt class="col-sm-4">Qualification</dt>
+                                <dd class="col-sm-8">@t.Qualification</dd>
+                            }
+                            @if (t.ExperienceYears.HasValue)
+                            {
+                                <dt class="col-sm-4">Experience</dt>
+                                <dd class="col-sm-8">@t.ExperienceYears yrs</dd>
+                            }
+                        </dl>
+                    }
+                </div>
+            </div>
+
+            <div class="card mt-1">
+                <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                    <h4 class="card-title mb-0">My Profile</h4>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Department</dt>
+                        <dd class="col-sm-8">@(Model.Student.Department?.Name ?? "—")</dd>
+
+                        <dt class="col-sm-4">Status</dt>
+                        <dd class="col-sm-8">
+                            @switch (Model.Student.ApprovalStatus)
+                            {
+                                case StudentApprovalStatus.Approved:
+                                    <span class="badge badge-pill badge-success">Approved</span>
+                                    break;
+                                case StudentApprovalStatus.Pending:
+                                    <span class="badge badge-pill badge-warning">Pending</span>
+                                    break;
+                                default:
+                                    <span class="badge badge-pill badge-danger">Rejected</span>
+                                    break;
+                            }
+                        </dd>
+
+                        @if (!string.IsNullOrWhiteSpace(Model.Student.Email))
+                        {
+                            <dt class="col-sm-4">Email</dt>
+                            <dd class="col-sm-8">@Model.Student.Email</dd>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.Student.PhoneNumber))
+                        {
+                            <dt class="col-sm-4">Phone</dt>
+                            <dd class="col-sm-8">@Model.Student.PhoneNumber</dd>
+                        }
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+}

@@ -1,0 +1,94 @@
+@model IList<StudentListItem>
+@{
+    ViewData["Title"] = "Pending Student Approvals";
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-md-9 col-12 mb-1">
+        <h3 class="content-header-title mb-0">Pending Student Approvals</h3>
+        <div class="row breadcrumbs-top">
+            <div class="breadcrumb-wrapper col-12">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Students</a></li>
+                    <li class="breadcrumb-item active">Pending</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+}
+
+<section id="students-pending">
+    @if (!Model.Any())
+    {
+        <div class="card">
+            <div class="card-body text-center py-3">
+                <i class="fa fa-check-circle font-large-2 text-success mb-1"></i>
+                <p class="text-muted mb-0">No pending student approvals.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var s in Model)
+            {
+                var avatar = string.IsNullOrWhiteSpace(s.ImageUrl) ? "/images/no-image.jpg" : Url.Content(s.ImageUrl);
+                var initials = string.Concat(s.FullName
+                    .Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2)
+                    .Select(p => char.ToUpper(p[0])));
+                <div class="col-lg-4 col-md-6 mb-3">
+                    <div class="card pending-student-card h-100">
+                        <div class="card-body text-center">
+                            <span class="user-avatar pending-avatar mb-2">
+                                @if (!string.IsNullOrWhiteSpace(s.ImageUrl))
+                                { <img src="@avatar" alt="@s.FullName" /> }
+                                else
+                                { <span class="user-avatar-initials">@initials</span> }
+                            </span>
+                            <h5 class="mb-0">@s.FullName</h5>
+                            <p class="text-muted mb-1">Registered @s.Created.ToString("dd MMM yyyy")</p>
+
+                            <div class="text-left mt-2">
+                                @if (!string.IsNullOrWhiteSpace(s.Email))
+                                { <div><i class="fa fa-envelope mr-1 text-muted"></i> @s.Email</div> }
+                                @if (!string.IsNullOrWhiteSpace(s.PhoneNumber))
+                                { <div><i class="fa fa-phone mr-1 text-muted"></i> @s.PhoneNumber</div> }
+                                @if (!string.IsNullOrWhiteSpace(s.GuardianName))
+                                { <div><i class="fa fa-users mr-1 text-muted"></i> @s.GuardianName</div> }
+                            </div>
+                        </div>
+                        <div class="card-footer text-center">
+                            <form method="post" asp-action="Approve" asp-route-id="@s.Id" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-success">
+                                    <i class="fa fa-check"></i> Approve
+                                </button>
+                            </form>
+                            <a class="btn btn-sm btn-outline-warning" asp-action="Reject" asp-route-id="@s.Id">
+                                <i class="fa fa-times"></i> Reject
+                            </a>
+                            <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@s.Id">
+                                <i class="fa fa-eye"></i> View
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</section>

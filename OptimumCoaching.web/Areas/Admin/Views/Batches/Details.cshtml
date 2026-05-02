@@ -1,0 +1,198 @@
+@model OptimumCoaching.core.Batch
+@using OptimumCoaching.core
+@{
+    ViewData["Title"] = $"Batch  {Model.Name}";
+    var updates = ViewBag.Updates as IList<BatchUpdate> ?? new List<BatchUpdate>();
+    var students = ViewBag.Students as IList<Student> ?? new List<Student>();
+    var canPost = User.HasClaim(CustomClaimType.Permission, Permissions.BatchUpdates.Post)
+                || User.HasClaim(CustomClaimType.Permission, "*");
+    var canDeleteUpdate = User.HasClaim(CustomClaimType.Permission, Permissions.BatchUpdates.Delete)
+                || User.HasClaim(CustomClaimType.Permission, "*");
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-md-9 col-12 mb-1">
+        <h3 class="content-header-title mb-0">@Model.Name</h3>
+        <div class="row breadcrumbs-top">
+            <div class="breadcrumb-wrapper col-12">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Batches</a></li>
+                    <li class="breadcrumb-item active">@Model.Name</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+    <div class="content-header-right col-md-3 col-12 mb-1 text-md-right">
+        <a class="btn btn-sm btn-custom" asp-action="Edit" asp-route-id="@Model.Id">
+            <i class="fa fa-pencil"></i> Edit
+        </a>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        @TempData["SuccessMessage"]
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        @TempData["ErrorMessage"]
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+}
+
+<div class="row">
+    <div class="col-lg-7 mb-3">
+        <div class="card">
+            <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                <h4 class="card-title mb-0">Batch Information</h4>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Department</dt>
+                    <dd class="col-sm-8">@(Model.Department?.Name ?? "—")</dd>
+
+                    <dt class="col-sm-4">Code</dt>
+                    <dd class="col-sm-8">@(Model.Code ?? "—")</dd>
+
+                    <dt class="col-sm-4">Class</dt>
+                    <dd class="col-sm-8">@(Model.Class?.Name ?? "—")</dd>
+
+                    <dt class="col-sm-4">Subject</dt>
+                    <dd class="col-sm-8">@(Model.Subject?.Name ?? "—")</dd>
+
+                    <dt class="col-sm-4">Teacher</dt>
+                    <dd class="col-sm-8">@(Model.Teacher?.FullName ?? "Unassigned")</dd>
+
+                    <dt class="col-sm-4">Schedule</dt>
+                    <dd class="col-sm-8">
+                        @(Model.StartDate?.ToString("dd MMM yyyy") ?? "?")
+                        &mdash;
+                        @(Model.EndDate?.ToString("dd MMM yyyy") ?? "?")
+                    </dd>
+
+                    <dt class="col-sm-4">Capacity</dt>
+                    <dd class="col-sm-8">@(Model.Capacity?.ToString() ?? "—")</dd>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.Description))
+                    {
+                        <dt class="col-sm-4">Description</dt>
+                        <dd class="col-sm-8">@Model.Description</dd>
+                    }
+                </dl>
+            </div>
+        </div>
+
+        @if (canPost)
+        {
+            <div class="card mt-1">
+                <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                    <h4 class="card-title mb-0">Post a Class Update</h4>
+                </div>
+                <form method="post" asp-action="PostUpdate">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="BatchId" value="@Model.Id" />
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label class="label-control required">Title</label>
+                            <input name="Title" class="form-control" maxlength="200" placeholder="e.g. Class rescheduled to Sat 10 AM" />
+                        </div>
+                        <div class="form-group">
+                            <label class="label-control required">Message</label>
+                            <textarea name="Body" class="form-control" rows="3" maxlength="4000"
+                                      placeholder="What students need to know"></textarea>
+                        </div>
+                    </div>
+                    <div class="card-footer text-right">
+                        <button type="submit" class="btn btn-custom btn-medium">
+                            <i class="fa fa-paper-plane"></i> Post Update
+                        </button>
+                    </div>
+                </form>
+            </div>
+        }
+
+        <div class="card mt-1">
+            <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                <h4 class="card-title mb-0">Class Updates <span class="badge badge-pill badge-secondary ml-1">@updates.Count</span></h4>
+            </div>
+            <div class="card-body">
+                @if (!updates.Any())
+                {
+                    <p class="text-muted mb-0">No updates posted yet.</p>
+                }
+                else
+                {
+                    <ul class="list-unstyled mb-0">
+                        @foreach (var u in updates)
+                        {
+                            <li class="batch-update-item">
+                                <div class="d-flex justify-content-between">
+                                    <strong>@u.Title</strong>
+                                    @if (canDeleteUpdate)
+                                    {
+                                        <form method="post" asp-action="DeleteUpdate" class="d-inline"
+                                              onsubmit="return confirm('Remove this update?');">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@u.Id" />
+                                            <input type="hidden" name="batchId" value="@Model.Id" />
+                                            <button type="submit" class="btn btn-link btn-sm text-danger p-0">
+                                                <i class="fa fa-times"></i>
+                                            </button>
+                                        </form>
+                                    }
+                                </div>
+                                <small class="text-muted">
+                                    @u.PostedAt.ToString("dd MMM yyyy, HH:mm") &middot;
+                                    @(u.PostedByUser?.FullName ?? "System")
+                                </small>
+                                <div class="mt-1" style="white-space: pre-wrap">@u.Body</div>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5 mb-3">
+        <div class="card">
+            <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                <h4 class="card-title mb-0">Enrolled Students <span class="badge badge-pill badge-secondary ml-1">@students.Count</span></h4>
+            </div>
+            <div class="card-body p-0">
+                @if (!students.Any())
+                {
+                    <p class="text-muted m-2 mb-0">No students assigned to this batch yet.</p>
+                }
+                else
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var s in students)
+                        {
+                            var avatar = string.IsNullOrWhiteSpace(s.ImageUrl) ? "/images/no-image.jpg" : Url.Content(s.ImageUrl);
+                            var initials = string.Concat(s.FullName
+                                .Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2)
+                                .Select(p => char.ToUpper(p[0])));
+                            <li class="list-group-item d-flex align-items-center">
+                                <span class="user-avatar mr-1">
+                                    @if (!string.IsNullOrWhiteSpace(s.ImageUrl))
+                                    { <img src="@avatar" alt="@s.FullName" /> }
+                                    else
+                                    { <span class="user-avatar-initials">@initials</span> }
+                                </span>
+                                <div>
+                                    <div class="font-weight-bold">@s.FullName</div>
+                                    <small class="text-muted">@(s.Email ?? s.PhoneNumber ?? "")</small>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,54 @@
+@model List<OptimumCoaching.web.Models.AcademicRecordInput>
+
+<div class="card mt-1" id="academicRecordsCard">
+    <div class="card-header border-bottom-blue-grey border-bottom-lighten-5 d-flex justify-content-between align-items-center">
+        <div>
+            <h4 class="card-title mb-0">
+                Academic Records
+                <span id="academicRecordsCount" class="badge badge-pill badge-secondary ml-1">@Model.Count</span>
+            </h4>
+            <small class="text-muted">SSC, HSC, Diploma semesters,  add as many as you need.</small>
+        </div>
+        <button type="button" class="btn btn-sm btn-custom" id="addAcademicRow">
+            <i class="fa fa-plus"></i> Add Record
+        </button>
+    </div>
+
+    <div class="card-body p-0">
+        <div asp-validation-summary="ModelOnly" class="text-danger m-1"></div>
+
+        <div class="table-responsive">
+            <table class="table table-condensed mb-0 academic-records-table">
+                <thead>
+                    <tr>
+                        <th class="serial">#</th>
+                        <th>Examination / Level <span class="text-danger">*</span></th>
+                        <th style="width:96px">Year <span class="text-danger">*</span></th>
+                        <th style="width:160px">Group / Dept</th>
+                        <th style="width:140px">Result</th>
+                        <th>Institution / Board</th>
+                        <th class="action" style="width:48px"></th>
+                    </tr>
+                </thead>
+                <tbody id="academicRowsHost">
+                    @if (Model.Count == 0)
+                    {
+                        @await Html.PartialAsync("_AcademicRecordRow", new OptimumCoaching.web.Models.AcademicRecordInput(), new ViewDataDictionary(ViewData) { { "Index", 0 } })
+                    }
+                    else
+                    {
+                        @for (int i = 0; i < Model.Count; i++)
+                        {
+                            @await Html.PartialAsync("_AcademicRecordRow", Model[i], new ViewDataDictionary(ViewData) { { "Index", i } })
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@* Cloned by JS when "Add Record" is clicked. *@
+<template id="academicRowTemplate">
+    @await Html.PartialAsync("_AcademicRecordRow", new OptimumCoaching.web.Models.AcademicRecordInput(), new ViewDataDictionary(ViewData) { { "Index", "__INDEX__" } })
+</template>

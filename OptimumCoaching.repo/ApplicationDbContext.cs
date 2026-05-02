@@ -17,11 +17,14 @@ namespace OptimumCoaching.repo
         public DbSet<Permission> Permissions => Set<Permission>();
         public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
         public DbSet<Student> Students => Set<Student>();
+        public DbSet<StudentAcademicRecord> StudentAcademicRecords => Set<StudentAcademicRecord>();
         public DbSet<Teacher> Teachers => Set<Teacher>();
+        public DbSet<Guardian> Guardians => Set<Guardian>();
         public DbSet<Department> Departments => Set<Department>();
         public DbSet<Class> Classes => Set<Class>();
         public DbSet<Subject> Subjects => Set<Subject>();
         public DbSet<Batch> Batches => Set<Batch>();
+        public DbSet<BatchUpdate> BatchUpdates => Set<BatchUpdate>();
         public DbSet<Group> Groups => Set<Group>();
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -77,6 +80,44 @@ namespace OptimumCoaching.repo
                     .WithOne()
                     .HasForeignKey<Student>(s => s.UserId)
                     .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne(s => s.Guardian)
+                    .WithMany()
+                    .HasForeignKey(s => s.GuardianId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne(s => s.Department)
+                    .WithMany()
+                    .HasForeignKey(s => s.DepartmentId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasOne(s => s.Batch)
+                    .WithMany()
+                    .HasForeignKey(s => s.BatchId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                entity.Property(s => s.ApprovalStatus).HasConversion<int>();
+            });
+
+            builder.Entity<StudentAcademicRecord>(entity =>
+            {
+                entity.HasOne(r => r.Student)
+                    .WithMany(s => s.AcademicRecords)
+                    .HasForeignKey(r => r.StudentId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(r => new { r.StudentId, r.SortOrder });
+            });
+
+            builder.Entity<Guardian>(entity =>
+            {
+                entity.HasIndex(g => g.UserId).IsUnique()
+                    .HasFilter("[UserId] IS NOT NULL");
+
+                entity.HasOne(g => g.User)
+                    .WithOne()
+                    .HasForeignKey<Guardian>(g => g.UserId)
+                    .OnDelete(DeleteBehavior.SetNull);
             });
 
             builder.Entity<Teacher>(entity =>
@@ -93,6 +134,8 @@ namespace OptimumCoaching.repo
             builder.Entity<Department>(e =>
             {
                 e.HasIndex(d => d.Code).IsUnique().HasFilter("[Code] IS NOT NULL");
+                e.HasIndex(d => new { d.Stream, d.Name }).IsUnique();
+                e.Property(d => d.Stream).HasConversion<int>();
             });
 
             builder.Entity<Class>(e =>
@@ -124,6 +167,11 @@ namespace OptimumCoaching.repo
             {
                 e.HasIndex(b => b.Code).IsUnique().HasFilter("[Code] IS NOT NULL");
 
+                e.HasOne(b => b.Department)
+                    .WithMany()
+                    .HasForeignKey(b => b.DepartmentId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
                 e.HasOne(b => b.Class)
                     .WithMany()
                     .HasForeignKey(b => b.ClassId)
@@ -138,6 +186,21 @@ namespace OptimumCoaching.repo
                     .WithMany()
                     .HasForeignKey(b => b.TeacherId)
                     .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            builder.Entity<BatchUpdate>(e =>
+            {
+                e.HasOne(u => u.Batch)
+                    .WithMany()
+                    .HasForeignKey(u => u.BatchId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasOne(u => u.PostedByUser)
+                    .WithMany()
+                    .HasForeignKey(u => u.PostedByUserId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                e.HasIndex(u => new { u.BatchId, u.PostedAt });
             });
 
             builder.Entity<Group>(e =>

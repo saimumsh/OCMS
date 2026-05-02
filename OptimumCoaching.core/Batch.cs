@@ -14,6 +14,10 @@ namespace OptimumCoaching.core
         [MaxLength(500)]
         public string? Description { get; set; }
 
+        [Display(Name = "Department")]
+        public Guid? DepartmentId { get; set; }
+        public Department? Department { get; set; }
+
         [Display(Name = "Class")]
         public Guid? ClassId { get; set; }
         public Class? Class { get; set; }

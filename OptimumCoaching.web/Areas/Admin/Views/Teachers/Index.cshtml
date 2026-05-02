@@ -1,0 +1,171 @@
+@model IList<TeacherListItem>
+@{
+    ViewData["Title"] = "Teachers";
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-md-9 col-12 mb-1">
+        <h3 class="content-header-title mb-0">Teachers</h3>
+        <div class="row breadcrumbs-top">
+            <div class="breadcrumb-wrapper col-12">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">Administration</li>
+                    <li class="breadcrumb-item active">Teachers</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+    <div class="content-header-right col-md-3 col-12 mb-1 text-md-right">
+        <a class="btn btn-custom btn-medium" asp-action="Create">
+            <i class="fa fa-plus"></i> Register Teacher
+        </a>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span>&times;</span></button>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span>&times;</span></button>
+    </div>
+}
+
+<section id="teachers-list">
+    <div class="card">
+        <div class="card-header border-bottom-blue-grey border-bottom-lighten-5 d-flex justify-content-between align-items-center">
+            <h4 class="card-title mb-0">All Teachers <span class="badge badge-pill badge-secondary ml-1">@Model.Count</span></h4>
+            <div class="user-search">
+                <input type="search" id="teacherSearch" class="form-control form-control-sm"
+                       placeholder="Search by name, email, specialization..." />
+            </div>
+        </div>
+        <div class="card-body p-0">
+            @if (!Model.Any())
+            {
+                <div class="text-center py-3">
+                    <p class="text-muted mb-1">No teachers yet.</p>
+                    <a class="btn btn-custom btn-medium" asp-action="Create">
+                        <i class="fa fa-plus"></i> Register the first teacher
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover table-condensed mb-0 user-table">
+                        <thead>
+                            <tr>
+                                <th class="serial">#</th>
+                                <th>Teacher</th>
+                                <th>Contact</th>
+                                <th>Specialization</th>
+                                <th class="text-center">Experience</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{ var sn = 0; }
+                            @foreach (var t in Model)
+                            {
+                                sn++;
+                                var avatar = string.IsNullOrWhiteSpace(t.ImageUrl) ? "/images/no-image.jpg" : Url.Content(t.ImageUrl);
+                                var initials = string.Concat(t.FullName
+                                    .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                                    .Take(2)
+                                    .Select(p => char.ToUpper(p[0])));
+                                <tr>
+                                    <td class="align-middle">@sn</td>
+                                    <td class="align-middle">
+                                        <div class="d-flex align-items-center">
+                                            <span class="user-avatar mr-1">
+                                                @if (!string.IsNullOrWhiteSpace(t.ImageUrl))
+                                                {
+                                                    <img src="@avatar" alt="@t.FullName" />
+                                                }
+                                                else
+                                                {
+                                                    <span class="user-avatar-initials">@initials</span>
+                                                }
+                                            </span>
+                                            <div>
+                                                <div class="font-weight-bold">@t.FullName</div>
+                                                @if (t.HireDate.HasValue)
+                                                {
+                                                    <small class="text-muted">Joined @t.HireDate.Value.ToString("dd MMM yyyy")</small>
+                                                }
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="align-middle">
+                                        @if (!string.IsNullOrWhiteSpace(t.Email))
+                                        {
+                                            <div><a href="mailto:@t.Email" class="text-decoration-none">@t.Email</a></div>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(t.PhoneNumber))
+                                        {
+                                            <div><small class="text-muted">@t.PhoneNumber</small></div>
+                                        }
+                                    </td>
+                                    <td class="align-middle">@(t.Specialization ?? "—")</td>
+                                    <td class="align-middle text-center">@(t.ExperienceYears.HasValue ? $"{t.ExperienceYears} yrs" : "—")</td>
+                                    <td class="align-middle text-center">
+                                        @if (t.IsActive)
+                                        {
+                                            <span class="badge badge-pill badge-success">Active</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-pill badge-secondary">Inactive</span>
+                                        }
+                                    </td>
+                                    <td class="align-middle text-right action-cell">
+                                        <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@t.Id" title="Edit">
+                                            <i class="fa fa-pencil"></i>
+                                        </a>
+                                        <form method="post" asp-action="ToggleActive" asp-route-id="@t.Id" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-warning" title="@(t.IsActive ? "Deactivate" : "Activate")">
+                                                <i class="fa @(t.IsActive ? "fa-pause" : "fa-play")"></i>
+                                            </button>
+                                        </form>
+                                        <form method="post" asp-action="Delete" asp-route-id="@t.Id" class="d-inline"
+                                              onsubmit="return confirm('Remove @t.FullName?');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Remove">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        (function () {
+            var input = document.getElementById('teacherSearch');
+            if (!input) return;
+            var rows = document.querySelectorAll('.user-table tbody tr');
+            input.addEventListener('input', function () {
+                var term = this.value.toLowerCase().trim();
+                rows.forEach(function (row) {
+                    row.style.display = term === '' || row.textContent.toLowerCase().indexOf(term) !== -1 ? '' : 'none';
+                });
+            });
+        })();
+    </script>
+}

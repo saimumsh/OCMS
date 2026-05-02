@@ -1,0 +1,107 @@
+@model BatchFormViewModel
+
+<input asp-for="Id" type="hidden" />
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                <h4 class="card-title mb-0">@(Model.Id == Guid.Empty ? "New Batch" : "Edit Batch")</h4>
+            </div>
+            <div class="card-body">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-1"></div>
+
+                <div class="form-group row">
+                    <label asp-for="DepartmentId" class="col-sm-3 col-form-label label-control required">Department</label>
+                    <div class="col-sm-9">
+                        <select asp-for="DepartmentId" asp-items="Model.DepartmentOptions" class="form-control">
+                            <option value="">— Select —</option>
+                        </select>
+                        <span asp-validation-for="DepartmentId" class="text-danger"></span>
+                        <small class="text-muted">Department-wise filter applies to Class &amp; Subject lists.</small>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label asp-for="Name" class="col-sm-3 col-form-label label-control required"></label>
+                    <div class="col-sm-9">
+                        <input asp-for="Name" class="form-control" placeholder="e.g. Diploma 4th Sem  Batch A" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label asp-for="Code" class="col-sm-3 col-form-label label-control"></label>
+                    <div class="col-sm-9">
+                        <input asp-for="Code" class="form-control" placeholder="Optional short code" />
+                        <span asp-validation-for="Code" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label asp-for="ClassId" class="col-sm-3 col-form-label label-control"></label>
+                    <div class="col-sm-9">
+                        <select asp-for="ClassId" asp-items="Model.ClassOptions" class="form-control">
+                            <option value="">— Optional —</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label asp-for="SubjectId" class="col-sm-3 col-form-label label-control"></label>
+                    <div class="col-sm-9">
+                        <select asp-for="SubjectId" asp-items="Model.SubjectOptions" class="form-control">
+                            <option value="">— Optional —</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label asp-for="TeacherId" class="col-sm-3 col-form-label label-control"></label>
+                    <div class="col-sm-9">
+                        <select asp-for="TeacherId" asp-items="Model.TeacherOptions" class="form-control">
+                            <option value="">— Unassigned —</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label class="col-sm-3 col-form-label label-control">Schedule</label>
+                    <div class="col-sm-9">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <input asp-for="StartDate" class="form-control" type="date" placeholder="Start" />
+                            </div>
+                            <div class="col-md-6 mt-1 mt-md-0">
+                                <input asp-for="EndDate" class="form-control" type="date" placeholder="End" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label asp-for="Capacity" class="col-sm-3 col-form-label label-control"></label>
+                    <div class="col-sm-9">
+                        <input asp-for="Capacity" class="form-control" type="number" min="1" max="1000" />
+                        <span asp-validation-for="Capacity" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label asp-for="Description" class="col-sm-3 col-form-label label-control"></label>
+                    <div class="col-sm-9">
+                        <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer text-right">
+                <a class="btn btn-custom-default btn-medium mr-1" asp-action="Index">
+                    <i class="fa fa-times"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-custom btn-medium">
+                    <i class="fa fa-save"></i> @(Model.Id == Guid.Empty ? "Create Batch" : "Save Changes")
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

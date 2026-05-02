@@ -1,0 +1,74 @@
+@model Student
+@{
+    ViewData["Title"] = "Registration Status";
+    Layout = "_Layout";
+    var avatar = string.IsNullOrWhiteSpace(Model.ImageUrl) ? "/images/no-image.jpg" : Url.Content(Model.ImageUrl);
+    var initials = string.Concat(Model.FullName
+        .Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2)
+        .Select(p => char.ToUpper(p[0])));
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-12 mb-1">
+        <h3 class="content-header-title mb-0">My Registration</h3>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+}
+
+<section id="student-status">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-body text-center">
+                    <span class="user-avatar pending-avatar mb-2">
+                        @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
+                        { <img src="@avatar" alt="@Model.FullName" /> }
+                        else
+                        { <span class="user-avatar-initials">@initials</span> }
+                    </span>
+                    <h4 class="mb-1">@Model.FullName</h4>
+
+                    @switch (Model.ApprovalStatus)
+                    {
+                        case StudentApprovalStatus.Pending:
+                            <span class="badge badge-pill badge-warning mb-2">Awaiting Approval</span>
+                            <p class="text-muted">
+                                Thanks for registering. An admin will review your details shortly.
+                                You'll be notified once your registration is approved.
+                            </p>
+                            break;
+
+                        case StudentApprovalStatus.Approved:
+                            <span class="badge badge-pill badge-success mb-2">Approved</span>
+                            <p class="text-muted">
+                                Your registration is approved. You can now access student features.
+                            </p>
+                            <a class="btn btn-custom btn-medium" asp-controller="Home" asp-action="Dashboard">
+                                <i class="fa fa-tachometer"></i> Go to Dashboard
+                            </a>
+                            break;
+
+                        case StudentApprovalStatus.Rejected:
+                            <span class="badge badge-pill badge-danger mb-2">Rejected</span>
+                            @if (!string.IsNullOrWhiteSpace(Model.RejectionReason))
+                            {
+                                <p class="text-muted">Reason: @Model.RejectionReason</p>
+                            }
+                            else
+                            {
+                                <p class="text-muted">Please contact an admin for more information.</p>
+                            }
+                            break;
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

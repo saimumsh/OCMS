@@ -1,0 +1,37 @@
+@model OptimumCoaching.web.Models.AcademicRecordInput
+@{
+    var idx = ViewData["Index"]?.ToString() ?? "0";
+    var prefix = $"AcademicRecords[{idx}]";
+}
+
+<tr data-row>
+    <td class="serial align-middle">
+        <span class="row-number"></span>
+        <input type="hidden" name="@(prefix).Id" value="@(Model.Id == Guid.Empty ? "" : Model.Id.ToString())" />
+    </td>
+    <td>
+        <input name="@(prefix).ExaminationName" value="@Model.ExaminationName"
+               class="form-control form-control-sm" placeholder="e.g. SSC, HSC, Diploma 4th Sem" />
+    </td>
+    <td>
+        <input name="@(prefix).PassingYear" value="@(Model.PassingYear?.ToString() ?? "")"
+               class="form-control form-control-sm" type="number" min="1950" max="2100" placeholder="2024" />
+    </td>
+    <td>
+        <input name="@(prefix).Group" value="@Model.Group"
+               class="form-control form-control-sm" list="academicGroupSuggestions" placeholder="Science / Computer …" />
+    </td>
+    <td>
+        <input name="@(prefix).Result" value="@Model.Result"
+               class="form-control form-control-sm" placeholder="GPA / CGPA" />
+    </td>
+    <td>
+        <input name="@(prefix).Institution" value="@Model.Institution"
+               class="form-control form-control-sm" placeholder="Optional" />
+    </td>
+    <td class="action align-middle text-center">
+        <button type="button" class="btn btn-sm btn-outline-danger" data-remove-row title="Remove this row">
+            <i class="fa fa-trash"></i>
+        </button>
+    </td>
+</tr>

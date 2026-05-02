@@ -1,0 +1,27 @@
+@model DepartmentFormViewModel
+@{
+    ViewData["Title"] = "Add Department";
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-md-9 col-12 mb-1">
+        <h3 class="content-header-title mb-0">Add Department</h3>
+        <div class="row breadcrumbs-top">
+            <div class="breadcrumb-wrapper col-12">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Departments</a></li>
+                    <li class="breadcrumb-item active">Add</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section id="department-create">
+    <form method="post" asp-action="Create">
+        @Html.AntiForgeryToken()
+        <partial name="_DepartmentForm" model="Model" />
+    </form>
+</section>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

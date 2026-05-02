@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cp -r \"D:/Encoders/VitalityCash/VitalityCash/VitalityCash.Web/wwwroot/themeCSS\" \"d:/My Projects/OCMS/OptimumCoaching.web/wwwroot/themeCSS\")",
+      "Bash(cp -r \"D:/Encoders/VitalityCash/VitalityCash/VitalityCash.Web/wwwroot/themeJS\" \"d:/My Projects/OCMS/OptimumCoaching.web/wwwroot/themeJS\")",
+      "Bash(cp -r \"D:/Encoders/VitalityCash/VitalityCash/VitalityCash.Web/wwwroot/themeIMG\" \"d:/My Projects/OCMS/OptimumCoaching.web/wwwroot/themeIMG\")",
+      "Bash(mkdir -p \"d:/My Projects/OCMS/OptimumCoaching.web/wwwroot/images\")",
+      "Bash(cp \"D:/Encoders/VitalityCash/VitalityCash/VitalityCash.Web/wwwroot/images/no-image.jpg\" \"d:/My Projects/OCMS/OptimumCoaching.web/wwwroot/images/no-image.jpg\")",
+      "Bash(cp \"D:/Encoders/VitalityCash/VitalityCash/VitalityCash.Web/wwwroot/js/jquery-3.6.0.min.js\" \"d:/My Projects/OCMS/OptimumCoaching.web/wwwroot/js/jquery-3.6.0.min.js\")",
+      "Bash(cp \"D:/Encoders/VitalityCash/VitalityCash/VitalityCash.Web/wwwroot/js/bootstrap-datepicker.js\" \"d:/My Projects/OCMS/OptimumCoaching.web/wwwroot/js/bootstrap-datepicker.js\")",
+      "Bash(dotnet build *)",
+      "Bash(dotnet publish *)",
+      "Bash(curl -s --max-time 10 http://localhost:5258/ -o /tmp/ocms_home.html)",
+      "Bash(curl -sL --max-time 10 -k http://localhost:5258/ -o /tmp/ocms_home.html)",
+      "Bash(curl -sL --max-time 10 -k http://localhost:5258/)",
+      "Bash(grep -n \"\\\\$\\\\.app\\\\s*=\\\\|jQuery.app\\\\s*=\" \"d:/My Projects/OCMS/OptimumCoaching.web/wwwroot/themeJS/js/core/app-menu.js\" \"d:/My Projects/OCMS/OptimumCoaching.web/wwwroot/themeJS/js/core/app.js\")",
+      "Bash(curl -sL --max-time 10 -k -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5258/themeJS/vendors/js/vendors.min.js)",
+      "Bash(curl -sL --max-time 10 -k -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5258/themeJS/js/core/app-menu.js)",
+      "Bash(curl -sL --max-time 10 -k -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5258/themeCSS/css/components.min.css)",
+      "Bash(curl -sL --max-time 10 -k -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5258/themeJS/js/core/app.js)",
+      "Bash(curl -sL --max-time 5 -k -o /dev/null -w \"%{http_code}\\\\n\" \"http://localhost:5258/OptimumCoaching.web.styles.css\")",
+      "Bash(grep -rE \"^\\\\s*head\\\\s*\\\\{|head\\\\{font-family|\\\\\\\\btitle\\\\s*\\\\\\\\{\" \"d:/My Projects/OCMS/OptimumCoaching.web/wwwroot/themeCSS\")",
+      "Bash(tasklist)",
+      "Bash(dotnet tool *)",
+      "Bash(dotnet ef *)",
+      "Bash(dotnet dev-certs *)",
+      "Bash(curl -s -o /dev/null -w \"HTTP  : %{http_code}\\\\n\" http://localhost:5258/)",
+      "Bash(curl -sk -o /dev/null -w \"HTTPS : %{http_code}\\\\n\" https://localhost:7037/)",
+      "Bash(taskkill /PID 19528 /F)",
+      "PowerShell(Stop-Process -Id 19528 -Force)"
+    ]
+  }
+}

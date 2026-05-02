@@ -1,0 +1,104 @@
+@model System.Security.Principal.IIdentity
+@inject OptimumCoaching.service.IStudentService StudentSvc
+@inject OptimumCoaching.service.IGuardianService GuardianSvc
+@inject OptimumCoaching.service.ITeacherService TeacherSvc
+@{
+    var isAdminArea = Model != null && Model.IsAuthenticated &&
+        (Model.HasRole(Roles.Admin) || Model.HasRole(Roles.SuperAdmin) || Model.HasRole(Roles.Dev));
+
+    var hasDomainProfile = false;
+    var pendingStudent = false;
+    if (Model != null && Model.IsAuthenticated && !isAdminArea)
+    {
+        Guid.TryParse(Model.Id(), out var uid);
+        if (uid != Guid.Empty)
+        {
+            var s = await StudentSvc.GetByUserIdAsync(uid);
+            if (s != null)
+            {
+                hasDomainProfile = true;
+                pendingStudent = s.ApprovalStatus != OptimumCoaching.core.StudentApprovalStatus.Approved;
+            }
+            else if (await GuardianSvc.GetByUserIdAsync(uid) != null) hasDomainProfile = true;
+            else if (await TeacherSvc.GetByUserIdAsync(uid) != null) hasDomainProfile = true;
+        }
+    }
+}
+<div class="main-menu menu-fixed menu-dark menu-accordion menu-shadow" data-scroll-to-active="true">
+    <div class="main-menu-content">
+        <ul class="navigation navigation-main" id="main-menu-navigation" data-menu="menu-navigation">
+            <li class="nav-item">
+                <a href="@Url.Action("Index", "Home", new { area = "" })">
+                    <i class="fa fa-home"></i>
+                    <span class="menu-title" data-i18n="">Home</span>
+                </a>
+            </li>
+
+            @if (Model != null && Model.IsAuthenticated)
+            {
+                <li class="nav-item">
+                    <a href="@Url.Action("Dashboard", "Home", new { area = "" })">
+                        <i class="fa fa-tachometer"></i>
+                        <span class="menu-title" data-i18n="">Dashboard</span>
+                    </a>
+                </li>
+
+                @if (!isAdminArea && !hasDomainProfile)
+                {
+                    <li class="nav-item">
+                        <a href="@Url.Action("Index", "StudentRegistration")">
+                            <i class="fa fa-id-card"></i>
+                            <span class="menu-title" data-i18n="">Complete Profile</span>
+                        </a>
+                    </li>
+                }
+                else if (!isAdminArea && pendingStudent)
+                {
+                    <li class="nav-item">
+                        <a href="@Url.Action("Status", "StudentRegistration")">
+                            <i class="fa fa-hourglass-half"></i>
+                            <span class="menu-title" data-i18n="">Registration Status</span>
+                        </a>
+                    </li>
+                }
+
+                @if (isAdminArea)
+                {
+                    <li class="nav-item">
+                        <a href="#">
+                            <i class="ft-user"></i><span class="menu-title" data-i18n="">User Settings</span>
+                        </a>
+                        <ul class="menu-content">
+                            <li>
+                                <a class="menu-item" asp-area="Admin" asp-controller="Users" asp-action="Index">Users</a>
+                            </li>
+                            @if (Model.HasRole(Roles.SuperAdmin) || Model.HasRole(Roles.Dev))
+                            {
+                                <li>
+                                    <a class="menu-item" asp-area="Admin" asp-controller="Roles" asp-action="Index">Roles</a>
+                                </li>
+                                <li>
+                                    <a class="menu-item" asp-area="Admin" asp-controller="Permissions" asp-action="Index">Permissions</a>
+                                </li>
+                            }
+                        </ul>
+                    </li>
+                }
+
+                <li class="nav-item">
+                    <a href="@Url.Action("ChangePassword", "Account", new { area = "Identity" })">
+                        <i class="ft-lock"></i>
+                        <span class="menu-title" data-i18n="">Change Password</span>
+                    </a>
+                </li>
+            }
+
+            <li class="nav-item">
+                <a href="@Url.Action("Privacy", "Home", new { area = "" })">
+                    <i class="ft-shield"></i>
+                    <span class="menu-title" data-i18n="">Privacy</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>

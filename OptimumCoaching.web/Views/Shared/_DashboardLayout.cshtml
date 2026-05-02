@@ -1,15 +1,12 @@
 @{
     Layout = "_Layout";
-    ViewData["UseDashboardLayout"] = true;
 }
 
-<div class="dashboard-shell" id="dashboardShell">
-    @await Html.PartialAsync("_DashboardSidebar")
+@RenderBody()
 
-    <div class="dashboard-content">
-        @RenderBody()
-    </div>
-</div>
+@section Styles {
+    @await RenderSectionAsync("Styles", required: false)
+}
 
 @section Scripts {
     @await RenderSectionAsync("Scripts", required: false)

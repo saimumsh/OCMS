@@ -1,0 +1,58 @@
+@model RejectStudentViewModel
+@{
+    ViewData["Title"] = "Reject Student";
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-md-9 col-12 mb-1">
+        <h3 class="content-header-title mb-0">Reject Student</h3>
+        <div class="row breadcrumbs-top">
+            <div class="breadcrumb-wrapper col-12">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Students</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Pending">Pending</a></li>
+                    <li class="breadcrumb-item active">Reject</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section id="reject-student">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                    <h4 class="card-title mb-0">Reject @Model.FullName</h4>
+                </div>
+                <form method="post" asp-action="Reject">
+                    @Html.AntiForgeryToken()
+                    <input asp-for="Id" type="hidden" />
+                    <input asp-for="FullName" type="hidden" />
+                    <div class="card-body">
+                        <p class="text-muted">
+                            The student record will be marked <strong>Rejected</strong>.
+                            The reason below is stored on the record for future reference.
+                        </p>
+                        <div class="form-group">
+                            <label asp-for="Reason" class="label-control"></label>
+                            <textarea asp-for="Reason" class="form-control" rows="3"
+                                      placeholder="Optional reason..."></textarea>
+                            <span asp-validation-for="Reason" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="card-footer text-right">
+                        <a class="btn btn-custom-default btn-medium mr-1" asp-action="Pending">
+                            <i class="fa fa-arrow-left"></i> Back
+                        </a>
+                        <button type="submit" class="btn btn-warning btn-medium">
+                            <i class="fa fa-times"></i> Reject Student
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

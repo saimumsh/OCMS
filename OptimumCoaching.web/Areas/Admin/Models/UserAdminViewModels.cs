@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using OptimumCoaching.core;
 using System.ComponentModel.DataAnnotations;
 
@@ -8,6 +9,7 @@ namespace OptimumCoaching.web.Areas.Admin.Models
         public Guid Id { get; set; }
         public string FullName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
+        public string? ImageUrl { get; set; }
         public bool IsActive { get; set; }
         public ApplicationUserStatus Status { get; set; }
         public IList<string> Roles { get; set; } = new List<string>();
@@ -24,6 +26,9 @@ namespace OptimumCoaching.web.Areas.Admin.Models
         [Required, DataType(DataType.Password), MinLength(5)]
         public string Password { get; set; } = string.Empty;
 
+        [Display(Name = "Profile Picture")]
+        public IFormFile? Image { get; set; }
+
         public List<string> SelectedRoles { get; set; } = new();
         public IList<string> AllRoles { get; set; } = new List<string>();
     }
@@ -39,6 +44,12 @@ namespace OptimumCoaching.web.Areas.Admin.Models
 
         public bool IsActive { get; set; }
         public ApplicationUserStatus Status { get; set; }
+
+        [Display(Name = "Profile Picture")]
+        public IFormFile? Image { get; set; }
+
+        public string? ImageUrl { get; set; }
+        public bool RemoveImage { get; set; }
 
         public List<string> SelectedRoles { get; set; } = new();
         public IList<string> AllRoles { get; set; } = new List<string>();

@@ -1,0 +1,53 @@
+@model StudentFormViewModel
+@{
+    ViewData["Title"] = "Edit Student";
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-md-9 col-12 mb-1">
+        <h3 class="content-header-title mb-0">Edit Student</h3>
+        <div class="row breadcrumbs-top">
+            <div class="breadcrumb-wrapper col-12">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Students</a></li>
+                    <li class="breadcrumb-item active">@Model.FullName</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section id="student-edit">
+    <form method="post" asp-action="Edit" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <partial name="_StudentForm" model="Model" />
+    </form>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <datalist id="academicGroupSuggestions">
+        <option value="Science"></option>
+        <option value="Arts"></option>
+        <option value="Commerce"></option>
+        <option value="Computer"></option>
+        <option value="Electrical"></option>
+        <option value="Electronics"></option>
+        <option value="Civil"></option>
+        <option value="Mechanical"></option>
+    </datalist>
+    <script>
+        function previewStudentPhoto(input) {
+            var preview = document.getElementById('studentPhotoPreview');
+            if (input && input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function (e) { preview.src = e.target.result; };
+                reader.readAsDataURL(input.files[0]);
+                var remove = document.getElementById('RemoveImage');
+                if (remove) remove.checked = false;
+            }
+        }
+    </script>
+    <partial name="_AcademicRecordsScript" />
+    <partial name="_StudentBatchFilterScript" />
+}

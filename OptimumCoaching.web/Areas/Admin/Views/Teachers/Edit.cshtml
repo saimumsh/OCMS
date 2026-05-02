@@ -1,0 +1,41 @@
+@model TeacherFormViewModel
+@{
+    ViewData["Title"] = "Edit Teacher";
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-md-9 col-12 mb-1">
+        <h3 class="content-header-title mb-0">Edit Teacher</h3>
+        <div class="row breadcrumbs-top">
+            <div class="breadcrumb-wrapper col-12">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Teachers</a></li>
+                    <li class="breadcrumb-item active">@Model.FullName</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section id="teacher-edit">
+    <form method="post" asp-action="Edit" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <partial name="_TeacherForm" model="Model" />
+    </form>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function previewTeacherPhoto(input) {
+            var preview = document.getElementById('teacherPhotoPreview');
+            if (input && input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function (e) { preview.src = e.target.result; };
+                reader.readAsDataURL(input.files[0]);
+                var remove = document.getElementById('RemoveImage');
+                if (remove) remove.checked = false;
+            }
+        }
+    </script>
+}

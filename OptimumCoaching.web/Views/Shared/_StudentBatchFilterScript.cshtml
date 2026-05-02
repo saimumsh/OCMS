@@ -1,0 +1,40 @@
+@* Filters the Batch dropdown to only show batches under the selected Department. *@
+<script>
+    (function () {
+        var dept = document.getElementById('StudentDepartmentSelect');
+        var batch = document.getElementById('StudentBatchSelect');
+        if (!dept || !batch) return;
+
+        var allOptions = Array.prototype.slice.call(batch.options).map(function (o) {
+            return { value: o.value, text: o.text, dept: o.getAttribute('data-department') || '', selected: o.selected };
+        });
+        var initial = batch.value;
+
+        function rebuild() {
+            var d = dept.value;
+            // keep the "Unassigned" placeholder + only batches in this department
+            batch.innerHTML = '';
+            allOptions.forEach(function (o) {
+                if (!o.value || !d || o.dept === d) {
+                    var opt = document.createElement('option');
+                    opt.value = o.value;
+                    opt.textContent = o.text;
+                    if (o.dept) opt.setAttribute('data-department', o.dept);
+                    batch.appendChild(opt);
+                }
+            });
+            // restore selection if the previously-selected batch is still valid
+            if (initial && Array.prototype.some.call(batch.options, function (o) { return o.value === initial; })) {
+                batch.value = initial;
+            } else {
+                batch.value = '';
+            }
+        }
+
+        dept.addEventListener('change', function () {
+            initial = batch.value;
+            rebuild();
+        });
+        rebuild();
+    })();
+</script>
