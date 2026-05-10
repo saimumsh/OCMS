@@ -1,0 +1,105 @@
+@model SubjectFormViewModel
+@{
+    var isEdit = Model.Id != Guid.Empty;
+}
+
+<input asp-for="Id" type="hidden" />
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                <h4 class="card-title mb-0">@(isEdit ? "Edit Subject" : "New Subject")</h4>
+            </div>
+            <div class="card-body">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-1"></div>
+
+                <div class="form-group row">
+                    <label asp-for="DepartmentId" class="col-sm-3 col-form-label label-control"></label>
+                    <div class="col-sm-9">
+                        <select asp-for="DepartmentId" id="DepartmentSelect" class="form-control"
+                                asp-items="@Model.DepartmentOptions">
+                            <option value="">— None —</option>
+                        </select>
+                        <span asp-validation-for="DepartmentId" class="text-danger"></span>
+                        <small class="text-muted">Optional. Pick the department this subject belongs to.</small>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label asp-for="ClassId" class="col-sm-3 col-form-label label-control"></label>
+                    <div class="col-sm-9">
+                        <select asp-for="ClassId" id="ClassSelect" class="form-control"
+                                asp-items="@Model.ClassOptions">
+                            <option value="">— None —</option>
+                        </select>
+                        <span asp-validation-for="ClassId" class="text-danger"></span>
+                        <small class="text-muted">Optional. Filtered by the selected department.</small>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label asp-for="Name" class="col-sm-3 col-form-label label-control required"></label>
+                    <div class="col-sm-9">
+                        <input asp-for="Name" class="form-control" placeholder="e.g. Mathematics, Physics, Accounting" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label asp-for="Code" class="col-sm-3 col-form-label label-control"></label>
+                    <div class="col-sm-9">
+                        <input asp-for="Code" class="form-control" placeholder="Optional short code, e.g. MATH-101" />
+                        <span asp-validation-for="Code" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label asp-for="Description" class="col-sm-3 col-form-label label-control"></label>
+                    <div class="col-sm-9">
+                        <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer text-right">
+                <a class="btn btn-custom-default btn-medium mr-1" asp-action="Index">
+                    <i class="fa fa-times"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-custom btn-medium">
+                    <i class="fa fa-save"></i> @(isEdit ? "Save Changes" : "Create Subject")
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // When the user picks a department, refresh the class dropdown via the
+    // controller's JSON endpoint (so the list stays in sync with the chosen dept).
+    (function () {
+        var dept = document.getElementById('DepartmentSelect');
+        var cls = document.getElementById('ClassSelect');
+        if (!dept || !cls) return;
+
+        var url = '@Url.Action("ClassesForDepartment", "Subjects", new { area = "Admin" })';
+        var initialClassId = '@(Model.ClassId?.ToString() ?? "")';
+
+        dept.addEventListener('change', function () {
+            var query = dept.value ? ('?departmentId=' + encodeURIComponent(dept.value)) : '';
+            fetch(url + query, { headers: { 'Accept': 'application/json' } })
+                .then(function (r) { return r.ok ? r.json() : []; })
+                .then(function (items) {
+                    var current = cls.value;
+                    cls.innerHTML = '<option value="">— None —</option>';
+                    items.forEach(function (it) {
+                        var opt = document.createElement('option');
+                        opt.value = it.value;
+                        opt.textContent = it.text;
+                        if (it.value === current || it.value === initialClassId) opt.selected = true;
+                        cls.appendChild(opt);
+                    });
+                })
+                .catch(function () { /* leave the existing options as-is */ });
+        });
+    })();
+</script>

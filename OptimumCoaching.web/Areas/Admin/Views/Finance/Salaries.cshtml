@@ -1,0 +1,148 @@
+@model IList<OptimumCoaching.core.TeacherSalaryPayment>
+@using Microsoft.AspNetCore.Mvc.Rendering
+@using OptimumCoaching.core
+@{
+    ViewData["Title"] = "Teacher Salaries";
+    var teacherOptions = (IList<SelectListItem>)ViewBag.TeacherOptions;
+    var year = (int)(ViewBag.ActiveYear ?? DateTime.UtcNow.Year);
+    var month = ViewBag.ActiveMonth as int?;
+    var canRecord = User.Identity != null && User.Identity.HasPermission(Permissions.Finance.RecordSalary);
+    var methods = Enum.GetValues<PaymentMethod>();
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-md-7 col-12 mb-1">
+        <h3 class="content-header-title mb-0"><i class="fa fa-user-md mr-1 text-primary"></i> Teacher Salaries</h3>
+    </div>
+    <div class="content-header-right col-md-5 col-12 mb-1 text-md-right">
+        <form method="get" class="form-inline justify-content-md-end mb-1 d-inline-block">
+            <input type="number" name="year" value="@year" min="2020" class="form-control form-control-sm mr-1" style="width:100px" />
+            <select name="month" class="form-control form-control-sm" onchange="this.form.submit()">
+                <option value="">All months</option>
+                @for (int m = 1; m <= 12; m++)
+                {
+                    var label = new DateTime(2000, m, 1).ToString("MMM");
+                    if (month == m) { <option value="@m" selected>@label</option> }
+                    else { <option value="@m">@label</option> }
+                }
+            </select>
+        </form>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null) { <div class="alert alert-success">@TempData["SuccessMessage"]</div> }
+@if (TempData["ErrorMessage"]   != null) { <div class="alert alert-danger">@TempData["ErrorMessage"]</div> }
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                <h4 class="card-title mb-0">Salary payments <span class="badge badge-pill badge-secondary ml-1">@Model.Count</span></h4>
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.Any())
+                { <p class="text-muted text-center py-3 mb-0">No salary payments recorded for this period.</p> }
+                else
+                {
+                    <table class="table table-condensed mb-0 user-table">
+                        <thead>
+                            <tr>
+                                <th>Teacher</th>
+                                <th>Period</th>
+                                <th class="text-right">Amount</th>
+                                <th>Paid on</th>
+                                <th>Method</th>
+                                <th>Reference</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var s in Model)
+                            {
+                                <tr>
+                                    <td class="align-middle">
+                                        <strong>@s.Teacher.FullName</strong>
+                                        @if (!string.IsNullOrWhiteSpace(s.Note))
+                                        { <div class="small text-muted">@s.Note</div> }
+                                    </td>
+                                    <td class="align-middle">@s.PeriodMonth.ToString("MMM yyyy")</td>
+                                    <td class="align-middle text-right"><strong>@s.Amount.ToString("N2")</strong></td>
+                                    <td class="align-middle">@s.PaidOn.ToString("dd MMM yyyy")</td>
+                                    <td class="align-middle"><span class="badge badge-pill badge-light">@s.Method</span></td>
+                                    <td class="align-middle">@(s.Reference ?? "—")</td>
+                                    <td class="align-middle text-right">
+                                        @if (canRecord)
+                                        {
+                                            <form method="post" asp-action="DeleteSalary" asp-route-id="@s.Id" class="d-inline" onsubmit="return confirm('Remove this payment?');">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fa fa-times"></i></button>
+                                            </form>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+
+    @if (canRecord)
+    {
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                    <h4 class="card-title mb-0">Record salary</h4>
+                </div>
+                <form method="post" asp-action="RecordSalary">
+                    @Html.AntiForgeryToken()
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label>Teacher</label>
+                            <select name="teacherId" class="form-control" required>
+                                <option value="">— Choose teacher —</option>
+                                @foreach (var o in teacherOptions) { <option value="@o.Value">@o.Text</option> }
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-7">
+                                <label>Pay period (month)</label>
+                                <input name="periodMonth" type="month" class="form-control"
+                                       value="@DateTime.UtcNow.ToString("yyyy-MM")" required />
+                            </div>
+                            <div class="form-group col-5">
+                                <label>Paid on</label>
+                                <input name="paidOn" type="date" class="form-control"
+                                       value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" required />
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-6">
+                                <label>Amount</label>
+                                <input name="amount" type="number" step="0.01" min="0.01" class="form-control" required />
+                            </div>
+                            <div class="form-group col-6">
+                                <label>Method</label>
+                                <select name="method" class="form-control">
+                                    @foreach (var m in methods) { <option value="@((int)m)">@m</option> }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Reference</label>
+                            <input name="reference" class="form-control" placeholder="Transaction id / cheque #" />
+                        </div>
+                        <div class="form-group">
+                            <label>Note</label>
+                            <textarea name="note" class="form-control" rows="2"></textarea>
+                        </div>
+                    </div>
+                    <div class="card-footer text-right">
+                        <button type="submit" class="btn btn-custom"><i class="fa fa-save"></i> Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
+</div>

@@ -1,0 +1,188 @@
+@model IList<OptimumCoaching.core.StudentFeeAccount>
+@using Microsoft.AspNetCore.Mvc.Rendering
+@using OptimumCoaching.core
+@{
+    ViewData["Title"] = "Student Fees";
+    var batchOptions = (IList<SelectListItem>)ViewBag.BatchOptions;
+    var activeBatchId = ViewBag.ActiveBatchId as Guid?;
+    var batch = ViewBag.Batch as Batch;
+    var canRecord = User.Identity != null && User.Identity.HasPermission(Permissions.Finance.RecordPayment);
+    var canManage = User.Identity != null && User.Identity.HasPermission(Permissions.Finance.ManageFees);
+    var methods = Enum.GetValues<PaymentMethod>();
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-md-7 col-12 mb-1">
+        <h3 class="content-header-title mb-0"><i class="fa fa-graduation-cap mr-1 text-info"></i> Student Fees</h3>
+        @if (batch != null)
+        {
+            <small class="text-muted">
+                @batch.Name · Course fee <strong>@batch.CourseFee.ToString("N0")</strong>
+                · Min enrollment <strong>@batch.MinimumEnrollment.ToString("N0")</strong>
+                @if (batch.FullPaymentDiscountPercent > 0)
+                { <text> · Full-pay discount <strong>@batch.FullPaymentDiscountPercent%</strong></text> }
+            </small>
+        }
+    </div>
+    <div class="content-header-right col-md-5 col-12 mb-1 text-md-right">
+        <form method="get" class="form-inline justify-content-md-end mb-1 d-inline-block">
+            <select name="batchId" class="form-control form-control-sm" onchange="this.form.submit()">
+                <option value="">— Choose batch —</option>
+                @foreach (var o in batchOptions)
+                {
+                    if (Guid.TryParse(o.Value, out var g) && activeBatchId == g)
+                    { <option value="@o.Value" selected>@o.Text</option> }
+                    else
+                    { <option value="@o.Value">@o.Text</option> }
+                }
+            </select>
+        </form>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null) { <div class="alert alert-success">@TempData["SuccessMessage"]</div> }
+@if (TempData["ErrorMessage"]   != null) { <div class="alert alert-danger">@TempData["ErrorMessage"]</div> }
+
+@if (!activeBatchId.HasValue)
+{
+    <div class="card"><div class="card-body text-center py-3"><p class="text-muted mb-0">Pick a batch to manage student fees.</p></div></div>
+    return;
+}
+
+@if (!Model.Any())
+{
+    <div class="card"><div class="card-body text-center py-3"><p class="text-muted mb-0">No fee accounts in this batch yet. Accounts are created automatically when a student is approved + assigned to a batch.</p></div></div>
+}
+else
+{
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-condensed mb-0 user-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Student</th>
+                            <th class="text-right">Final fee</th>
+                            <th class="text-right">Paid</th>
+                            <th class="text-right">Balance</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{ var sn = 0; }
+                        @foreach (var a in Model)
+                        {
+                            sn++;
+                            var statusBadge = a.Status switch
+                            {
+                                FeeAccountStatus.PaidInFull    => ("badge-success",  "Paid"),
+                                FeeAccountStatus.PartiallyPaid => ("badge-info",     "Partial"),
+                                FeeAccountStatus.Overdue       => ("badge-danger",   "Overdue"),
+                                FeeAccountStatus.Waived        => ("badge-secondary","Waived"),
+                                _                              => ("badge-warning",  "Unpaid")
+                            };
+                            <tr>
+                                <td class="align-middle">@sn</td>
+                                <td class="align-middle">
+                                    <strong>@a.Student.FullName</strong>
+                                    @if (!string.IsNullOrWhiteSpace(a.Student.StudentCode))
+                                    { <div class="small text-muted">@a.Student.StudentCode</div> }
+                                </td>
+                                <td class="align-middle text-right">@a.FinalFee.ToString("N0")</td>
+                                <td class="align-middle text-right">@a.AmountPaid.ToString("N0")</td>
+                                <td class="align-middle text-right"><strong>@a.Balance.ToString("N0")</strong></td>
+                                <td class="align-middle text-center">
+                                    <span class="badge badge-pill @statusBadge.Item1">@statusBadge.Item2</span>
+                                </td>
+                                <td class="align-middle text-right">
+                                    @if (canRecord && a.Balance > 0)
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-success"
+                                                data-toggle="collapse" data-target="#pay-@a.Id"
+                                                title="Record payment">
+                                            <i class="fa fa-money"></i>
+                                        </button>
+                                    }
+                                    @if (canManage)
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-warning"
+                                                data-toggle="collapse" data-target="#disc-@a.Id"
+                                                title="Apply discount">
+                                            <i class="fa fa-percent"></i>
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                            @if (canRecord && a.Balance > 0)
+                            {
+                                <tr class="collapse" id="pay-@a.Id">
+                                    <td colspan="7" class="p-2 bg-light">
+                                        <form method="post" asp-action="RecordPayment" class="form-inline align-items-end">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="accountId" value="@a.Id" />
+                                            <input type="hidden" name="batchId"   value="@activeBatchId" />
+                                            <div class="form-group mr-1 mb-1">
+                                                <label class="d-block small">Amount</label>
+                                                <input name="amount" type="number" step="0.01" min="0.01" max="@a.Balance"
+                                                       class="form-control form-control-sm" required style="width:120px" />
+                                            </div>
+                                            <div class="form-group mr-1 mb-1">
+                                                <label class="d-block small">Date</label>
+                                                <input name="paidOn" type="date" class="form-control form-control-sm"
+                                                       value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" required />
+                                            </div>
+                                            <div class="form-group mr-1 mb-1">
+                                                <label class="d-block small">Method</label>
+                                                <select name="method" class="form-control form-control-sm">
+                                                    @foreach (var m in methods) { <option value="@((int)m)">@m</option> }
+                                                </select>
+                                            </div>
+                                            <div class="form-group mr-1 mb-1">
+                                                <label class="d-block small">Receipt #</label>
+                                                <input name="receiptNumber" class="form-control form-control-sm" />
+                                            </div>
+                                            <div class="form-group mr-1 mb-1 flex-grow-1">
+                                                <label class="d-block small">Note</label>
+                                                <input name="note" class="form-control form-control-sm" />
+                                            </div>
+                                            <button type="submit" class="btn btn-custom btn-sm mb-1">
+                                                <i class="fa fa-check"></i> Record
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                            @if (canManage)
+                            {
+                                <tr class="collapse" id="disc-@a.Id">
+                                    <td colspan="7" class="p-2 bg-light">
+                                        <form method="post" asp-action="ApplyDiscount" class="form-inline align-items-end">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="accountId" value="@a.Id" />
+                                            <input type="hidden" name="batchId"   value="@activeBatchId" />
+                                            <div class="form-group mr-1 mb-1">
+                                                <label class="d-block small">Discount amount</label>
+                                                <input name="discountAmount" type="number" step="0.01" min="0"
+                                                       value="@a.DiscountAmount" class="form-control form-control-sm" required style="width:140px" />
+                                            </div>
+                                            <div class="form-group mr-1 mb-1 flex-grow-1">
+                                                <label class="d-block small">Reason</label>
+                                                <input name="reason" value="@a.DiscountReason" class="form-control form-control-sm"
+                                                       placeholder="e.g. Result-based discount, scholarship, …" />
+                                            </div>
+                                            <button type="submit" class="btn btn-warning btn-sm mb-1">
+                                                <i class="fa fa-save"></i> Apply
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}

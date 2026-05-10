@@ -1,0 +1,102 @@
+@model NoticeFormViewModel
+@{
+    var isEdit = Model.Id != Guid.Empty;
+    // When the poster is restricted to Students (Teacher role), show a static
+    // pill instead of the full audience dropdown — and bind a hidden input so
+    // model binding still receives the value.
+    var allAudiences = Html.GetEnumSelectList<NoticeAudience>();
+}
+
+<input asp-for="Id" type="hidden" />
+
+<div class="row">
+    <div class="col-lg-9">
+        <div class="card">
+            <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                <h4 class="card-title mb-0">@(isEdit ? "Edit Notice" : "New Notice")</h4>
+            </div>
+            <div class="card-body">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-1"></div>
+
+                <div class="form-group row">
+                    <label asp-for="Title" class="col-sm-3 col-form-label label-control required"></label>
+                    <div class="col-sm-9">
+                        <input asp-for="Title" class="form-control" placeholder="Short, descriptive title" />
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label asp-for="Body" class="col-sm-3 col-form-label label-control required"></label>
+                    <div class="col-sm-9">
+                        <textarea asp-for="Body" class="form-control" rows="6"
+                                  placeholder="Notice details. Line breaks are preserved when displayed."></textarea>
+                        <span asp-validation-for="Body" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label asp-for="Audience" class="col-sm-3 col-form-label label-control required"></label>
+                    <div class="col-sm-9">
+                        @if (Model.RestrictAudienceToStudents)
+                        {
+                            <input type="hidden" asp-for="Audience" value="@((int)NoticeAudience.Students)" />
+                            <span class="badge badge-pill badge-info p-2">
+                                <i class="fa fa-users"></i> Students
+                            </span>
+                            <small class="text-muted d-block mt-1">
+                                Teachers can only post notices to students.
+                            </small>
+                        }
+                        else
+                        {
+                            <select asp-for="Audience" class="form-control" asp-items="@allAudiences"></select>
+                            <small class="text-muted">
+                                <strong>Students</strong>: only students see it.
+                                <strong>Teachers</strong>: only teachers see it.
+                                <strong>Both</strong>: visible to all students and teachers.
+                            </small>
+                        }
+                        <span asp-validation-for="Audience" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label asp-for="DepartmentId" class="col-sm-3 col-form-label label-control"></label>
+                    <div class="col-sm-9">
+                        <select asp-for="DepartmentId" class="form-control" asp-items="@Model.DepartmentOptions">
+                            <option value="">— All departments —</option>
+                        </select>
+                        <small class="text-muted">Limit visibility to one department, or leave empty to broadcast.</small>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <label asp-for="ExpiresAt" class="col-sm-3 col-form-label label-control"></label>
+                    <div class="col-sm-9">
+                        <input asp-for="ExpiresAt" class="form-control" type="date"
+                               value="@(Model.ExpiresAt?.ToString("yyyy-MM-dd"))" />
+                        <small class="text-muted">After this date the notice stops appearing on receivers' dashboards.</small>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-sm-9 offset-sm-3">
+                        <div class="form-check">
+                            <input asp-for="IsPinned" class="form-check-input" />
+                            <label asp-for="IsPinned" class="form-check-label">Pin to top of the notice list</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer text-right">
+                <a class="btn btn-custom-default btn-medium mr-1" asp-action="Index">
+                    <i class="fa fa-times"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-custom btn-medium">
+                    <i class="fa fa-paper-plane"></i> @(isEdit ? "Save Changes" : "Post Notice")
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

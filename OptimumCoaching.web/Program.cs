@@ -40,10 +40,23 @@ namespace OptimumCoaching.web
             // Domain services
             services.AddScoped<ITeacherService, TeacherService>();
             services.AddScoped<IStudentService, StudentService>();
+            services.AddScoped<IStudentCodeService, StudentCodeService>();
             services.AddScoped<IGuardianService, GuardianService>();
             services.AddScoped<IDepartmentService, DepartmentService>();
+            services.AddScoped<ISubjectService, SubjectService>();
             services.AddScoped<IBatchService, BatchService>();
             services.AddScoped<IBatchUpdateService, BatchUpdateService>();
+            services.AddScoped<INoticeService, NoticeService>();
+            services.AddScoped<IMessagingService, MessagingService>();
+            services.AddScoped<IExamService, ExamService>();
+            services.AddScoped<IExamResultService, ExamResultService>();
+            services.AddScoped<ITeacherFeedbackService, TeacherFeedbackService>();
+            services.AddScoped<ITopicService, TopicService>();
+            services.AddScoped<IClassMaterialService, ClassMaterialService>();
+            services.AddScoped<IClassRoutineService, ClassRoutineService>();
+            services.AddScoped<IBatchTeacherService, BatchTeacherService>();
+            services.AddScoped<IFeeService, FeeService>();
+            services.AddScoped<ISalaryService, SalaryService>();
 
             // Permission-based authorization (VitalityCash-style policy provider)
             services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
@@ -79,7 +92,7 @@ namespace OptimumCoaching.web
                     ? "default-token-key-please-change"
                     : appSettings.TokenSecretKey);
 
-            services.AddAuthentication()
+            var authBuilder = services.AddAuthentication()
                 .AddJwtBearer(options =>
                 {
                     options.RequireHttpsMetadata = false;
@@ -92,6 +105,24 @@ namespace OptimumCoaching.web
                         ValidateAudience = false
                     };
                 });
+
+            // Google OAuth — only register when both credentials are present so
+            // the app boots cleanly in environments where Google is not configured.
+            // Set Authentication:Google:ClientId / :ClientSecret in appsettings
+            // (or user-secrets) after creating an OAuth 2.0 client in Google Cloud
+            // Console with redirect URIs https://<host>/signin-google.
+            var googleClientId = configuration["Authentication:Google:ClientId"];
+            var googleClientSecret = configuration["Authentication:Google:ClientSecret"];
+            if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(googleClientSecret))
+            {
+                authBuilder.AddGoogle(options =>
+                {
+                    options.ClientId = googleClientId;
+                    options.ClientSecret = googleClientSecret;
+                    // Default callback path is /signin-google — matches the URI you
+                    // registered in Google Cloud Console.
+                });
+            }
 
             services.ConfigureApplicationCookie(options =>
             {
@@ -106,6 +137,12 @@ namespace OptimumCoaching.web
             var app = builder.Build();
 
             IdentitySeeder.SeedAsync(app.Services).GetAwaiter().GetResult();
+            // Dev-only: populate a medium dummy dataset for analysis. No-op in
+            // Production; idempotent (skipped if already seeded).
+            DummyDataSeeder.SeedAsync(
+                app.Services,
+                app.Environment,
+                app.Services.GetService<ILogger<Program>>()).GetAwaiter().GetResult();
 
             if (!app.Environment.IsDevelopment())
             {

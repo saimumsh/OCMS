@@ -1,0 +1,74 @@
+@{
+    ViewData["Title"] = "Finance";
+    var totalCollected   = (decimal)(ViewBag.TotalCollected ?? 0m);
+    var totalOutstanding = (decimal)(ViewBag.TotalOutstanding ?? 0m);
+    var totalSalaries30d = (decimal)(ViewBag.TotalSalaries30d ?? 0m);
+    var unpaidStudents   = (int)(ViewBag.UnpaidStudents ?? 0);
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-12 mb-1">
+        <h3 class="content-header-title mb-0"><i class="fa fa-money mr-1 text-success"></i> Finance</h3>
+        <small class="text-muted">Fee collection and salary payouts.</small>
+    </div>
+</div>
+
+<section class="oc-stats row">
+    <div class="col-6 col-md-3 mb-2">
+        <div class="oc-stat oc-stat--success">
+            <div class="oc-stat__icon"><i class="fa fa-arrow-down"></i></div>
+            <div>
+                <div class="oc-stat__value">@totalCollected.ToString("N0")</div>
+                <div class="oc-stat__label">Collected (all time)</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3 mb-2">
+        <div class="oc-stat oc-stat--warning">
+            <div class="oc-stat__icon"><i class="fa fa-clock-o"></i></div>
+            <div>
+                <div class="oc-stat__value">@totalOutstanding.ToString("N0")</div>
+                <div class="oc-stat__label">Outstanding</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3 mb-2">
+        <div class="oc-stat oc-stat--info">
+            <div class="oc-stat__icon"><i class="fa fa-arrow-up"></i></div>
+            <div>
+                <div class="oc-stat__value">@totalSalaries30d.ToString("N0")</div>
+                <div class="oc-stat__label">Salaries · 30d</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3 mb-2">
+        <div class="oc-stat oc-stat--primary">
+            <div class="oc-stat__icon"><i class="fa fa-users"></i></div>
+            <div>
+                <div class="oc-stat__value">@unpaidStudents</div>
+                <div class="oc-stat__label">Students with dues</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="row">
+    <div class="col-md-6 mb-2">
+        <div class="card">
+            <div class="card-body text-center">
+                <h4><i class="fa fa-graduation-cap text-info mr-1"></i> Student Fees</h4>
+                <p class="text-muted">Record fee payments, apply discounts, see who's behind.</p>
+                <a class="btn btn-custom" asp-action="StudentFees"><i class="fa fa-arrow-right"></i> Open</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-2">
+        <div class="card">
+            <div class="card-body text-center">
+                <h4><i class="fa fa-user-md text-primary mr-1"></i> Teacher Salaries</h4>
+                <p class="text-muted">Log monthly salary payouts and review history.</p>
+                <a class="btn btn-custom" asp-action="Salaries"><i class="fa fa-arrow-right"></i> Open</a>
+            </div>
+        </div>
+    </div>
+</div>

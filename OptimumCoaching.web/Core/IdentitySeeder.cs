@@ -15,7 +15,13 @@ namespace OptimumCoaching.web.Core
             var sp = scope.ServiceProvider;
 
             var db = sp.GetRequiredService<ApplicationDbContext>();
-            await db.Database.MigrateAsync();
+            // Production uses SQL Server (relational) and migrations. Tests
+            // swap in the EF InMemory provider, which doesn't support
+            // migrations — fall back to EnsureCreated there.
+            if (db.Database.IsRelational())
+                await db.Database.MigrateAsync();
+            else
+                await db.Database.EnsureCreatedAsync();
 
             var roleManager = sp.GetRequiredService<RoleManager<ApplicationRole>>();
             var userManager = sp.GetRequiredService<UserManager<ApplicationUser>>();
@@ -48,6 +54,9 @@ namespace OptimumCoaching.web.Core
                 Permissions.Departments.ListView,
                 Permissions.Departments.AddEdit,
                 Permissions.Departments.Delete,
+                Permissions.Subjects.ListView,
+                Permissions.Subjects.AddEdit,
+                Permissions.Subjects.Delete,
                 Permissions.Batches.ListView,
                 Permissions.Batches.AddEdit,
                 Permissions.Batches.Delete,
@@ -55,7 +64,47 @@ namespace OptimumCoaching.web.Core
                 Permissions.BatchUpdates.ListView,
                 Permissions.BatchUpdates.Post,
                 Permissions.BatchUpdates.Delete,
+                Permissions.Notices.ListView,
+                Permissions.Notices.AddEdit,
+                Permissions.Notices.Delete,
+                Permissions.Exams.ListView,
+                Permissions.Exams.AddEdit,
+                Permissions.Exams.Delete,
+                Permissions.Exams.Publish,
+                Permissions.Results.Grade,
+                Permissions.Results.Publish,
+                Permissions.TeacherReports.ListView,
+                Permissions.TeacherReports.Handle,
+                Permissions.Topics.ListView,
+                Permissions.Topics.AddEdit,
+                Permissions.Topics.Delete,
+                Permissions.Topics.AssignTeachers,
+                Permissions.Materials.ListView,
+                Permissions.Materials.Upload,
+                Permissions.Materials.Delete,
+                Permissions.Routine.ListView,
+                Permissions.Routine.AddEdit,
+                Permissions.Routine.Delete,
+                Permissions.Finance.ListView,
+                Permissions.Finance.ManageFees,
+                Permissions.Finance.RecordPayment,
+                Permissions.Finance.ViewSalaries,
+                Permissions.Finance.RecordSalary,
                 Permissions.Users.ListView,
+            });
+
+            // 2b-finance) Finance / Accounts role — focused on payments only.
+            await EnsureRolePermissionsAsync(db, roleManager, Roles.Finance, new[]
+            {
+                Permissions.Finance.ListView,
+                Permissions.Finance.ManageFees,
+                Permissions.Finance.RecordPayment,
+                Permissions.Finance.ViewSalaries,
+                Permissions.Finance.RecordSalary,
+                Permissions.Students.ListView,
+                Permissions.Teachers.ListView,
+                Permissions.Batches.ListView,
+                Permissions.Notices.ListView,
             });
 
             // 2b-cc) Course Coordinator role grants — manages batches & posts updates.
@@ -69,14 +118,33 @@ namespace OptimumCoaching.web.Core
                 Permissions.Students.ListView,
                 Permissions.Teachers.ListView,
                 Permissions.Departments.ListView,
+                Permissions.Subjects.ListView,
+                Permissions.Exams.ListView,
+                Permissions.Topics.ListView,
+                Permissions.Topics.AssignTeachers,
+                Permissions.Materials.ListView,
+                Permissions.Materials.Upload,
+                Permissions.Routine.ListView,
+                Permissions.Routine.AddEdit,
             });
 
-            // 2b-teacher) Teacher role grants — can post class updates for their batches.
+            // 2b-teacher) Teacher role grants — can post class updates and exams for their batches.
             await EnsureRolePermissionsAsync(db, roleManager, Roles.Teacher, new[]
             {
                 Permissions.Batches.ListView,
                 Permissions.BatchUpdates.ListView,
                 Permissions.BatchUpdates.Post,
+                Permissions.Notices.ListView,
+                Permissions.Notices.AddEdit,
+                Permissions.Exams.ListView,
+                Permissions.Exams.AddEdit,
+                Permissions.Exams.Publish,
+                Permissions.Results.Grade,
+                Permissions.Results.Publish,
+                Permissions.Topics.ListView,
+                Permissions.Materials.ListView,
+                Permissions.Materials.Upload,
+                Permissions.Routine.ListView,
             });
 
             // 2c) Default departments per stream

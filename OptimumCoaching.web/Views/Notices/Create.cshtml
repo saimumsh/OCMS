@@ -1,0 +1,27 @@
+@model NoticeFormViewModel
+@{
+    ViewData["Title"] = "Post Notice";
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-md-9 col-12 mb-1">
+        <h3 class="content-header-title mb-0">Post Notice</h3>
+        <div class="row breadcrumbs-top">
+            <div class="breadcrumb-wrapper col-12">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Notices</a></li>
+                    <li class="breadcrumb-item active">New</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section id="notice-create">
+    <form method="post" asp-action="Create">
+        @Html.AntiForgeryToken()
+        <partial name="_NoticeForm" model="Model" />
+    </form>
+</section>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

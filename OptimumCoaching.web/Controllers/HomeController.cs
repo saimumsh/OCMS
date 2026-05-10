@@ -2,7 +2,9 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using OptimumCoaching.core;
+using OptimumCoaching.repo;
 using OptimumCoaching.service;
 using OptimumCoaching.web.Models;
 
@@ -17,6 +19,14 @@ namespace OptimumCoaching.web.Controllers
         private readonly ITeacherService _teacherService;
         private readonly IBatchService _batchService;
         private readonly IBatchUpdateService _batchUpdateService;
+        private readonly INoticeService _noticeService;
+        private readonly IExamService _examService;
+        private readonly IExamResultService _examResultService;
+        private readonly ITeacherFeedbackService _feedbackService;
+        private readonly IClassMaterialService _materialService;
+        private readonly IClassRoutineService _routineService;
+        private readonly IFeeService _feeService;
+        private readonly ApplicationDbContext _db;
 
         public HomeController(
             ILogger<HomeController> logger,
@@ -25,7 +35,15 @@ namespace OptimumCoaching.web.Controllers
             IGuardianService guardianService,
             ITeacherService teacherService,
             IBatchService batchService,
-            IBatchUpdateService batchUpdateService)
+            IBatchUpdateService batchUpdateService,
+            INoticeService noticeService,
+            IExamService examService,
+            IExamResultService examResultService,
+            ITeacherFeedbackService feedbackService,
+            IClassMaterialService materialService,
+            IClassRoutineService routineService,
+            IFeeService feeService,
+            ApplicationDbContext db)
         {
             _logger = logger;
             _userManager = userManager;
@@ -34,6 +52,14 @@ namespace OptimumCoaching.web.Controllers
             _teacherService = teacherService;
             _batchService = batchService;
             _batchUpdateService = batchUpdateService;
+            _noticeService = noticeService;
+            _examService = examService;
+            _examResultService = examResultService;
+            _feedbackService = feedbackService;
+            _materialService = materialService;
+            _routineService = routineService;
+            _feeService = feeService;
+            _db = db;
         }
 
         [AllowAnonymous]
@@ -103,9 +129,99 @@ namespace OptimumCoaching.web.Controllers
                     vm.Batch = await _batchService.GetByIdAsync(asStudent.BatchId.Value);
                     vm.Updates = await _batchUpdateService.GetForBatchAsync(asStudent.BatchId.Value, take: 10);
                 }
+                vm.Notices = await _noticeService.GetForReceiverAsync(
+                    NoticeAudience.Students, asStudent.DepartmentId, take: 10);
+                vm.UpcomingExams = await _examService.GetUpcomingForStudentAsync(asStudent.Id, take: 5);
+                vm.MyResults = await _examResultService.GetForStudentAsync(asStudent.Id, publishedOnly: true);
+
+                if (asStudent.BatchId.HasValue)
+                {
+                    vm.Materials = (await _materialService.GetForBatchAsync(asStudent.BatchId.Value)).Take(8).ToList();
+                    vm.RoutineSlots = await _routineService.GetSlotsForBatchAsync(asStudent.BatchId.Value);
+                    vm.FeeAccount = await _feeService.GetAccountAsync(asStudent.Id, asStudent.BatchId.Value);
+                    vm.ExamAdmitEligible = await _feeService.IsExamAdmitEligibleAsync(asStudent.Id, asStudent.BatchId.Value);
+                }
+            }
+            else
+            {
+                var asTeacher = await _teacherService.GetByUserIdAsync(user.Id);
+                if (asTeacher != null)
+                {
+                    vm.Teacher = asTeacher;
+                    vm.Notices = await _noticeService.GetForReceiverAsync(
+                        NoticeAudience.Teachers, departmentId: null, take: 10);
+                    await PopulateTeacherDashboardAsync(vm, asTeacher.Id);
+                    var rating = await _feedbackService.GetRatingSummaryAsync(asTeacher.Id);
+                    vm.RatingSnapshot = new TeacherRatingSnapshot
+                    {
+                        Average = rating.AverageRating,
+                        Count = rating.Count
+                    };
+                }
             }
 
             return View(vm);
+        }
+
+        // Loads aggregates that power the teacher dashboard tiles + batch list.
+        private async Task PopulateTeacherDashboardAsync(StudentDashboardViewModel vm, Guid teacherId)
+        {
+            var since = DateTime.UtcNow.AddDays(-30);
+
+            // Include batches where this teacher is either the lead OR a co-teacher.
+            var coTaughtIds = _db.BatchTeachers
+                .Where(bt => !bt.IsDeleted && bt.TeacherId == teacherId)
+                .Select(bt => bt.BatchId);
+
+            var batches = await _db.Batches
+                .Where(b => !b.IsDeleted && (b.TeacherId == teacherId || coTaughtIds.Contains(b.Id)))
+                .Include(b => b.Department)
+                .Include(b => b.Subject)
+                .Include(b => b.Class)
+                .OrderByDescending(b => b.StartDate)
+                .ToListAsync();
+
+            var batchIds = batches.Select(b => b.Id).ToList();
+
+            var enrollmentByBatch = await _db.Students
+                .Where(s => !s.IsDeleted && s.BatchId.HasValue && batchIds.Contains(s.BatchId!.Value))
+                .GroupBy(s => s.BatchId!.Value)
+                .Select(g => new { BatchId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.BatchId, x => x.Count);
+
+            var recentByBatch = await _db.BatchUpdates
+                .Where(u => !u.IsDeleted && batchIds.Contains(u.BatchId) && u.PostedAt >= since)
+                .GroupBy(u => u.BatchId)
+                .Select(g => new { BatchId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.BatchId, x => x.Count);
+
+            vm.TeacherBatches = batches.Select(b => new TeacherBatchSummary
+            {
+                Id = b.Id,
+                Name = b.Name,
+                Code = b.Code,
+                DepartmentName = b.Department?.Name,
+                SubjectName = b.Subject?.Name,
+                ClassName = b.Class?.Name,
+                StartDate = b.StartDate,
+                EndDate = b.EndDate,
+                Capacity = b.Capacity,
+                EnrolledCount = enrollmentByBatch.TryGetValue(b.Id, out var ec) ? ec : 0,
+                RecentUpdates = recentByBatch.TryGetValue(b.Id, out var ru) ? ru : 0
+            }).ToList();
+
+            vm.TotalStudentsTaught = vm.TeacherBatches.Sum(b => b.EnrolledCount);
+            vm.UpdatesPostedLast30Days = vm.TeacherBatches.Sum(b => b.RecentUpdates);
+            vm.ActiveBatchesCount = vm.TeacherBatches.Count(b => b.IsActiveNow);
+
+            // Pull the teacher's most recent updates across all their batches for a feed.
+            vm.Updates = await _db.BatchUpdates
+                .Where(u => !u.IsDeleted && batchIds.Contains(u.BatchId))
+                .Include(u => u.PostedByUser)
+                .Include(u => u.Batch)
+                .OrderByDescending(u => u.PostedAt)
+                .Take(10)
+                .ToListAsync();
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

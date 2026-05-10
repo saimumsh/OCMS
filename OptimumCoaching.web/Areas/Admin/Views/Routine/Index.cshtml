@@ -1,0 +1,224 @@
+@model OptimumCoaching.web.Areas.Admin.Controllers.RoutineViewBag
+@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+    ViewData["Title"] = "Class Routine";
+    var batchOptions = (IList<SelectListItem>)ViewBag.BatchOptions;
+    var teacherOptions = ViewBag.TeacherOptions as IList<SelectListItem> ?? new List<SelectListItem>();
+    var topicOptions = ViewBag.TopicOptions as IList<SelectListItem> ?? new List<SelectListItem>();
+    var batch = ViewBag.Batch as OptimumCoaching.core.Batch;
+    var activeBatchId = ViewBag.ActiveBatchId as Guid?;
+    var canEdit = User.Identity != null && User.Identity.HasPermission(OptimumCoaching.core.Permissions.Routine.AddEdit);
+    var canDelete = User.Identity != null && User.Identity.HasPermission(OptimumCoaching.core.Permissions.Routine.Delete);
+
+    var days = new[] { DayOfWeek.Sunday, DayOfWeek.Monday, DayOfWeek.Tuesday,
+                       DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday,
+                       DayOfWeek.Saturday };
+    var slotsByDay = Model.Slots.GroupBy(s => s.Day).ToDictionary(g => g.Key, g => g.OrderBy(s => s.StartTime).ToList());
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-md-7 col-12 mb-1">
+        <h3 class="content-header-title mb-0"><i class="fa fa-calendar mr-1 text-primary"></i> Class Routine</h3>
+        @if (batch != null) { <small class="text-muted">@batch.Name · @(batch.Subject?.Name ?? "—")</small> }
+    </div>
+    <div class="content-header-right col-md-5 col-12 mb-1 text-md-right">
+        <form method="get" class="form-inline justify-content-md-end mb-1 d-inline-block">
+            <select name="batchId" class="form-control form-control-sm" onchange="this.form.submit()">
+                <option value="">— Choose a batch —</option>
+                @foreach (var o in batchOptions)
+                {
+                    if (Guid.TryParse(o.Value, out var g) && activeBatchId == g)
+                    { <option value="@o.Value" selected>@o.Text</option> }
+                    else
+                    { <option value="@o.Value">@o.Text</option> }
+                }
+            </select>
+        </form>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null) { <div class="alert alert-success">@TempData["SuccessMessage"]</div> }
+@if (TempData["ErrorMessage"] != null) { <div class="alert alert-danger">@TempData["ErrorMessage"]</div> }
+
+@if (!activeBatchId.HasValue)
+{
+    <div class="card"><div class="card-body text-center py-3"><p class="text-muted mb-0">Pick a batch to manage its weekly routine and date overrides.</p></div></div>
+    return;
+}
+
+<div class="row">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                <h4 class="card-title mb-0">Weekly routine</h4>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-condensed mb-0 user-table">
+                    <thead><tr><th>Day</th><th>Time</th><th>Topic / Teacher</th><th>Room</th><th></th></tr></thead>
+                    <tbody>
+                        @foreach (var d in days)
+                        {
+                            if (slotsByDay.TryGetValue(d, out var daySlots))
+                            {
+                                foreach (var slot in daySlots)
+                                {
+                                    <tr>
+                                        <td class="align-middle"><strong>@d</strong></td>
+                                        <td class="align-middle">@slot.StartTime.ToString(@"hh\:mm") – @slot.EndTime.ToString(@"hh\:mm")</td>
+                                        <td class="align-middle">
+                                            @(slot.Topic?.Title ?? "—")
+                                            @if (slot.Teacher != null)
+                                            { <div class="small text-muted">@slot.Teacher.FullName</div> }
+                                        </td>
+                                        <td class="align-middle">@(slot.Room ?? "—")</td>
+                                        <td class="align-middle text-right">
+                                            @if (canDelete)
+                                            {
+                                                <form method="post" asp-action="DeleteSlot" asp-route-id="@slot.Id" asp-route-batchId="@activeBatchId" class="d-inline" onsubmit="return confirm('Remove this slot?');">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fa fa-times"></i></button>
+                                                </form>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        }
+                        @if (!Model.Slots.Any())
+                        { <tr><td colspan="5" class="text-center text-muted py-3">No weekly slots yet.</td></tr> }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        @if (canEdit)
+        {
+            <div class="card mt-1">
+                <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                    <h4 class="card-title mb-0">Add weekly slot</h4>
+                </div>
+                <form method="post" asp-action="CreateSlot" class="form-inline p-2 align-items-end">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="BatchId" value="@activeBatchId" />
+                    <div class="form-group mr-1 mb-1">
+                        <label class="d-block small">Day</label>
+                        <select name="Day" class="form-control form-control-sm">
+                            @foreach (var d in days) { <option value="@((int)d)">@d</option> }
+                        </select>
+                    </div>
+                    <div class="form-group mr-1 mb-1">
+                        <label class="d-block small">Start</label>
+                        <input type="time" name="StartTime" value="18:00" class="form-control form-control-sm" required />
+                    </div>
+                    <div class="form-group mr-1 mb-1">
+                        <label class="d-block small">End</label>
+                        <input type="time" name="EndTime" value="19:30" class="form-control form-control-sm" required />
+                    </div>
+                    <div class="form-group mr-1 mb-1">
+                        <label class="d-block small">Topic</label>
+                        <select name="TopicId" class="form-control form-control-sm">
+                            <option value="">—</option>
+                            @foreach (var o in topicOptions) { <option value="@o.Value">@o.Text</option> }
+                        </select>
+                    </div>
+                    <div class="form-group mr-1 mb-1">
+                        <label class="d-block small">Teacher</label>
+                        <select name="TeacherId" class="form-control form-control-sm">
+                            <option value="">—</option>
+                            @foreach (var o in teacherOptions) { <option value="@o.Value">@o.Text</option> }
+                        </select>
+                    </div>
+                    <div class="form-group mr-1 mb-1">
+                        <label class="d-block small">Room</label>
+                        <input name="Room" class="form-control form-control-sm" />
+                    </div>
+                    <button type="submit" class="btn btn-custom btn-sm mb-1"><i class="fa fa-plus"></i> Add</button>
+                </form>
+            </div>
+        }
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                <h4 class="card-title mb-0">Upcoming overrides</h4>
+                <small class="text-muted">Cancellations / extra sessions for the next 60 days.</small>
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.Overrides.Any())
+                { <p class="text-muted text-center py-3 mb-0">No overrides scheduled.</p> }
+                else
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var ov in Model.Overrides)
+                        {
+                            <li class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <strong>@ov.SessionDate.ToString("dd MMM yyyy")</strong>
+                                        @if (ov.IsCancelled) { <span class="badge badge-pill badge-danger ml-1">Cancelled</span> }
+                                        else if (ov.RoutineSlotId.HasValue) { <span class="badge badge-pill badge-info ml-1">Override</span> }
+                                        else { <span class="badge badge-pill badge-success ml-1">Extra</span> }
+                                        <div class="small text-muted">
+                                            @if (ov.StartTime.HasValue && ov.EndTime.HasValue)
+                                            { <text>@ov.StartTime.Value.ToString(@"hh\:mm") – @ov.EndTime.Value.ToString(@"hh\:mm") · </text> }
+                                            @(ov.Topic?.Title ?? "—") · @(ov.Teacher?.FullName ?? "—")
+                                        </div>
+                                        @if (!string.IsNullOrWhiteSpace(ov.Note))
+                                        { <div class="small mt-1">@ov.Note</div> }
+                                    </div>
+                                    @if (canDelete)
+                                    {
+                                        <form method="post" asp-action="DeleteOverride" asp-route-id="@ov.Id" asp-route-batchId="@activeBatchId" class="d-inline" onsubmit="return confirm('Remove this override?');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fa fa-times"></i></button>
+                                        </form>
+                                    }
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+
+        @if (canEdit)
+        {
+            <div class="card mt-1">
+                <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                    <h4 class="card-title mb-0">Add override</h4>
+                    <small class="text-muted">Cancel a session or add an extra date.</small>
+                </div>
+                <form method="post" asp-action="CreateOverride">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="BatchId" value="@activeBatchId" />
+                    <div class="card-body">
+                        <div class="form-group"><label>Date</label><input type="date" name="SessionDate" class="form-control" required /></div>
+                        <div class="form-row">
+                            <div class="form-group col-6"><label>Start</label><input type="time" name="StartTime" class="form-control" /></div>
+                            <div class="form-group col-6"><label>End</label><input type="time" name="EndTime" class="form-control" /></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Topic</label>
+                            <select name="TopicId" class="form-control"><option value="">—</option>@foreach (var o in topicOptions) { <option value="@o.Value">@o.Text</option> }</select>
+                        </div>
+                        <div class="form-group">
+                            <label>Teacher</label>
+                            <select name="TeacherId" class="form-control"><option value="">—</option>@foreach (var o in teacherOptions) { <option value="@o.Value">@o.Text</option> }</select>
+                        </div>
+                        <div class="form-group"><label>Room</label><input name="Room" class="form-control" /></div>
+                        <div class="form-group form-check">
+                            <input type="checkbox" name="IsCancelled" value="true" class="form-check-input" id="isCancelled" />
+                            <label for="isCancelled" class="form-check-label">Cancel the regular session on this date</label>
+                            <input type="hidden" name="IsCancelled" value="false" />
+                        </div>
+                        <div class="form-group"><label>Note</label><textarea name="Note" class="form-control" rows="2"></textarea></div>
+                    </div>
+                    <div class="card-footer text-right">
+                        <button type="submit" class="btn btn-custom"><i class="fa fa-save"></i> Save</button>
+                    </div>
+                </form>
+            </div>
+        }
+    </div>
+</div>

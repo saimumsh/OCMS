@@ -26,13 +26,13 @@ namespace OptimumCoaching.web.Areas.Admin.Controllers
         }
 
         [Authorize(Permissions.Users.ListView)]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? role = null)
         {
             var users = await _userService.GetAllAsync();
-            var list = new List<UserListItem>();
+            var allItems = new List<UserListItem>();
             foreach (var u in users)
             {
-                list.Add(new UserListItem
+                allItems.Add(new UserListItem
                 {
                     Id = u.Id,
                     FullName = u.FullName,
@@ -43,7 +43,22 @@ namespace OptimumCoaching.web.Areas.Admin.Controllers
                     Roles = await _userService.GetRolesAsync(u)
                 });
             }
-            return View(list);
+
+            // Per-role counts from the unfiltered list — used to render badges
+            // on the tab buttons regardless of which tab is currently active.
+            var roleCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            foreach (var item in allItems)
+                foreach (var r in item.Roles)
+                    roleCounts[r] = roleCounts.GetValueOrDefault(r) + 1;
+
+            var filtered = string.IsNullOrWhiteSpace(role)
+                ? allItems
+                : allItems.Where(u => u.Roles.Contains(role, StringComparer.OrdinalIgnoreCase)).ToList();
+
+            ViewBag.ActiveRole = role;
+            ViewBag.RoleCounts = roleCounts;
+            ViewBag.TotalCount = allItems.Count;
+            return View(filtered);
         }
 
         [Authorize(Permissions.Users.AddEdit)]

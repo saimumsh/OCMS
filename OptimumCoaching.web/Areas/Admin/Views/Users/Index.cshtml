@@ -1,24 +1,62 @@
 @model IList<UserListItem>
 @{
     ViewData["Title"] = "Users";
+    var activeRole  = ViewBag.ActiveRole as string;
+    var roleCounts  = ViewBag.RoleCounts as Dictionary<string, int> ?? new();
+    var totalCount  = (int)(ViewBag.TotalCount ?? Model.Count);
+
+    // Order the tabs from most-privileged to least so admins see structure first.
+    var roleTabs = new[]
+    {
+        Roles.SuperAdmin,
+        Roles.Dev,
+        Roles.Admin,
+        Roles.CC,
+        Roles.Teacher,
+        Roles.User
+    };
+
+    string TabClass(string? r) =>
+        string.Equals(activeRole, r, StringComparison.OrdinalIgnoreCase)
+            ? "btn-custom"
+            : "btn-custom-default";
 }
 
 <div class="content-header row">
-    <div class="content-header-left col-md-9 col-12 mb-1">
+    <div class="content-header-left col-md-7 col-12 mb-1">
         <h3 class="content-header-title mb-0">Users</h3>
         <div class="row breadcrumbs-top">
             <div class="breadcrumb-wrapper col-12">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item">Administration</li>
-                    <li class="breadcrumb-item active">Users</li>
+                    <li class="breadcrumb-item active">
+                        Users@(string.IsNullOrEmpty(activeRole) ? "" : $" — {activeRole}")
+                    </li>
                 </ol>
             </div>
         </div>
     </div>
-    <div class="content-header-right col-md-3 col-12 mb-1 text-md-right">
+    <div class="content-header-right col-md-5 col-12 mb-1 text-md-right">
         <a class="btn btn-custom btn-medium" asp-action="Create">
             <i class="fa fa-plus"></i> New User
         </a>
+    </div>
+</div>
+
+<div class="row mb-1">
+    <div class="col-12">
+        <div class="btn-group flex-wrap" role="group" aria-label="Filter users by role">
+            <a class="btn btn-sm @TabClass(null)" asp-action="Index">
+                All <span class="badge badge-pill badge-light ml-1">@totalCount</span>
+            </a>
+            @foreach (var r in roleTabs)
+            {
+                var count = roleCounts.GetValueOrDefault(r);
+                <a class="btn btn-sm @TabClass(r)" asp-action="Index" asp-route-role="@r">
+                    @r <span class="badge badge-pill badge-light ml-1">@count</span>
+                </a>
+            }
+        </div>
     </div>
 </div>
 
@@ -44,7 +82,10 @@
 <section id="users-list">
     <div class="card">
         <div class="card-header border-bottom-blue-grey border-bottom-lighten-5 d-flex justify-content-between align-items-center">
-            <h4 class="card-title mb-0">All Users <span class="badge badge-pill badge-secondary ml-1">@Model.Count</span></h4>
+            <h4 class="card-title mb-0">
+                @(string.IsNullOrEmpty(activeRole) ? "All Users" : $"{activeRole} Users")
+                <span class="badge badge-pill badge-secondary ml-1">@Model.Count</span>
+            </h4>
             <div class="user-search">
                 <input type="search" id="userSearch" class="form-control form-control-sm"
                        placeholder="Search by name, email or role..." />

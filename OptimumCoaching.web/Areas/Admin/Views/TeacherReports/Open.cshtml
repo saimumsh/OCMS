@@ -1,0 +1,78 @@
+@model OptimumCoaching.core.TeacherReport
+@{
+    ViewData["Title"] = "Report";
+    var canHandle = User.Identity != null && User.Identity.HasPermission(OptimumCoaching.core.Permissions.TeacherReports.Handle);
+    var statuses = Enum.GetValues<OptimumCoaching.core.ReportStatus>();
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-12 mb-1">
+        <h3 class="content-header-title mb-0">Report against @Model.Teacher?.FullName</h3>
+        <div class="row breadcrumbs-top">
+            <div class="breadcrumb-wrapper col-12">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Teacher Reports</a></li>
+                    <li class="breadcrumb-item active">@Model.Category</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null) { <div class="alert alert-success">@TempData["SuccessMessage"]</div> }
+@if (TempData["ErrorMessage"]   != null) { <div class="alert alert-danger">@TempData["ErrorMessage"]</div> }
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                <h4 class="card-title mb-0">@Model.Category — @Model.Status</h4>
+                <small class="text-muted">From <strong>@Model.Student?.FullName</strong> · @Model.Created.ToString("dd MMM yyyy, HH:mm")</small>
+            </div>
+            <div class="card-body" style="white-space:pre-wrap;">@Model.Description</div>
+            @if (!string.IsNullOrWhiteSpace(Model.AdminNote))
+            {
+                <div class="card-footer">
+                    <strong>Admin note</strong>
+                    <div style="white-space:pre-wrap;">@Model.AdminNote</div>
+                    @if (Model.HandledByUser != null)
+                    { <small class="text-muted d-block mt-1">— @Model.HandledByUser.FullName · @(Model.HandledAt?.ToString("dd MMM yyyy") ?? "")</small> }
+                </div>
+            }
+        </div>
+    </div>
+    <div class="col-lg-4">
+        @if (canHandle)
+        {
+            <div class="card">
+                <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                    <h4 class="card-title mb-0">Update status</h4>
+                </div>
+                <form method="post" asp-action="UpdateStatus" asp-route-id="@Model.Id">
+                    @Html.AntiForgeryToken()
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="status">Status</label>
+                            <select id="status" name="status" class="form-control">
+                                @foreach (var s in statuses)
+                                {
+                                    if (s == Model.Status)
+                                    { <option value="@((int)s)" selected>@s</option> }
+                                    else
+                                    { <option value="@((int)s)">@s</option> }
+                                }
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="adminNote">Admin note</label>
+                            <textarea id="adminNote" name="adminNote" class="form-control" rows="4">@Model.AdminNote</textarea>
+                        </div>
+                    </div>
+                    <div class="card-footer text-right">
+                        <button type="submit" class="btn btn-custom"><i class="fa fa-save"></i> Save</button>
+                    </div>
+                </form>
+            </div>
+        }
+    </div>
+</div>

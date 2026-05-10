@@ -1,0 +1,54 @@
+@{
+    ViewData["Title"] = "Report Teacher";
+    var teacherId = (Guid)ViewBag.TeacherId;
+    var batchId = (Guid?)ViewBag.BatchId;
+    var categories = Enum.GetValues<OptimumCoaching.core.ReportCategory>();
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-12 mb-1">
+        <h3 class="content-header-title mb-0"><i class="fa fa-flag mr-1 text-danger"></i> Report a concern</h3>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <form method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="teacherId" value="@teacherId" />
+            @if (batchId.HasValue) { <input type="hidden" name="batchId" value="@batchId" /> }
+
+            <div class="card">
+                <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                    <h4 class="card-title mb-0">File a formal report</h4>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small">
+                        Reports are visible only to administrators and are reviewed in confidence.
+                        Use this when you have a serious concern that needs follow-up.
+                    </p>
+
+                    <div class="form-group">
+                        <label for="category">Category</label>
+                        <select id="category" name="category" class="form-control" required>
+                            @foreach (var c in categories)
+                            {
+                                <option value="@((int)c)">@c.ToString()</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea id="description" name="description" class="form-control" rows="6" required maxlength="2000"
+                                  placeholder="Describe what happened, when, and any context an administrator should know."></textarea>
+                    </div>
+                </div>
+                <div class="card-footer text-right">
+                    <a asp-controller="Home" asp-action="UserDashboard" class="btn btn-custom-default mr-1"><i class="fa fa-times"></i> Cancel</a>
+                    <button type="submit" class="btn btn-danger"><i class="fa fa-flag"></i> Submit report</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,15 @@
+@model OptimumCoaching.core.Exam
+@{ ViewData["Title"] = "New Exam"; }
+
+<div class="content-header row">
+    <div class="content-header-left col-12 mb-1">
+        <h3 class="content-header-title mb-0">New Exam</h3>
+    </div>
+</div>
+
+<form method="post" asp-action="Create">
+    @Html.AntiForgeryToken()
+    <partial name="_ExamForm" model="Model" />
+</form>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

@@ -80,64 +80,107 @@
 
     @await RenderSectionAsync("Scripts", required: false)
 
-    <!--menu active + sidebar collapse fallback-->
+    <!-- OCMS sidebar shell: state, responsive, backdrop, scroll-lock -->
     <script type="text/javascript">
         $(function ($) {
-            let url = window.location.href;
+            var $body = $('body');
+            var STORE_KEY = 'oc.menuCollapsed';
+            var MOBILE_Q = '(max-width: 767.98px)';
+            var isSmall = function () { return window.matchMedia(MOBILE_Q).matches; };
+
+            // Mark the link matching the current URL as active.
+            var url = window.location.href;
             $('li a').each(function () {
-                if (this.href === url) {
-                    $(this).closest('li').addClass('active');
-                }
+                if (this.href === url) $(this).closest('li').addClass('active');
             });
 
-            // Mirror each sidebar item's label into data-title so the
-            // collapsed-rail hover tooltip (CSS ::after) can read it.
+            // Mirror each top-level item's label into data-title so the
+            // collapsed-rail CSS tooltip (::after) can read it.
             $('.main-menu .navigation > li > a').each(function () {
                 var $a = $(this);
                 var label = $.trim($a.find('.menu-title').first().text());
                 if (label) $a.attr('data-title', label);
             });
 
-            // Restore previous sidebar state — and on small screens
-            // start collapsed so the overlay sidebar isn't covering content.
-            try {
-                var stored = localStorage.getItem('oc.menuCollapsed');
-                var isSmall = window.matchMedia('(max-width: 767.98px)').matches;
-                var shouldCollapse = stored === '1' || (stored === null && isSmall);
-                if (shouldCollapse) {
-                    $('body').removeClass('menu-expanded').addClass('menu-collapsed');
-                    $('.modern-nav-toggle .toggle-icon')
-                        .removeClass('ft-toggle-right').addClass('ft-toggle-left');
+            // Backdrop element — created lazily, click closes overlay menu.
+            var ensureBackdrop = function () {
+                var $bd = $('.oc-sidebar-backdrop');
+                if (!$bd.length) {
+                    $bd = $('<div class="oc-sidebar-backdrop" aria-hidden="true"></div>').appendTo('body');
+                    $bd.on('click', function () { collapseMenu(true); });
                 }
+                return $bd;
+            };
+
+            var setToggleIcon = function (collapsed) {
+                var $icon = $('.modern-nav-toggle .toggle-icon');
+                if (collapsed) $icon.removeClass('ft-toggle-right').addClass('ft-toggle-left');
+                else           $icon.removeClass('ft-toggle-left').addClass('ft-toggle-right');
+            };
+
+            var expandMenu = function (persist) {
+                $body.removeClass('menu-collapsed menu-hide').addClass('menu-expanded');
+                setToggleIcon(false);
+                if (isSmall()) {
+                    $body.addClass('oc-menu-overlay-open');
+                    ensureBackdrop().addClass('is-visible');
+                }
+                if (persist !== false) {
+                    try { localStorage.setItem(STORE_KEY, '0'); } catch (e) { /* ignore */ }
+                }
+            };
+
+            var collapseMenu = function (persist) {
+                $body.removeClass('menu-expanded menu-open oc-menu-overlay-open').addClass('menu-collapsed');
+                setToggleIcon(true);
+                $('.oc-sidebar-backdrop').removeClass('is-visible');
+                if (persist !== false) {
+                    try { localStorage.setItem(STORE_KEY, '1'); } catch (e) { /* ignore */ }
+                }
+            };
+
+            // Restore previous state — mobile defaults to collapsed.
+            try {
+                var stored = localStorage.getItem(STORE_KEY);
+                var shouldCollapse = stored === '1' || (stored === null && isSmall());
+                if (shouldCollapse) collapseMenu(false);
             } catch (e) { /* ignore */ }
 
-            // Defensive fallback in case the theme menu plugin failed to init.
+            // Toggle button (header chevron + mobile hamburger).
             $(document).on('click', '.modern-nav-toggle, .menu-toggle', function (e) {
                 e.preventDefault();
-                var $body = $('body');
-                var collapse = $body.hasClass('menu-expanded') || $body.hasClass('menu-open');
-                if (collapse) {
-                    $body.removeClass('menu-expanded menu-open').addClass('menu-collapsed');
-                    $('.modern-nav-toggle .toggle-icon')
-                        .removeClass('ft-toggle-right').addClass('ft-toggle-left');
+                if ($body.hasClass('menu-expanded') || $body.hasClass('menu-open')) {
+                    collapseMenu(true);
                 } else {
-                    $body.removeClass('menu-collapsed menu-hide').addClass('menu-expanded');
-                    $('.modern-nav-toggle .toggle-icon')
-                        .removeClass('ft-toggle-left').addClass('ft-toggle-right');
+                    expandMenu(true);
                 }
-                try { localStorage.setItem('oc.menuCollapsed', collapse ? '1' : '0'); } catch (err) { /* ignore */ }
             });
 
-            // Mobile: tap on content area while sidebar is overlaying closes it.
-            $(document).on('click', '.app-content, .footer', function () {
-                var isSmall = window.matchMedia('(max-width: 767.98px)').matches;
-                if (!isSmall) return;
-                var $body = $('body');
-                if ($body.hasClass('menu-expanded')) {
-                    $body.removeClass('menu-expanded').addClass('menu-collapsed');
-                    $('.modern-nav-toggle .toggle-icon')
-                        .removeClass('ft-toggle-right').addClass('ft-toggle-left');
-                    try { localStorage.setItem('oc.menuCollapsed', '1'); } catch (err) { /* ignore */ }
+            // Mobile: tapping a leaf nav link auto-closes the overlay.
+            $(document).on('click', '.main-menu .navigation a', function () {
+                if (!isSmall() || !$body.hasClass('menu-expanded')) return;
+                var $a = $(this);
+                var href = $a.attr('href');
+                var $li = $a.parent('li');
+                if (!$li.hasClass('has-sub') && href && href !== '#') {
+                    collapseMenu(true);
+                }
+            });
+
+            // Crossing the mobile breakpoint: sync overlay artifacts.
+            var lastSmall = isSmall();
+            $(window).on('resize', function () {
+                var nowSmall = isSmall();
+                if (nowSmall === lastSmall) return;
+                lastSmall = nowSmall;
+                if (nowSmall) {
+                    if ($body.hasClass('menu-expanded')) {
+                        $body.addClass('oc-menu-overlay-open');
+                        ensureBackdrop().addClass('is-visible');
+                    }
+                } else {
+                    $body.removeClass('oc-menu-overlay-open');
+                    $('.oc-sidebar-backdrop').removeClass('is-visible');
                 }
             });
         });

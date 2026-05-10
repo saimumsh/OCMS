@@ -1,12 +1,17 @@
 @model OptimumCoaching.core.Batch
 @using OptimumCoaching.core
+@using Microsoft.AspNetCore.Mvc.Rendering
 @{
     ViewData["Title"] = $"Batch  {Model.Name}";
     var updates = ViewBag.Updates as IList<BatchUpdate> ?? new List<BatchUpdate>();
     var students = ViewBag.Students as IList<Student> ?? new List<Student>();
+    var teachers = ViewBag.Teachers as IList<BatchTeacher> ?? new List<BatchTeacher>();
+    var teacherOptions = ViewBag.TeacherOptions as IList<SelectListItem> ?? new List<SelectListItem>();
     var canPost = User.HasClaim(CustomClaimType.Permission, Permissions.BatchUpdates.Post)
                 || User.HasClaim(CustomClaimType.Permission, "*");
     var canDeleteUpdate = User.HasClaim(CustomClaimType.Permission, Permissions.BatchUpdates.Delete)
+                || User.HasClaim(CustomClaimType.Permission, "*");
+    var canManageTeachers = User.HasClaim(CustomClaimType.Permission, Permissions.Batches.AddEdit)
                 || User.HasClaim(CustomClaimType.Permission, "*");
 }
 
@@ -160,6 +165,93 @@
 
     <div class="col-lg-5 mb-3">
         <div class="card">
+            <div class="card-header border-bottom-blue-grey border-bottom-lighten-5 d-flex justify-content-between align-items-center">
+                <h4 class="card-title mb-0">
+                    <i class="fa fa-users mr-1 text-primary"></i> Teachers
+                    <span class="badge badge-pill badge-secondary ml-1">@teachers.Count</span>
+                </h4>
+            </div>
+            <div class="card-body p-0">
+                @if (!teachers.Any())
+                {
+                    <p class="text-muted m-2 mb-0">No teachers assigned. Add the first teacher below.</p>
+                }
+                else
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var bt in teachers)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>@bt.Teacher.FullName</strong>
+                                    @if (bt.IsLead)
+                                    { <span class="badge badge-pill badge-success ml-1">Lead</span> }
+                                    else if (!string.IsNullOrWhiteSpace(bt.Role))
+                                    { <span class="badge badge-pill badge-light ml-1">@bt.Role</span> }
+                                    <div class="small text-muted">
+                                        @bt.Teacher.Email
+                                        @if (!string.IsNullOrWhiteSpace(bt.Note))
+                                        { <div>@bt.Note</div> }
+                                    </div>
+                                </div>
+                                @if (canManageTeachers)
+                                {
+                                    <div class="text-right">
+                                        @if (!bt.IsLead)
+                                        {
+                                            <form method="post" asp-action="SetLead" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="batchId" value="@Model.Id" />
+                                                <input type="hidden" name="teacherId" value="@bt.TeacherId" />
+                                                <button type="submit" class="btn btn-sm btn-outline-success" title="Make lead">
+                                                    <i class="fa fa-star"></i>
+                                                </button>
+                                            </form>
+                                            <form method="post" asp-action="RemoveTeacher" class="d-inline" onsubmit="return confirm('Remove this teacher from the batch?');">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@bt.Id" />
+                                                <input type="hidden" name="batchId" value="@Model.Id" />
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Remove">
+                                                    <i class="fa fa-times"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                }
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+            @if (canManageTeachers)
+            {
+                <div class="card-footer">
+                    <form method="post" asp-action="AddTeacher" class="form-inline align-items-end">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="batchId" value="@Model.Id" />
+                        <div class="form-group mr-1 mb-1 flex-grow-1">
+                            <select name="teacherId" class="form-control form-control-sm" required>
+                                <option value="">— Add teacher —</option>
+                                @{
+                                    var assignedIds = teachers.Select(t => t.TeacherId).ToHashSet();
+                                }
+                                @foreach (var o in teacherOptions)
+                                {
+                                    if (Guid.TryParse(o.Value, out var g) && assignedIds.Contains(g)) { continue; }
+                                    <option value="@o.Value">@o.Text</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="form-group mr-1 mb-1">
+                            <input type="text" name="role" placeholder="Role (e.g. Co-teacher)" class="form-control form-control-sm" />
+                        </div>
+                        <button type="submit" class="btn btn-custom btn-sm mb-1"><i class="fa fa-plus"></i> Add</button>
+                    </form>
+                </div>
+            }
+        </div>
+
+        <div class="card mt-1">
             <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
                 <h4 class="card-title mb-0">Enrolled Students <span class="badge badge-pill badge-secondary ml-1">@students.Count</span></h4>
             </div>

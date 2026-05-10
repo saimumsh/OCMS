@@ -72,17 +72,8 @@ fieldset.row-bordered {
     padding: 3px;
 }
 
-body.vertical-layout.vertical-menu-modern.menu-expanded .main-menu .navigation > li > a > i {
-    margin-right: 7px !important;
-}
-
-.main-menu.menu-dark .navigation > li > a {
-    padding: 5px 8px 5px 5px;
-}
-
-.main-menu.menu-dark .navigation > li ul li > a {
-    padding: 5px 7px 7px 5px !important;
-}
+/* Sidebar item paddings & spacings are defined in the sidebar block at
+   the bottom of this file (search "Sidebar — responsive, professional"). */
 
 .btn-custom {
     padding: 6px;
@@ -208,10 +199,6 @@ form .form-group {
 
 .select2-search--dropdown .select2-search__field {
     padding: 7px !important;
-}
-
-.main-menu.menu-dark .navigation > li ul .active > a {
-    padding-left: 23px !important;
 }
 
 .input-xs {
@@ -412,105 +399,387 @@ html body .content .content-wrapper {
     min-width: 240px;
 }
 
-/* ------------------------------------------------------------
-   Responsive shell layout — guarantee content / footer / navbar
-   container shift to make room for the sidebar at every width.
-   Base theme rules sometimes lose to vendor / media-query rules,
-   so we restate them with stronger selectors.
-   ------------------------------------------------------------ */
+/* ================================================================
+   User dashboard — hero banner, stat tiles, activity feed
+   Used by Views/Home/UserDashboard.cshtml for both Student and
+   Teacher views. Mobile-first: hero stacks vertically below 576px,
+   stat tiles fall to 2-up.
+   ================================================================ */
+.oc-hero {
+    border-radius: 8px;
+    padding: 22px 24px;
+    margin-bottom: 18px;
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(27, 41, 66, 0.18);
+    background: linear-gradient(135deg, #1B2942 0%, #2F4D8A 100%);
+}
+.oc-hero--teacher {
+    background: linear-gradient(135deg, #1B2942 0%, #1E6F7F 100%);
+}
+.oc-hero--student {
+    background: linear-gradient(135deg, #283891 0%, #5B6FE8 100%);
+}
+.oc-hero__inner {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 18px;
+}
+.oc-hero__avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.18);
+    border: 3px solid rgba(255, 255, 255, 0.35);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    color: #fff;
+    font-weight: 600;
+    font-size: 1.6rem;
+    flex-shrink: 0;
+}
+.oc-hero__avatar img {
+    width: 100%; height: 100%;
+    object-fit: cover; display: block;
+}
+.oc-hero__meta { min-width: 0; }
+.oc-hero__role {
+    letter-spacing: 0.12em;
+    opacity: 0.78;
+    font-size: 0.7rem;
+}
+.oc-hero__name {
+    margin: 2px 0 6px;
+    font-weight: 600;
+    line-height: 1.2;
+    color: #fff;
+}
+.oc-hero__sub {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    font-size: 0.85rem;
+    opacity: 0.92;
+}
+@media (max-width: 575.98px) {
+    .oc-hero { padding: 18px 16px; }
+    .oc-hero__avatar { width: 64px; height: 64px; font-size: 1.3rem; }
+    .oc-hero__name { font-size: 1.25rem; }
+}
 
-/* Desktop & tablet: sidebar pushes layout */
+/* ---- Stat tiles (KPI cards) ---- */
+.oc-stats { margin-bottom: 4px; }
+.oc-stat {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid #E4E7ED;
+    box-shadow: 0 1px 3px rgba(27, 41, 66, 0.04);
+    height: 100%;
+    transition: transform 0.15s var(--oc-ease, ease), box-shadow 0.15s var(--oc-ease, ease);
+}
+.oc-stat:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(27, 41, 66, 0.10);
+}
+.oc-stat__icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+.oc-stat__value {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1B2942;
+    line-height: 1.1;
+    word-break: break-word;
+}
+.oc-stat__label {
+    font-size: 0.78rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.oc-stat--primary .oc-stat__icon { background: #5B6FE8; }
+.oc-stat--info    .oc-stat__icon { background: #1E88E5; }
+.oc-stat--success .oc-stat__icon { background: #28a745; }
+.oc-stat--warning .oc-stat__icon { background: #ffb822; color: #6b4c00; }
+
+/* ---- Activity feed list ---- */
+.oc-feed { }
+.oc-feed__item {
+    padding: 10px 0;
+    border-bottom: 1px solid #EEF1F5;
+}
+.oc-feed__item:last-child { border-bottom: 0; }
+.oc-feed__body {
+    white-space: pre-wrap;
+    color: #404E67;
+    font-size: 0.9rem;
+}
+
+/* ================================================================
+   Messaging — chat thread bubbles + inbox row hover
+   ================================================================ */
+.oc-thread {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+.oc-msg {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    max-width: 92%;
+}
+.oc-msg--mine   { align-self: flex-end;   flex-direction: row-reverse; }
+.oc-msg--theirs { align-self: flex-start; }
+.oc-msg__avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #1B2942;
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.oc-msg--mine .oc-msg__avatar { background: #5B6FE8; }
+.oc-msg__bubble {
+    background: #F0F2F7;
+    color: #1B2942;
+    padding: 8px 12px;
+    border-radius: 10px;
+    box-shadow: 0 1px 2px rgba(27, 41, 66, 0.06);
+}
+.oc-msg--mine .oc-msg__bubble {
+    background: #DCE7FF;
+    color: #1B2942;
+    border-bottom-right-radius: 2px;
+}
+.oc-msg--theirs .oc-msg__bubble {
+    border-bottom-left-radius: 2px;
+}
+.oc-msg__meta { font-size: 0.78rem; }
+.oc-msg__body {
+    margin-top: 2px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 0.92rem;
+}
+.oc-msg-row--unread strong { color: #283891; }
+
+/* ================================================================
+   Sidebar — responsive, professional polish
+   ----------------------------------------------------------------
+   Inherits from Pixinvent ModernAdmin "vertical-menu-modern" theme,
+   then layers OCMS-specific responsiveness, easing, and active-state
+   polish on top with stronger selectors so nothing leaks through.
+   Breakpoints:
+     >=768px  Desktop / tablet: sidebar pushes layout (240px / 60px)
+     <768px   Mobile: sidebar is an overlay, layout stays full width
+   ================================================================ */
+
+:root {
+    --oc-sidebar-w: 240px;
+    --oc-sidebar-rail: 60px;
+    --oc-sidebar-bg: #1B2942;
+    --oc-sidebar-bg-hover: rgba(255, 255, 255, 0.06);
+    --oc-sidebar-bg-active: rgba(64, 158, 255, 0.14);
+    --oc-sidebar-text: #c4cdd9;
+    --oc-sidebar-text-active: #ffffff;
+    --oc-sidebar-accent: #409eff;
+    --oc-sidebar-divider: rgba(255, 255, 255, 0.06);
+    --oc-ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Smooth, consistent shell transitions */
+.main-menu {
+    transition: width 0.28s var(--oc-ease), transform 0.28s var(--oc-ease) !important;
+    will-change: width;
+}
+.content,
+.footer,
+.navbar .navbar-header,
+.navbar .navbar-container {
+    transition: margin-left 0.28s var(--oc-ease), width 0.28s var(--oc-ease);
+}
+
+/* ---- Top-level nav items ---- */
+.main-menu.menu-dark .navigation > li > a {
+    padding: 11px 14px !important;
+    margin: 1px 8px;
+    border-radius: 4px;
+    color: var(--oc-sidebar-text);
+    font-weight: 400;
+    transition: background-color 0.18s var(--oc-ease), color 0.18s var(--oc-ease), box-shadow 0.18s var(--oc-ease);
+    position: relative;
+}
+.main-menu.menu-dark .navigation > li > a > i {
+    width: 20px;
+    text-align: center;
+    font-size: 1rem !important;
+    transition: color 0.18s var(--oc-ease);
+}
+body.vertical-layout.vertical-menu-modern.menu-expanded .main-menu .navigation > li > a > i {
+    margin-right: 12px !important;
+}
+.main-menu.menu-dark .navigation > li > a:hover {
+    background: var(--oc-sidebar-bg-hover);
+    color: var(--oc-sidebar-text-active);
+}
+.main-menu.menu-dark .navigation > li.active > a,
+.main-menu.menu-dark .navigation > li > a.active {
+    background: var(--oc-sidebar-bg-active) !important;
+    color: var(--oc-sidebar-text-active) !important;
+    box-shadow: inset 3px 0 0 var(--oc-sidebar-accent);
+}
+.main-menu.menu-dark .navigation > li.active > a > i,
+.main-menu.menu-dark .navigation > li > a.active > i {
+    color: var(--oc-sidebar-accent) !important;
+}
+
+/* Caret on items with submenu — smoother rotate */
+.main-menu .navigation li.has-sub > a:not(.mm-next):after {
+    transition: transform 0.22s var(--oc-ease) !important;
+}
+
+/* ---- Submenu items ---- */
+.main-menu.menu-dark .navigation > li ul {
+    background: rgba(0, 0, 0, 0.12);
+    padding: 4px 0;
+}
+.main-menu.menu-dark .navigation > li ul li > a {
+    padding: 8px 16px 8px 44px !important;
+    font-size: 0.875rem;
+    color: var(--oc-sidebar-text);
+    position: relative;
+    transition: background-color 0.18s var(--oc-ease), color 0.18s var(--oc-ease), padding-left 0.18s var(--oc-ease);
+}
+.main-menu.menu-dark .navigation > li ul li > a:hover {
+    background: var(--oc-sidebar-bg-hover);
+    color: var(--oc-sidebar-text-active);
+    padding-left: 48px !important;
+}
+.main-menu.menu-dark .navigation > li ul li.active > a,
+.main-menu.menu-dark .navigation > li ul .active > a {
+    background: var(--oc-sidebar-bg-active) !important;
+    color: var(--oc-sidebar-text-active) !important;
+    font-weight: 500;
+    padding-left: 44px !important;
+}
+
+/* ---- Custom thin scrollbar inside the menu ---- */
+.main-menu .main-menu-content {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+.main-menu .main-menu-content::-webkit-scrollbar { width: 6px; }
+.main-menu .main-menu-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 3px;
+}
+.main-menu .main-menu-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.32);
+}
+.main-menu .main-menu-content::-webkit-scrollbar-track { background: transparent; }
+
+/* ---- Responsive: desktop / tablet (push layout) ---- */
 @media (min-width: 768px) {
     html body.vertical-layout.vertical-menu-modern.menu-expanded .content,
     html body.vertical-layout.vertical-menu-modern.menu-expanded .footer {
-        margin-left: 240px !important;
+        margin-left: var(--oc-sidebar-w) !important;
     }
-
     html body.vertical-layout.vertical-menu-modern.menu-expanded .main-menu {
-        width: 240px !important;
+        width: var(--oc-sidebar-w) !important;
     }
-
     html body.vertical-layout.vertical-menu-modern.menu-expanded .navbar .navbar-header {
-        width: 240px !important;
+        width: var(--oc-sidebar-w) !important;
     }
-
     html body.vertical-layout.vertical-menu-modern.menu-expanded .navbar .navbar-container {
-        margin-left: 240px !important;
+        margin-left: var(--oc-sidebar-w) !important;
     }
 
     html body.vertical-layout.vertical-menu-modern.menu-collapsed .content,
     html body.vertical-layout.vertical-menu-modern.menu-collapsed .footer {
-        margin-left: 60px !important;
+        margin-left: var(--oc-sidebar-rail) !important;
     }
-
     html body.vertical-layout.vertical-menu-modern.menu-collapsed .main-menu {
-        width: 60px !important;
+        width: var(--oc-sidebar-rail) !important;
     }
-
     html body.vertical-layout.vertical-menu-modern.menu-collapsed .navbar .navbar-header {
-        width: 60px !important;
+        width: var(--oc-sidebar-rail) !important;
     }
-
     html body.vertical-layout.vertical-menu-modern.menu-collapsed .navbar .navbar-container {
-        margin-left: 60px !important;
+        margin-left: var(--oc-sidebar-rail) !important;
     }
 }
 
-/* Mobile: sidebar becomes an overlay so content stays full width */
+/* ---- Responsive: mobile (overlay, full-width content) ---- */
 @media (max-width: 767.98px) {
     html body.vertical-layout.vertical-menu-modern .content,
     html body.vertical-layout.vertical-menu-modern .footer {
         margin-left: 0 !important;
     }
-
     html body.vertical-layout.vertical-menu-modern .navbar .navbar-header {
-        width: 60px !important;
+        width: var(--oc-sidebar-rail) !important;
     }
-
     html body.vertical-layout.vertical-menu-modern .navbar .navbar-container {
-        margin-left: 60px !important;
+        margin-left: var(--oc-sidebar-rail) !important;
     }
 
     html body.vertical-layout.vertical-menu-modern.menu-expanded .main-menu {
-        width: 240px !important;
+        width: var(--oc-sidebar-w) !important;
         z-index: 1100;
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.18);
     }
-
     html body.vertical-layout.vertical-menu-modern.menu-collapsed .main-menu,
     html body.vertical-layout.vertical-menu-modern.menu-hide .main-menu {
         width: 0 !important;
         overflow: hidden;
     }
 
-    /* Dim background when sidebar overlays content */
-    html body.vertical-layout.vertical-menu-modern.menu-expanded::before {
-        content: "";
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.4);
-        z-index: 1050;
+    /* Lock body scroll while overlay sidebar is open */
+    html body.vertical-layout.vertical-menu-modern.menu-expanded.oc-menu-overlay-open {
+        overflow: hidden;
     }
 }
 
-/* Sidebar transition so width animates smoothly */
-.main-menu {
-    transition: width 0.25s ease, margin 0.25s ease;
+/* ---- Backdrop behind overlay sidebar (created by inline JS on mobile) ---- */
+.oc-sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 1050;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s var(--oc-ease);
 }
-.content,
-.footer,
-.navbar .navbar-header,
-.navbar .navbar-container {
-    transition: margin-left 0.25s ease, width 0.25s ease;
+.oc-sidebar-backdrop.is-visible {
+    opacity: 1;
+    pointer-events: auto;
 }
 
-/* ------------------------------------------------------------
-   Collapsed sidebar (60px rail) — pure icon rail, no growth.
-   Menu titles, badges and sub-menus are hidden completely so
-   nothing spills past the 60px width. On hover of an item, the
-   label appears as a small tooltip-style chip floating to the
-   right of the icon — never resizing the rail itself, so the
-   navbar / content / footer layout never shifts.
-   ------------------------------------------------------------ */
+/* ================================================================
+   Collapsed rail (60px) — icon-only column with hover tooltip.
+   Layout never reflows on hover; tooltip floats outside the rail.
+   ================================================================ */
 @media (min-width: 768px) {
     html body.vertical-layout.vertical-menu-modern.menu-collapsed
         .main-menu .navigation > li > a > .menu-title,
@@ -523,59 +792,101 @@ html body .content .content-wrapper {
         animation: none !important;
     }
 
+    /* Hide the chevron caret in collapsed mode (no submenu visible) */
+    html body.vertical-layout.vertical-menu-modern.menu-collapsed
+        .main-menu .navigation li.has-sub > a:not(.mm-next):after {
+        display: none !important;
+    }
+
     html body.vertical-layout.vertical-menu-modern.menu-collapsed
         .main-menu .navigation > li > a {
+        padding: 12px 0 !important;
+        margin: 1px 6px;
         white-space: nowrap;
         overflow: hidden;
         position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    html body.vertical-layout.vertical-menu-modern.menu-collapsed
+        .main-menu .navigation > li > a > i {
+        margin: 0 !important;
+        float: none !important;
+        font-size: 1.15rem !important;
     }
 
-    /* tooltip-style label that appears beside the icon on hover */
+    /* Tooltip — pill with arrow, fades in on hover */
     html body.vertical-layout.vertical-menu-modern.menu-collapsed
         .main-menu .navigation > li > a:hover::after {
         content: attr(data-title);
         position: absolute;
         left: 100%;
         top: 50%;
-        transform: translateY(-50%);
-        margin-left: 8px;
-        padding: 4px 10px;
-        background: #1B2942;
+        margin-left: 12px;
+        padding: 6px 12px;
+        background: var(--oc-sidebar-bg);
         color: #fff;
-        font-size: 0.85rem;
+        font-size: 0.8rem;
+        font-weight: 500;
         white-space: nowrap;
-        border-radius: 3px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        border-radius: 4px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
         z-index: 1200;
         pointer-events: none;
+        animation: oc-tooltip-fade 0.18s var(--oc-ease) both;
+    }
+    html body.vertical-layout.vertical-menu-modern.menu-collapsed
+        .main-menu .navigation > li > a:hover::before {
+        content: "";
+        position: absolute;
+        left: 100%;
+        top: 50%;
+        margin-left: 0;
+        border: 6px solid transparent;
+        border-right-color: var(--oc-sidebar-bg);
+        z-index: 1201;
+        pointer-events: none;
+        transform: translateY(-50%);
+        animation: oc-tooltip-fade 0.18s var(--oc-ease) both;
     }
 }
 
+@keyframes oc-tooltip-fade {
+    from { opacity: 0; transform: translateY(-50%) translateX(-4px); }
+    to   { opacity: 1; transform: translateY(-50%) translateX(0); }
+}
 
-/* Brand text visibility — hide cleanly when sidebar collapsed
-   so the navbar header (60px) doesn't overflow. Hover restores it. */
+/* ================================================================
+   Brand area / navbar header polish
+   ================================================================ */
 body.vertical-layout.vertical-menu-modern.menu-collapsed
     .navbar .navbar-header:not(.expanded) .navbar-brand .brand-text {
     display: none;
 }
-
 body.vertical-layout.vertical-menu-modern.menu-collapsed
     .navbar .navbar-header.expanded .navbar-brand .brand-text {
     display: inline-block;
 }
 
-/* Allow hover to expand the navbar-header so the toggle is reachable
-   when collapsed (matches VitalityCash theme behavior). */
-body.vertical-layout.vertical-menu-modern.menu-collapsed
-    .navbar .navbar-header:hover {
-    width: 240px;
+/* Hover-expand the navbar header in collapsed mode (theme parity) */
+@media (min-width: 768px) {
+    body.vertical-layout.vertical-menu-modern.menu-collapsed
+        .navbar .navbar-header:hover {
+        width: var(--oc-sidebar-w);
+    }
+    body.vertical-layout.vertical-menu-modern.menu-collapsed
+        .navbar .navbar-header:hover .modern-nav-toggle {
+        display: block;
+    }
+    body.vertical-layout.vertical-menu-modern.menu-collapsed
+        .navbar .navbar-header:hover .navbar-brand .brand-text {
+        display: inline-block;
+    }
 }
-body.vertical-layout.vertical-menu-modern.menu-collapsed
-    .navbar .navbar-header:hover .modern-nav-toggle {
-    display: block;
-}
-body.vertical-layout.vertical-menu-modern.menu-collapsed
-    .navbar .navbar-header:hover .navbar-brand .brand-text {
-    display: inline-block;
+
+/* Toggle icon spin on click — matches the easing of the rail */
+.modern-nav-toggle .toggle-icon {
+    transition: transform 0.25s var(--oc-ease);
 }
 

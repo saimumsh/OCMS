@@ -1,0 +1,68 @@
+@model IList<OptimumCoaching.core.TeacherReport>
+@{
+    ViewData["Title"] = "Teacher Reports";
+    var activeStatus = ViewBag.ActiveStatus as OptimumCoaching.core.ReportStatus?;
+    string TabClass(OptimumCoaching.core.ReportStatus? s) =>
+        activeStatus == s ? "btn-custom" : "btn-custom-default";
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-md-7 col-12 mb-1">
+        <h3 class="content-header-title mb-0"><i class="fa fa-flag mr-1 text-danger"></i> Teacher Reports</h3>
+    </div>
+    <div class="content-header-right col-md-5 col-12 mb-1 text-md-right">
+        <div class="btn-group" role="group">
+            <a class="btn btn-sm @TabClass(null)" asp-action="Index">All</a>
+            <a class="btn btn-sm @TabClass(OptimumCoaching.core.ReportStatus.Open)" asp-action="Index" asp-route-status="@OptimumCoaching.core.ReportStatus.Open">Open</a>
+            <a class="btn btn-sm @TabClass(OptimumCoaching.core.ReportStatus.Investigating)" asp-action="Index" asp-route-status="@OptimumCoaching.core.ReportStatus.Investigating">Investigating</a>
+            <a class="btn btn-sm @TabClass(OptimumCoaching.core.ReportStatus.Resolved)" asp-action="Index" asp-route-status="@OptimumCoaching.core.ReportStatus.Resolved">Resolved</a>
+            <a class="btn btn-sm @TabClass(OptimumCoaching.core.ReportStatus.Dismissed)" asp-action="Index" asp-route-status="@OptimumCoaching.core.ReportStatus.Dismissed">Dismissed</a>
+        </div>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null) { <div class="alert alert-success">@TempData["SuccessMessage"]</div> }
+
+@if (!Model.Any())
+{
+    <div class="card"><div class="card-body text-center py-3"><p class="text-muted mb-0">No reports.</p></div></div>
+}
+else
+{
+    <div class="card">
+        <div class="card-body p-0">
+            <ul class="list-group list-group-flush">
+                @foreach (var r in Model)
+                {
+                    <li class="list-group-item">
+                        <a asp-action="Open" asp-route-id="@r.Id" class="text-decoration-none text-dark d-block">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>@r.Teacher?.FullName</strong>
+                                    <span class="badge badge-pill badge-light ml-1">@r.Category</span>
+                                    @switch (r.Status)
+                                    {
+                                        case OptimumCoaching.core.ReportStatus.Open:
+                                            <span class="badge badge-pill badge-warning ml-1">Open</span>
+                                            break;
+                                        case OptimumCoaching.core.ReportStatus.Investigating:
+                                            <span class="badge badge-pill badge-info ml-1">Investigating</span>
+                                            break;
+                                        case OptimumCoaching.core.ReportStatus.Resolved:
+                                            <span class="badge badge-pill badge-success ml-1">Resolved</span>
+                                            break;
+                                        case OptimumCoaching.core.ReportStatus.Dismissed:
+                                            <span class="badge badge-pill badge-secondary ml-1">Dismissed</span>
+                                            break;
+                                    }
+                                    <div class="small text-muted">From @r.Student?.FullName · @r.Created.ToString("dd MMM yyyy")</div>
+                                    <div class="small mt-1" style="white-space:pre-wrap;">@(r.Description.Length > 200 ? r.Description[..200] + "…" : r.Description)</div>
+                                </div>
+                            </div>
+                        </a>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+}

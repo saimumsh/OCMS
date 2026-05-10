@@ -16,6 +16,7 @@ namespace OptimumCoaching.web.Areas.Admin.Controllers
         private readonly IBatchUpdateService _updateService;
         private readonly IDepartmentService _departmentService;
         private readonly ITeacherService _teacherService;
+        private readonly IBatchTeacherService _batchTeachers;
         private readonly ApplicationDbContext _db;
         private readonly ICurrentUserService _currentUser;
 
@@ -24,6 +25,7 @@ namespace OptimumCoaching.web.Areas.Admin.Controllers
             IBatchUpdateService updateService,
             IDepartmentService departmentService,
             ITeacherService teacherService,
+            IBatchTeacherService batchTeachers,
             ApplicationDbContext db,
             ICurrentUserService currentUser)
         {
@@ -31,6 +33,7 @@ namespace OptimumCoaching.web.Areas.Admin.Controllers
             _updateService = updateService;
             _departmentService = departmentService;
             _teacherService = teacherService;
+            _batchTeachers = batchTeachers;
             _db = db;
             _currentUser = currentUser;
         }
@@ -155,7 +158,42 @@ namespace OptimumCoaching.web.Areas.Admin.Controllers
                 .Where(s => s.BatchId == id && !s.IsDeleted)
                 .OrderBy(s => s.FullName)
                 .ToListAsync();
+            ViewBag.Teachers = await _batchTeachers.GetForBatchAsync(id);
+            ViewBag.TeacherOptions = await _db.Teachers
+                .Where(t => !t.IsDeleted && t.IsActive)
+                .OrderBy(t => t.FullName)
+                .Select(t => new SelectListItem { Value = t.Id.ToString(), Text = t.FullName })
+                .ToListAsync();
             return View(b);
+        }
+
+        // ---- Multiple-teacher management on the Details page ----
+
+        [HttpPost, ValidateAntiForgeryToken]
+        [Authorize(Permissions.Batches.AddEdit)]
+        public async Task<IActionResult> AddTeacher(Guid batchId, Guid teacherId, string? role, string? note)
+        {
+            var (ok, msg, _) = await _batchTeachers.AddTeacherAsync(batchId, teacherId, role, note, _currentUser.UserId);
+            TempData[ok ? "SuccessMessage" : "ErrorMessage"] = msg;
+            return RedirectToAction(nameof(Details), new { id = batchId });
+        }
+
+        [HttpPost, ValidateAntiForgeryToken]
+        [Authorize(Permissions.Batches.AddEdit)]
+        public async Task<IActionResult> RemoveTeacher(Guid id, Guid batchId)
+        {
+            var (ok, msg) = await _batchTeachers.RemoveTeacherAsync(id, _currentUser.UserId);
+            TempData[ok ? "SuccessMessage" : "ErrorMessage"] = msg;
+            return RedirectToAction(nameof(Details), new { id = batchId });
+        }
+
+        [HttpPost, ValidateAntiForgeryToken]
+        [Authorize(Permissions.Batches.AddEdit)]
+        public async Task<IActionResult> SetLead(Guid batchId, Guid teacherId)
+        {
+            var (ok, msg) = await _batchTeachers.SetLeadAsync(batchId, teacherId, _currentUser.UserId);
+            TempData[ok ? "SuccessMessage" : "ErrorMessage"] = msg;
+            return RedirectToAction(nameof(Details), new { id = batchId });
         }
 
         // POST a class update from the Details page.

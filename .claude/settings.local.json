@@ -27,7 +27,11 @@
       "Bash(curl -s -o /dev/null -w \"HTTP  : %{http_code}\\\\n\" http://localhost:5258/)",
       "Bash(curl -sk -o /dev/null -w \"HTTPS : %{http_code}\\\\n\" https://localhost:7037/)",
       "Bash(taskkill /PID 19528 /F)",
-      "PowerShell(Stop-Process -Id 19528 -Force)"
+      "PowerShell(Stop-Process -Id 19528 -Force)",
+      "Bash(ls \"D:/Encoders/VitalityCash/VitalityCash/VitalityCash.Web/Views/Shared\")",
+      "Read(//d/Encoders/VitalityCash/VitalityCash/VitalityCash.Web/Views/Shared/**)",
+      "Bash(dotnet restore *)",
+      "Bash(dotnet msbuild *)"
     ]
   }
 }

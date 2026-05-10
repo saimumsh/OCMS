@@ -10,6 +10,16 @@ namespace OptimumCoaching.core
         public Guid? UserId { get; set; }
         public ApplicationUser? User { get; set; }
 
+        // Auto-generated identifier of the form {DeptCode}-{Session}-{BatchCode}-{Seq}
+        // Set by StudentCodeService when the student is approved + assigned to a batch.
+        [MaxLength(50), Display(Name = "Student Code")]
+        public string? StudentCode { get; set; }
+
+        // Academic session (e.g. "2026" or "2025-26"). Captured during enrollment;
+        // forms part of the auto StudentCode.
+        [MaxLength(20), Display(Name = "Session")]
+        public string? Session { get; set; }
+
         [Required, MaxLength(200), Display(Name = "Full name")]
         public string FullName { get; set; } = string.Empty;
 

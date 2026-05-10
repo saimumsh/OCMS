@@ -1,0 +1,64 @@
+@model OptimumCoaching.core.Exam
+@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+    var batchOptions = (IList<SelectListItem>)ViewBag.BatchOptions;
+    var typeOptions  = (IList<SelectListItem>)ViewBag.TypeOptions;
+    var isEdit = Model.Id != Guid.Empty;
+}
+
+<input asp-for="Id" type="hidden" />
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                <h4 class="card-title mb-0">@(isEdit ? "Edit Exam" : "New Exam")</h4>
+            </div>
+            <div class="card-body">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-1"></div>
+
+                <div class="form-group row">
+                    <label asp-for="Title" class="col-sm-3 col-form-label required"></label>
+                    <div class="col-sm-9"><input asp-for="Title" class="form-control" autofocus /></div>
+                </div>
+                <div class="form-group row">
+                    <label asp-for="BatchId" class="col-sm-3 col-form-label required"></label>
+                    <div class="col-sm-9">
+                        <select asp-for="BatchId" class="form-control" asp-items="@batchOptions">
+                            <option value="">— Select batch —</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label asp-for="Type" class="col-sm-3 col-form-label"></label>
+                    <div class="col-sm-9">
+                        <select asp-for="Type" class="form-control" asp-items="@typeOptions"></select>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label asp-for="ExamDate" class="col-sm-3 col-form-label required"></label>
+                    <div class="col-sm-9">
+                        <input asp-for="ExamDate" class="form-control" type="date" value="@Model.ExamDate.ToString("yyyy-MM-dd")" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label asp-for="TotalMarks" class="col-sm-3 col-form-label required"></label>
+                    <div class="col-sm-3"><input asp-for="TotalMarks" class="form-control" type="number" step="0.5" /></div>
+                    <label asp-for="PassMarks" class="col-sm-3 col-form-label required"></label>
+                    <div class="col-sm-3"><input asp-for="PassMarks" class="form-control" type="number" step="0.5" /></div>
+                </div>
+                <div class="form-group row">
+                    <label asp-for="DurationMinutes" class="col-sm-3 col-form-label"></label>
+                    <div class="col-sm-9"><input asp-for="DurationMinutes" class="form-control" type="number" /></div>
+                </div>
+                <div class="form-group row">
+                    <label asp-for="Syllabus" class="col-sm-3 col-form-label"></label>
+                    <div class="col-sm-9"><textarea asp-for="Syllabus" class="form-control" rows="3"></textarea></div>
+                </div>
+            </div>
+            <div class="card-footer text-right">
+                <a class="btn btn-custom-default mr-1" asp-action="Index"><i class="fa fa-times"></i> Cancel</a>
+                <button type="submit" class="btn btn-custom"><i class="fa fa-save"></i> @(isEdit ? "Save changes" : "Create exam")</button>
+            </div>
+        </div>
+    </div>
+</div>

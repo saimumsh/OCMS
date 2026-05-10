@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -30,6 +31,8 @@ namespace OptimumCoaching.web.Areas.Identity.Pages.Account
 
         public string ReturnUrl { get; set; } = string.Empty;
 
+        public IList<AuthenticationScheme> ExternalLogins { get; set; } = new List<AuthenticationScheme>();
+
         public class InputModel
         {
             [Required]
@@ -52,13 +55,16 @@ namespace OptimumCoaching.web.Areas.Identity.Pages.Account
             public string ConfirmPassword { get; set; } = string.Empty;
         }
 
-        public void OnGet(string? returnUrl = null)
+        public async Task OnGetAsync(string? returnUrl = null)
         {
             ReturnUrl = returnUrl ?? Url.Content("~/");
+            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
         }
 
         public async Task<IActionResult> OnPostAsync(string? returnUrl = null)
         {
+            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+
             if (!ModelState.IsValid)
                 return Page();
 

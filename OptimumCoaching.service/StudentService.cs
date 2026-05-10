@@ -10,12 +10,21 @@ namespace OptimumCoaching.service
         private readonly IRepository<Student> _repo;
         private readonly IUnitOfWork _uow;
         private readonly ApplicationDbContext _db;
+        private readonly IStudentCodeService _codeService;
+        private readonly IFeeService _feeService;
 
-        public StudentService(IRepository<Student> repo, IUnitOfWork uow, ApplicationDbContext db)
+        public StudentService(
+            IRepository<Student> repo,
+            IUnitOfWork uow,
+            ApplicationDbContext db,
+            IStudentCodeService codeService,
+            IFeeService feeService)
         {
             _repo = repo;
             _uow = uow;
             _db = db;
+            _codeService = codeService;
+            _feeService = feeService;
         }
 
         public async Task<IList<Student>> GetAllAsync(bool includeUser = false, StudentApprovalStatus? status = null)
@@ -97,6 +106,7 @@ namespace OptimumCoaching.service
             existing.EnrollmentDate = student.EnrollmentDate;
             existing.DepartmentId = student.DepartmentId;
             existing.BatchId = student.BatchId;
+            existing.Session = student.Session;
             existing.Notes = student.Notes;
             if (student.ImageUrl != null) existing.ImageUrl = string.IsNullOrWhiteSpace(student.ImageUrl) ? null : student.ImageUrl;
             existing.LastModified = DateTime.UtcNow;
@@ -105,6 +115,17 @@ namespace OptimumCoaching.service
             await ReplaceAcademicRecordsAsync(existing, student.AcademicRecords, lastModifiedBy);
 
             await _uow.CompleteAsync();
+
+            // Best-effort: try to assign / refresh the auto code now that the
+            // student's batch / session may have changed. Failures are silent —
+            // the code can be assigned later when missing fields are filled in.
+            await _codeService.AssignAsync(existing.Id);
+
+            // Best-effort: ensure the per-batch fee account exists so the
+            // Finance team can record payments immediately.
+            if (existing.BatchId.HasValue)
+                await _feeService.EnsureAccountAsync(existing.Id, existing.BatchId.Value, lastModifiedBy);
+
             return (true, "Student updated");
         }
 
@@ -159,6 +180,16 @@ namespace OptimumCoaching.service
             existing.LastModifiedBy = approverId;
 
             await _uow.CompleteAsync();
+
+            // Try to assign the StudentCode now (only succeeds when the student
+            // already has a Batch + Session — otherwise it's assigned later via
+            // UpdateAsync once those fields are filled in).
+            await _codeService.AssignAsync(existing.Id);
+
+            // Create the fee account if the student already has a batch.
+            if (existing.BatchId.HasValue)
+                await _feeService.EnsureAccountAsync(existing.Id, existing.BatchId.Value, approverId);
+
             return (true, "Student approved");
         }
 

@@ -10,12 +10,18 @@ namespace OptimumCoaching.service
         private readonly IRepository<Batch> _repo;
         private readonly IUnitOfWork _uow;
         private readonly ApplicationDbContext _db;
+        private readonly IBatchTeacherService _batchTeachers;
 
-        public BatchService(IRepository<Batch> repo, IUnitOfWork uow, ApplicationDbContext db)
+        public BatchService(
+            IRepository<Batch> repo,
+            IUnitOfWork uow,
+            ApplicationDbContext db,
+            IBatchTeacherService batchTeachers)
         {
             _repo = repo;
             _uow = uow;
             _db = db;
+            _batchTeachers = batchTeachers;
         }
 
         public async Task<IList<Batch>> GetAllAsync(Guid? departmentId = null)
@@ -39,15 +45,23 @@ namespace OptimumCoaching.service
                 .Include(b => b.Teacher)
                 .FirstOrDefaultAsync(b => b.Id == id);
 
-        public Task<IList<Batch>> GetForTeacherAsync(Guid teacherId) =>
-            _db.Batches
-                .Where(b => !b.IsDeleted && b.TeacherId == teacherId)
+        public Task<IList<Batch>> GetForTeacherAsync(Guid teacherId)
+        {
+            // A batch is "for" a teacher when they're either the lead
+            // (Batch.TeacherId) OR a co-teacher in the BatchTeachers join.
+            var ids = _db.BatchTeachers
+                .Where(bt => !bt.IsDeleted && bt.TeacherId == teacherId)
+                .Select(bt => bt.BatchId);
+
+            return _db.Batches
+                .Where(b => !b.IsDeleted && (b.TeacherId == teacherId || ids.Contains(b.Id)))
                 .Include(b => b.Department)
                 .Include(b => b.Class)
                 .Include(b => b.Subject)
                 .OrderBy(b => b.Name)
                 .ToListAsync()
                 .ContinueWith(t => (IList<Batch>)t.Result);
+        }
 
         public async Task<(bool Success, string Message, Batch? Batch)> CreateAsync(Batch batch, Guid? createdBy)
         {
@@ -68,6 +82,12 @@ namespace OptimumCoaching.service
 
             await _repo.AddAsync(batch);
             await _uow.CompleteAsync();
+
+            // Mirror the lead teacher into the BatchTeachers join so the
+            // multi-teacher view shows them from day one.
+            if (batch.TeacherId.HasValue)
+                await _batchTeachers.EnsureLeadMirrorAsync(batch.Id, batch.TeacherId, createdBy);
+
             return (true, "Batch created", batch);
         }
 
@@ -97,6 +117,10 @@ namespace OptimumCoaching.service
             existing.LastModifiedBy = lastModifiedBy;
 
             await _uow.CompleteAsync();
+
+            // Re-sync the lead row in BatchTeachers if the lead teacher changed.
+            await _batchTeachers.EnsureLeadMirrorAsync(existing.Id, existing.TeacherId, lastModifiedBy);
+
             return (true, "Batch updated");
         }
 

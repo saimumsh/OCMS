@@ -26,6 +26,23 @@ namespace OptimumCoaching.repo
         public DbSet<Batch> Batches => Set<Batch>();
         public DbSet<BatchUpdate> BatchUpdates => Set<BatchUpdate>();
         public DbSet<Group> Groups => Set<Group>();
+        public DbSet<Notice> Notices => Set<Notice>();
+        public DbSet<Conversation> Conversations => Set<Conversation>();
+        public DbSet<Message> Messages => Set<Message>();
+        public DbSet<ConversationReadState> ConversationReadStates => Set<ConversationReadState>();
+        public DbSet<Exam> Exams => Set<Exam>();
+        public DbSet<ExamResult> ExamResults => Set<ExamResult>();
+        public DbSet<TeacherReview> TeacherReviews => Set<TeacherReview>();
+        public DbSet<TeacherReport> TeacherReports => Set<TeacherReport>();
+        public DbSet<Topic> Topics => Set<Topic>();
+        public DbSet<BatchTopicAssignment> BatchTopicAssignments => Set<BatchTopicAssignment>();
+        public DbSet<BatchTeacher> BatchTeachers => Set<BatchTeacher>();
+        public DbSet<StudentFeeAccount> StudentFeeAccounts => Set<StudentFeeAccount>();
+        public DbSet<FeePayment> FeePayments => Set<FeePayment>();
+        public DbSet<TeacherSalaryPayment> TeacherSalaryPayments => Set<TeacherSalaryPayment>();
+        public DbSet<ClassMaterial> ClassMaterials => Set<ClassMaterial>();
+        public DbSet<ClassRoutineSlot> ClassRoutineSlots => Set<ClassRoutineSlot>();
+        public DbSet<ClassSessionOverride> ClassSessionOverrides => Set<ClassSessionOverride>();
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -211,6 +228,344 @@ namespace OptimumCoaching.repo
                     .WithMany()
                     .HasForeignKey(g => g.BatchId)
                     .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            builder.Entity<Notice>(e =>
+            {
+                e.Property(n => n.Audience).HasConversion<int>();
+
+                e.HasOne(n => n.Department)
+                    .WithMany()
+                    .HasForeignKey(n => n.DepartmentId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                e.HasOne(n => n.PostedByUser)
+                    .WithMany()
+                    .HasForeignKey(n => n.PostedByUserId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                e.HasIndex(n => new { n.Audience, n.PostedAt });
+                e.HasIndex(n => n.ExpiresAt);
+            });
+
+            builder.Entity<Conversation>(e =>
+            {
+                e.Property(c => c.Status).HasConversion<int>();
+
+                e.HasOne(c => c.StartedByUser)
+                    .WithMany()
+                    .HasForeignKey(c => c.StartedByUserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                e.HasIndex(c => new { c.TargetRole, c.LastMessageAt });
+                e.HasIndex(c => new { c.StartedByUserId, c.LastMessageAt });
+            });
+
+            builder.Entity<Message>(e =>
+            {
+                e.HasOne(m => m.Conversation)
+                    .WithMany(c => c.Messages)
+                    .HasForeignKey(m => m.ConversationId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasOne(m => m.SenderUser)
+                    .WithMany()
+                    .HasForeignKey(m => m.SenderUserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                e.HasIndex(m => new { m.ConversationId, m.SentAt });
+            });
+
+            builder.Entity<ConversationReadState>(e =>
+            {
+                e.HasKey(rs => new { rs.ConversationId, rs.UserId });
+
+                e.HasOne(rs => rs.Conversation)
+                    .WithMany()
+                    .HasForeignKey(rs => rs.ConversationId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasOne(rs => rs.User)
+                    .WithMany()
+                    .HasForeignKey(rs => rs.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            builder.Entity<Student>(e =>
+            {
+                e.HasIndex(s => s.StudentCode).IsUnique().HasFilter("[StudentCode] IS NOT NULL");
+            });
+
+            builder.Entity<Exam>(e =>
+            {
+                e.Property(x => x.Type).HasConversion<int>();
+                e.Property(x => x.Status).HasConversion<int>();
+                e.Property(x => x.TotalMarks).HasColumnType("decimal(8,2)");
+                e.Property(x => x.PassMarks).HasColumnType("decimal(8,2)");
+
+                e.HasOne(x => x.Batch)
+                    .WithMany()
+                    .HasForeignKey(x => x.BatchId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasIndex(x => new { x.BatchId, x.ExamDate });
+            });
+
+            builder.Entity<ExamResult>(e =>
+            {
+                e.Property(x => x.Status).HasConversion<int>();
+                e.Property(x => x.MarksObtained).HasColumnType("decimal(8,2)");
+
+                e.HasOne(x => x.Exam)
+                    .WithMany(ex => ex.Results)
+                    .HasForeignKey(x => x.ExamId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasOne(x => x.Student)
+                    .WithMany()
+                    .HasForeignKey(x => x.StudentId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasIndex(x => new { x.ExamId, x.StudentId }).IsUnique();
+            });
+
+            builder.Entity<TeacherReview>(e =>
+            {
+                e.HasOne(x => x.Student)
+                    .WithMany()
+                    .HasForeignKey(x => x.StudentId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasOne(x => x.Teacher)
+                    .WithMany()
+                    .HasForeignKey(x => x.TeacherId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasOne(x => x.Batch)
+                    .WithMany()
+                    .HasForeignKey(x => x.BatchId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                // One latest review per student-teacher pair (we upsert).
+                e.HasIndex(x => new { x.StudentId, x.TeacherId }).IsUnique()
+                    .HasFilter("[IsDeleted] = 0");
+            });
+
+            builder.Entity<Topic>(e =>
+            {
+                e.HasOne(x => x.Subject)
+                    .WithMany()
+                    .HasForeignKey(x => x.SubjectId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasIndex(x => new { x.SubjectId, x.Title });
+            });
+
+            builder.Entity<BatchTopicAssignment>(e =>
+            {
+                e.HasOne(x => x.Batch)
+                    .WithMany()
+                    .HasForeignKey(x => x.BatchId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasOne(x => x.Topic)
+                    .WithMany()
+                    .HasForeignKey(x => x.TopicId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasOne(x => x.Teacher)
+                    .WithMany()
+                    .HasForeignKey(x => x.TeacherId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                e.HasIndex(x => new { x.BatchId, x.TopicId }).IsUnique()
+                    .HasFilter("[IsDeleted] = 0");
+            });
+
+            builder.Entity<BatchTeacher>(e =>
+            {
+                e.HasOne(x => x.Batch)
+                    .WithMany()
+                    .HasForeignKey(x => x.BatchId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                // Restrict so a Teacher row can't be deleted while still
+                // assigned; admin must remove the assignment first.
+                e.HasOne(x => x.Teacher)
+                    .WithMany()
+                    .HasForeignKey(x => x.TeacherId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                e.HasIndex(x => new { x.BatchId, x.TeacherId }).IsUnique()
+                    .HasFilter("[IsDeleted] = 0");
+            });
+
+            builder.Entity<Batch>(e =>
+            {
+                e.Property(x => x.CourseFee).HasColumnType("decimal(12,2)");
+                e.Property(x => x.MinimumEnrollment).HasColumnType("decimal(12,2)");
+                e.Property(x => x.FullPaymentDiscountPercent).HasColumnType("decimal(5,2)");
+            });
+
+            builder.Entity<StudentFeeAccount>(e =>
+            {
+                e.Property(x => x.Status).HasConversion<int>();
+                e.Property(x => x.FinalFee).HasColumnType("decimal(12,2)");
+                e.Property(x => x.AmountPaid).HasColumnType("decimal(12,2)");
+                e.Property(x => x.DiscountAmount).HasColumnType("decimal(12,2)");
+                e.Ignore(x => x.Balance); // computed in code, not stored
+
+                // NoAction on the second leg avoids "multiple cascade paths"
+                // because Batch and Student would both cascade-delete here.
+                e.HasOne(x => x.Student)
+                    .WithMany()
+                    .HasForeignKey(x => x.StudentId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasOne(x => x.Batch)
+                    .WithMany()
+                    .HasForeignKey(x => x.BatchId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                e.HasIndex(x => new { x.StudentId, x.BatchId }).IsUnique()
+                    .HasFilter("[IsDeleted] = 0");
+            });
+
+            builder.Entity<FeePayment>(e =>
+            {
+                e.Property(x => x.Method).HasConversion<int>();
+                e.Property(x => x.Amount).HasColumnType("decimal(12,2)");
+
+                e.HasOne(x => x.Account)
+                    .WithMany(a => a.Payments)
+                    .HasForeignKey(x => x.AccountId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasOne(x => x.RecordedByUser)
+                    .WithMany()
+                    .HasForeignKey(x => x.RecordedByUserId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                e.HasIndex(x => new { x.AccountId, x.PaidOn });
+            });
+
+            builder.Entity<TeacherSalaryPayment>(e =>
+            {
+                e.Property(x => x.Method).HasConversion<int>();
+                e.Property(x => x.Status).HasConversion<int>();
+                e.Property(x => x.Amount).HasColumnType("decimal(12,2)");
+
+                e.HasOne(x => x.Teacher)
+                    .WithMany()
+                    .HasForeignKey(x => x.TeacherId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasOne(x => x.RecordedByUser)
+                    .WithMany()
+                    .HasForeignKey(x => x.RecordedByUserId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                e.HasIndex(x => new { x.TeacherId, x.PeriodMonth });
+            });
+
+            builder.Entity<ClassMaterial>(e =>
+            {
+                e.Property(x => x.Type).HasConversion<int>();
+
+                e.HasOne(x => x.Batch)
+                    .WithMany()
+                    .HasForeignKey(x => x.BatchId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasOne(x => x.Topic)
+                    .WithMany()
+                    .HasForeignKey(x => x.TopicId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                e.HasOne(x => x.UploadedByUser)
+                    .WithMany()
+                    .HasForeignKey(x => x.UploadedByUserId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                e.HasIndex(x => new { x.BatchId, x.UploadedAt });
+            });
+
+            builder.Entity<ClassRoutineSlot>(e =>
+            {
+                e.Property(x => x.Day).HasConversion<int>();
+
+                e.HasOne(x => x.Batch)
+                    .WithMany()
+                    .HasForeignKey(x => x.BatchId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasOne(x => x.Topic)
+                    .WithMany()
+                    .HasForeignKey(x => x.TopicId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                e.HasOne(x => x.Teacher)
+                    .WithMany()
+                    .HasForeignKey(x => x.TeacherId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                e.HasIndex(x => new { x.BatchId, x.Day, x.StartTime });
+            });
+
+            builder.Entity<ClassSessionOverride>(e =>
+            {
+                e.HasOne(x => x.Batch)
+                    .WithMany()
+                    .HasForeignKey(x => x.BatchId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                // NoAction (not SetNull) avoids "multiple cascade paths"
+                // because both ClassRoutineSlots and ClassSessionOverrides
+                // already cascade from Batches.
+                e.HasOne(x => x.RoutineSlot)
+                    .WithMany()
+                    .HasForeignKey(x => x.RoutineSlotId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                e.HasOne(x => x.Topic)
+                    .WithMany()
+                    .HasForeignKey(x => x.TopicId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                e.HasOne(x => x.Teacher)
+                    .WithMany()
+                    .HasForeignKey(x => x.TeacherId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                e.HasIndex(x => new { x.BatchId, x.SessionDate });
+            });
+
+            builder.Entity<TeacherReport>(e =>
+            {
+                e.Property(x => x.Category).HasConversion<int>();
+                e.Property(x => x.Status).HasConversion<int>();
+
+                e.HasOne(x => x.Student)
+                    .WithMany()
+                    .HasForeignKey(x => x.StudentId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasOne(x => x.Teacher)
+                    .WithMany()
+                    .HasForeignKey(x => x.TeacherId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasOne(x => x.Batch)
+                    .WithMany()
+                    .HasForeignKey(x => x.BatchId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                e.HasOne(x => x.HandledByUser)
+                    .WithMany()
+                    .HasForeignKey(x => x.HandledByUserId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                e.HasIndex(x => new { x.Status, x.Created });
             });
         }
     }

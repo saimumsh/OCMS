@@ -2,6 +2,7 @@
 @inject OptimumCoaching.service.IStudentService StudentSvc
 @inject OptimumCoaching.service.IGuardianService GuardianSvc
 @inject OptimumCoaching.service.ITeacherService TeacherSvc
+@inject OptimumCoaching.service.IMessagingService MessagingSvc
 @{
     var isAdminArea = Model != null && Model.IsAuthenticated &&
         (Model.HasRole(Roles.Admin) || Model.HasRole(Roles.SuperAdmin) || Model.HasRole(Roles.Dev));
@@ -22,6 +23,36 @@
             else if (await GuardianSvc.GetByUserIdAsync(uid) != null) hasDomainProfile = true;
             else if (await TeacherSvc.GetByUserIdAsync(uid) != null) hasDomainProfile = true;
         }
+    }
+
+    // Per-item permission flags so each parent group is hidden when none of
+    // its children are reachable for this user.
+    var canSeeTeachers     = Model != null && Model.HasPermission(Permissions.Teachers.ListView);
+    var canSeeStudents     = Model != null && Model.HasPermission(Permissions.Students.ListView);
+    var canApproveStudents = Model != null && Model.HasPermission(Permissions.Students.Approve);
+    var canSeeGuardians    = Model != null && Model.HasPermission(Permissions.Guardians.ListView);
+    var canSeeAnyCoaching  = canSeeTeachers || canSeeStudents || canSeeGuardians;
+
+    var canSeeDepartments = Model != null && Model.HasPermission(Permissions.Departments.ListView);
+    var canSeeSubjects    = Model != null && Model.HasPermission(Permissions.Subjects.ListView);
+    var canSeeBatches     = Model != null && Model.HasPermission(Permissions.Batches.ListView);
+    var canSeeAnyConfig   = canSeeDepartments || canSeeSubjects || canSeeBatches;
+
+    var canSeeClassroomTopics    = Model != null && Model.HasPermission(Permissions.Topics.ListView);
+    var canSeeClassroomMaterials = Model != null && Model.HasPermission(Permissions.Materials.ListView);
+    var canSeeClassroomRoutine   = Model != null && Model.HasPermission(Permissions.Routine.ListView);
+    var canSeeClassroom = canSeeClassroomTopics || canSeeClassroomMaterials || canSeeClassroomRoutine;
+
+    var canSeeFinance      = Model != null && Model.HasPermission(Permissions.Finance.ListView);
+    var canSeeFinSalaries  = Model != null && Model.HasPermission(Permissions.Finance.ViewSalaries);
+    var canSeeAnyFinance   = canSeeFinance || canSeeFinSalaries;
+
+    // Unread Messages badge — only compute when authenticated.
+    var unreadMessages = 0;
+    if (Model != null && Model.IsAuthenticated &&
+        Guid.TryParse(Model.Id(), out var msgUid) && msgUid != Guid.Empty)
+    {
+        unreadMessages = await MessagingSvc.GetUnreadCountAsync(msgUid, Model.GetRoles());
     }
 }
 <div class="main-menu menu-fixed menu-dark menu-accordion menu-shadow" data-scroll-to-active="true">
@@ -62,6 +93,52 @@
                     </li>
                 }
 
+                @if (canSeeAnyCoaching)
+                {
+                    <li class="nav-item">
+                        <a href="#"><i class="fa fa-graduation-cap"></i><span class="menu-title" data-i18n="">Coaching</span></a>
+                        <ul class="menu-content">
+                            @if (canSeeTeachers)
+                            {
+                                <li><a class="menu-item" asp-area="Admin" asp-controller="Teachers" asp-action="Index">Teachers</a></li>
+                            }
+                            @if (canSeeStudents)
+                            {
+                                <li><a class="menu-item" asp-area="Admin" asp-controller="Students" asp-action="Index">Students</a></li>
+                            }
+                            @if (canApproveStudents)
+                            {
+                                <li><a class="menu-item" asp-area="Admin" asp-controller="Students" asp-action="Pending">Pending Approvals</a></li>
+                            }
+                            @if (canSeeGuardians)
+                            {
+                                <li><a class="menu-item" asp-area="Admin" asp-controller="Guardians" asp-action="Index">Guardians</a></li>
+                            }
+                        </ul>
+                    </li>
+                }
+
+                @if (canSeeAnyConfig)
+                {
+                    <li class="nav-item">
+                        <a href="#"><i class="fa fa-cogs"></i><span class="menu-title" data-i18n="">Configuration</span></a>
+                        <ul class="menu-content">
+                            @if (canSeeDepartments)
+                            {
+                                <li><a class="menu-item" asp-area="Admin" asp-controller="Departments" asp-action="Index">Departments</a></li>
+                            }
+                            @if (canSeeSubjects)
+                            {
+                                <li><a class="menu-item" asp-area="Admin" asp-controller="Subjects" asp-action="Index">Subjects</a></li>
+                            }
+                            @if (canSeeBatches)
+                            {
+                                <li><a class="menu-item" asp-area="Admin" asp-controller="Batches" asp-action="Index">Batches</a></li>
+                            }
+                        </ul>
+                    </li>
+                }
+
                 @if (isAdminArea)
                 {
                     <li class="nav-item">
@@ -84,6 +161,75 @@
                         </ul>
                     </li>
                 }
+
+                @if (Model.HasPermission(Permissions.Notices.ListView))
+                {
+                    <li class="nav-item">
+                        <a href="@Url.Action("Index", "Notices", new { area = "" })">
+                            <i class="fa fa-bullhorn"></i>
+                            <span class="menu-title" data-i18n="">Notices</span>
+                        </a>
+                    </li>
+                }
+
+                @if (Model.HasPermission(Permissions.Exams.ListView))
+                {
+                    <li class="nav-item">
+                        <a asp-area="Admin" asp-controller="Exams" asp-action="Index">
+                            <i class="fa fa-pencil-square-o"></i>
+                            <span class="menu-title" data-i18n="">Exams</span>
+                        </a>
+                    </li>
+                }
+
+                @if (canSeeClassroom)
+                {
+                    <li class="nav-item">
+                        <a href="#"><i class="fa fa-book"></i><span class="menu-title" data-i18n="">Classroom</span></a>
+                        <ul class="menu-content">
+                            @if (canSeeClassroomTopics)
+                            { <li><a class="menu-item" asp-area="Admin" asp-controller="Topics" asp-action="Index">Topics</a></li> }
+                            @if (canSeeClassroomMaterials)
+                            { <li><a class="menu-item" asp-area="Admin" asp-controller="Materials" asp-action="Index">Materials</a></li> }
+                            @if (canSeeClassroomRoutine)
+                            { <li><a class="menu-item" asp-area="Admin" asp-controller="Routine" asp-action="Index">Routine</a></li> }
+                        </ul>
+                    </li>
+                }
+
+                @if (canSeeAnyFinance)
+                {
+                    <li class="nav-item">
+                        <a href="#"><i class="fa fa-money"></i><span class="menu-title" data-i18n="">Finance</span></a>
+                        <ul class="menu-content">
+                            @if (canSeeFinance)
+                            { <li><a class="menu-item" asp-area="Admin" asp-controller="Finance" asp-action="Index">Overview</a></li> }
+                            @if (canSeeFinance)
+                            { <li><a class="menu-item" asp-area="Admin" asp-controller="Finance" asp-action="StudentFees">Student Fees</a></li> }
+                            @if (canSeeFinSalaries)
+                            { <li><a class="menu-item" asp-area="Admin" asp-controller="Finance" asp-action="Salaries">Teacher Salaries</a></li> }
+                        </ul>
+                    </li>
+                }
+
+                @if (Model.HasPermission(Permissions.TeacherReports.ListView))
+                {
+                    <li class="nav-item">
+                        <a asp-area="Admin" asp-controller="TeacherReports" asp-action="Index">
+                            <i class="fa fa-flag"></i>
+                            <span class="menu-title" data-i18n="">Teacher Reports</span>
+                        </a>
+                    </li>
+                }
+
+                <li class="nav-item">
+                    <a href="@Url.Action("Index", "Messages", new { area = "" })">
+                        <i class="fa fa-envelope"></i>
+                        <span class="menu-title" data-i18n="">Messages</span>
+                        @if (unreadMessages > 0)
+                        { <span class="badge badge-pill badge-danger float-right">@unreadMessages</span> }
+                    </a>
+                </li>
 
                 <li class="nav-item">
                     <a href="@Url.Action("ChangePassword", "Account", new { area = "Identity" })">

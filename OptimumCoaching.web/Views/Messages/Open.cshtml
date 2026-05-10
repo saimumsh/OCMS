@@ -1,0 +1,104 @@
+@model OptimumCoaching.core.Conversation
+@using OptimumCoaching.web.Models
+@{
+    ViewData["Title"] = Model.Subject;
+    var currentUserId = (Guid)(ViewBag.CurrentUserId ?? Guid.Empty);
+    var isOriginator  = (bool)(ViewBag.IsOriginator ?? false);
+
+    string Initials(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "?";
+        return string.Concat(name
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2)
+            .Select(p => char.ToUpper(p[0])));
+    }
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-12 mb-1">
+        <h3 class="content-header-title mb-0">@Model.Subject</h3>
+        <div class="row breadcrumbs-top">
+            <div class="breadcrumb-wrapper col-12">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Messages</a></li>
+                    <li class="breadcrumb-item active">Conversation</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+    </div>
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <div class="card">
+            <div class="card-header border-bottom-blue-grey border-bottom-lighten-5 d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                    <h4 class="card-title mb-0">@Model.Subject</h4>
+                    <small class="text-muted">
+                        Started by <strong>@(Model.StartedByUser?.FullName ?? "Unknown")</strong>
+                        · To <strong>@RoleLabels.For(Model.TargetRole)</strong>
+                    </small>
+                </div>
+                <span class="badge badge-pill @(Model.Status == OptimumCoaching.core.ConversationStatus.Closed ? "badge-secondary" : "badge-success")">
+                    @Model.Status
+                </span>
+            </div>
+            <div class="card-body oc-thread">
+                @foreach (var m in Model.Messages.OrderBy(x => x.SentAt))
+                {
+                    var mine = m.SenderUserId == currentUserId;
+                    var senderName = m.SenderUser?.FullName ?? "Unknown";
+                    <div class="oc-msg @(mine ? "oc-msg--mine" : "oc-msg--theirs")">
+                        <div class="oc-msg__avatar">@Initials(senderName)</div>
+                        <div class="oc-msg__bubble">
+                            <div class="oc-msg__meta">
+                                <strong>@senderName</strong>
+                                <span class="text-muted ml-1">· @m.SentAt.ToString("dd MMM yyyy, HH:mm")</span>
+                            </div>
+                            <div class="oc-msg__body">@m.Body</div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @if (Model.Status == OptimumCoaching.core.ConversationStatus.Open)
+            {
+                <div class="card-footer">
+                    <form method="post" asp-action="Reply">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="ConversationId" value="@Model.Id" />
+                        <div class="form-group mb-1">
+                            <textarea name="Body" class="form-control" rows="3" placeholder="Write a reply…" required></textarea>
+                        </div>
+                        <div class="text-right">
+                            <button type="submit" class="btn btn-custom btn-medium">
+                                <i class="fa fa-paper-plane"></i> Send Reply
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            }
+            else
+            {
+                <div class="card-footer text-center text-muted">
+                    <small>This conversation is closed. Start a new one to continue.</small>
+                </div>
+            }
+        </div>
+    </div>
+</div>

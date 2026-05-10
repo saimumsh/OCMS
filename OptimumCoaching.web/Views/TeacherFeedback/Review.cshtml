@@ -1,0 +1,51 @@
+@{
+    ViewData["Title"] = "Review Teacher";
+    var teacherId = (Guid)ViewBag.TeacherId;
+    var batchId = (Guid?)ViewBag.BatchId;
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-12 mb-1">
+        <h3 class="content-header-title mb-0"><i class="fa fa-star mr-1 text-warning"></i> Review your teacher</h3>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <form method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="teacherId" value="@teacherId" />
+            @if (batchId.HasValue) { <input type="hidden" name="batchId" value="@batchId" /> }
+
+            <div class="card">
+                <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                    <h4 class="card-title mb-0">How would you rate your teacher?</h4>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small">Your rating is shared with administrators and contributes to the teacher's average. You can update it later.</p>
+
+                    <div class="form-group">
+                        <label class="d-block">Rating</label>
+                        @for (int i = 5; i >= 1; i--)
+                        {
+                            <label class="mr-3">
+                                <input type="radio" name="rating" value="@i" required />
+                                @i ★
+                            </label>
+                        }
+                    </div>
+
+                    <div class="form-group">
+                        <label for="comment">Comment <span class="text-muted">(optional)</span></label>
+                        <textarea id="comment" name="comment" class="form-control" rows="4" maxlength="2000"
+                                  placeholder="What did you like? Anything that could be better?"></textarea>
+                    </div>
+                </div>
+                <div class="card-footer text-right">
+                    <a asp-controller="Home" asp-action="UserDashboard" class="btn btn-custom-default mr-1"><i class="fa fa-times"></i> Cancel</a>
+                    <button type="submit" class="btn btn-custom"><i class="fa fa-paper-plane"></i> Submit review</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

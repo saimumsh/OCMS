@@ -1,0 +1,98 @@
+@model IList<OptimumCoaching.service.ExamResultRow>
+@{
+    var exam = (OptimumCoaching.core.Exam)ViewBag.Exam;
+    ViewData["Title"] = $"Grade — {exam.Title}";
+    var canPublish = User.Identity != null && User.Identity.HasPermission(OptimumCoaching.core.Permissions.Results.Publish);
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-md-7 col-12 mb-1">
+        <h3 class="content-header-title mb-0">@exam.Title <small class="text-muted">@exam.Type · @exam.ExamDate.ToString("dd MMM yyyy") · Total @exam.TotalMarks · Pass @exam.PassMarks</small></h3>
+        <div class="row breadcrumbs-top">
+            <div class="breadcrumb-wrapper col-12">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Exams</a></li>
+                    <li class="breadcrumb-item active">Grade</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+    <div class="content-header-right col-md-5 col-12 mb-1 text-md-right">
+        @if (canPublish)
+        {
+            <form method="post" asp-action="PublishResults" asp-route-id="@exam.Id" class="d-inline"
+                  onsubmit="return confirm('Publish all draft results to students?');">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-success btn-medium"><i class="fa fa-bullhorn"></i> Publish results</button>
+            </form>
+        }
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null) { <div class="alert alert-success">@TempData["SuccessMessage"]</div> }
+@if (TempData["ErrorMessage"]   != null) { <div class="alert alert-danger">@TempData["ErrorMessage"]</div> }
+
+@if (!Model.Any())
+{
+    <div class="card"><div class="card-body text-center py-3"><p class="text-muted mb-0">No students enrolled in this batch yet.</p></div></div>
+}
+else
+{
+    <form method="post" asp-action="SaveGrades" asp-route-id="@exam.Id">
+        @Html.AntiForgeryToken()
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-condensed mb-0 user-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Student</th>
+                                <th>Code</th>
+                                <th class="text-center">Present</th>
+                                <th>Marks (out of @exam.TotalMarks)</th>
+                                <th>Remarks</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < Model.Count; i++)
+                            {
+                                var r = Model[i];
+                                <tr>
+                                    <td class="align-middle">@(i + 1)</td>
+                                    <td class="align-middle">@r.StudentName</td>
+                                    <td class="align-middle"><span class="badge badge-light">@(r.StudentCode ?? "—")</span></td>
+                                    <td class="align-middle text-center">
+                                        <input type="hidden" name="rows[@i].StudentId" value="@r.StudentId" />
+                                        <input type="hidden" name="rows[@i].ResultId"  value="@r.ResultId" />
+                                        <input type="checkbox" name="rows[@i].IsPresent" value="true" @(r.IsPresent ? "checked" : "") />
+                                        <input type="hidden" name="rows[@i].IsPresent" value="false" />
+                                    </td>
+                                    <td class="align-middle">
+                                        <input type="number" step="0.5" min="0" max="@exam.TotalMarks"
+                                               name="rows[@i].MarksObtained" value="@r.MarksObtained"
+                                               class="form-control form-control-sm" style="max-width:120px;" />
+                                    </td>
+                                    <td class="align-middle">
+                                        <input type="text" name="rows[@i].Remarks" value="@r.Remarks"
+                                               class="form-control form-control-sm" />
+                                    </td>
+                                    <td class="align-middle">
+                                        @if (r.Status == OptimumCoaching.core.ResultStatus.Published)
+                                        { <span class="badge badge-pill badge-success">Published</span> }
+                                        else
+                                        { <span class="badge badge-pill badge-secondary">Draft</span> }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer text-right">
+                <button type="submit" class="btn btn-custom"><i class="fa fa-save"></i> Save draft</button>
+            </div>
+        </div>
+    </form>
+}

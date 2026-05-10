@@ -1,0 +1,105 @@
+@model IList<OptimumCoaching.core.Topic>
+@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+    ViewData["Title"] = "Topics";
+    var subjectOptions = (IList<SelectListItem>)ViewBag.SubjectOptions;
+    var activeSubjectId = ViewBag.ActiveSubjectId as Guid?;
+    var canEdit = User.Identity != null && User.Identity.HasPermission(OptimumCoaching.core.Permissions.Topics.AddEdit);
+    var canDelete = User.Identity != null && User.Identity.HasPermission(OptimumCoaching.core.Permissions.Topics.Delete);
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-md-7 col-12 mb-1">
+        <h3 class="content-header-title mb-0"><i class="fa fa-list mr-1 text-primary"></i> Topics</h3>
+        <small class="text-muted">Break a Subject into teachable units. Topics can be assigned to teachers per batch.</small>
+    </div>
+    <div class="content-header-right col-md-5 col-12 mb-1 text-md-right">
+        <form method="get" class="form-inline justify-content-md-end mb-1 d-inline-block">
+            <select name="subjectId" class="form-control form-control-sm" onchange="this.form.submit()">
+                <option value="">— Choose a subject —</option>
+                @foreach (var o in subjectOptions)
+                {
+                    if (Guid.TryParse(o.Value, out var g) && activeSubjectId == g)
+                    { <option value="@o.Value" selected>@o.Text</option> }
+                    else
+                    { <option value="@o.Value">@o.Text</option> }
+                }
+            </select>
+        </form>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null) { <div class="alert alert-success">@TempData["SuccessMessage"]</div> }
+@if (TempData["ErrorMessage"] != null) { <div class="alert alert-danger">@TempData["ErrorMessage"]</div> }
+
+@if (!activeSubjectId.HasValue)
+{
+    <div class="card"><div class="card-body text-center py-3"><p class="text-muted mb-0">Pick a subject to manage its topics.</p></div></div>
+}
+else
+{
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                    <h4 class="card-title mb-0">Topics <span class="badge badge-pill badge-secondary ml-1">@Model.Count</span></h4>
+                </div>
+                <div class="card-body p-0">
+                    @if (!Model.Any())
+                    { <p class="text-muted text-center py-3 mb-0">No topics yet.</p> }
+                    else
+                    {
+                        <ul class="list-group list-group-flush">
+                            @foreach (var t in Model)
+                            {
+                                <li class="list-group-item">
+                                    <form method="post" asp-action="Update" class="form-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="Id" value="@t.Id" />
+                                        <input type="hidden" name="SubjectId" value="@t.SubjectId" />
+                                        <input type="number" name="SortOrder" value="@t.SortOrder" class="form-control form-control-sm mr-1" style="width:70px" />
+                                        <input type="text" name="Title" value="@t.Title" class="form-control form-control-sm flex-grow-1 mr-1" required />
+                                        <input type="text" name="Code" value="@t.Code" class="form-control form-control-sm mr-1" placeholder="Code" style="width:110px" />
+                                        @if (canEdit)
+                                        { <button type="submit" class="btn btn-sm btn-outline-primary mr-1" title="Save"><i class="fa fa-check"></i></button> }
+                                    </form>
+                                    @if (canDelete)
+                                    {
+                                        <form method="post" asp-action="Delete" asp-route-id="@t.Id" asp-route-subjectId="@t.SubjectId" class="d-inline" onsubmit="return confirm('Remove this topic?');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-danger mt-1" title="Remove"><i class="fa fa-trash"></i></button>
+                                        </form>
+                                    }
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+        </div>
+
+        @if (canEdit)
+        {
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                        <h4 class="card-title mb-0">Add topic</h4>
+                    </div>
+                    <form method="post" asp-action="Create">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="SubjectId" value="@activeSubjectId" />
+                        <div class="card-body">
+                            <div class="form-group"><label>Title</label><input name="Title" class="form-control" required /></div>
+                            <div class="form-group"><label>Code</label><input name="Code" class="form-control" /></div>
+                            <div class="form-group"><label>Order</label><input name="SortOrder" type="number" class="form-control" value="0" /></div>
+                            <div class="form-group"><label>Description</label><textarea name="Description" class="form-control" rows="3"></textarea></div>
+                        </div>
+                        <div class="card-footer text-right">
+                            <button type="submit" class="btn btn-custom"><i class="fa fa-plus"></i> Add</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+}

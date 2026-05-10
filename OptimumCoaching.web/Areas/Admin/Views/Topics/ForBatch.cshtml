@@ -1,0 +1,88 @@
+@model IList<OptimumCoaching.core.BatchTopicAssignment>
+@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+    var batch = (OptimumCoaching.core.Batch)ViewBag.Batch;
+    var topics = (IList<OptimumCoaching.core.Topic>)ViewBag.Topics;
+    var teacherOptions = (IList<SelectListItem>)ViewBag.TeacherOptions;
+    ViewData["Title"] = $"Topic teachers — {batch.Name}";
+    var canAssign = User.Identity != null && User.Identity.HasPermission(OptimumCoaching.core.Permissions.Topics.AssignTeachers);
+
+    var assigned = Model.ToDictionary(a => a.TopicId);
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-12 mb-1">
+        <h3 class="content-header-title mb-0"><i class="fa fa-user-plus mr-1 text-primary"></i> @batch.Name — Topic teachers</h3>
+        <small class="text-muted">@(batch.Subject?.Name ?? "—") · Lead teacher set on the Batch.</small>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null) { <div class="alert alert-success">@TempData["SuccessMessage"]</div> }
+@if (TempData["ErrorMessage"] != null) { <div class="alert alert-danger">@TempData["ErrorMessage"]</div> }
+
+@if (!topics.Any())
+{
+    <div class="card"><div class="card-body text-center py-3">
+        <p class="text-muted mb-1">No topics defined for this subject yet.</p>
+        @if (batch.SubjectId.HasValue)
+        { <a class="btn btn-custom btn-sm" asp-controller="Topics" asp-action="Index" asp-route-subjectId="@batch.SubjectId">Add topics first</a> }
+    </div></div>
+}
+else
+{
+    <div class="card">
+        <div class="card-body p-0">
+            <table class="table table-condensed mb-0 user-table">
+                <thead>
+                    <tr><th>Topic</th><th>Teacher</th><th>Note</th><th class="text-right">Action</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var topic in topics)
+                    {
+                        assigned.TryGetValue(topic.Id, out var a);
+                        <tr>
+                            <td class="align-middle"><strong>@topic.Title</strong>@if (!string.IsNullOrWhiteSpace(topic.Code)) { <span class="badge badge-light ml-1">@topic.Code</span> }</td>
+                            @if (canAssign)
+                            {
+                                <td colspan="2" class="align-middle">
+                                    <form method="post" asp-action="Assign" class="form-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="batchId" value="@batch.Id" />
+                                        <input type="hidden" name="topicId" value="@topic.Id" />
+                                        <select name="teacherId" class="form-control form-control-sm mr-1" required>
+                                            <option value="">— Choose teacher —</option>
+                                            @foreach (var o in teacherOptions)
+                                            {
+                                                if (a != null && Guid.TryParse(o.Value, out var g) && g == a.TeacherId)
+                                                { <option value="@o.Value" selected>@o.Text</option> }
+                                                else
+                                                { <option value="@o.Value">@o.Text</option> }
+                                            }
+                                        </select>
+                                        <input type="text" name="note" value="@(a?.Note)" class="form-control form-control-sm mr-1 flex-grow-1" placeholder="Optional note" />
+                                        <button type="submit" class="btn btn-sm btn-outline-primary"><i class="fa fa-check"></i></button>
+                                    </form>
+                                </td>
+                                <td class="align-middle text-right">
+                                    @if (a != null)
+                                    {
+                                        <form method="post" asp-action="Unassign" asp-route-id="@a.Id" asp-route-batchId="@batch.Id" class="d-inline" onsubmit="return confirm('Remove assignment?');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Unassign"><i class="fa fa-times"></i></button>
+                                        </form>
+                                    }
+                                </td>
+                            }
+                            else
+                            {
+                                <td class="align-middle">@(a?.Teacher?.FullName ?? "—")</td>
+                                <td class="align-middle">@(a?.Note ?? "—")</td>
+                                <td></td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

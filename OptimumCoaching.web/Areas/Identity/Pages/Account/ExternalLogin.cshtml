@@ -1,0 +1,56 @@
+@page
+@model ExternalLoginModel
+@{
+    ViewData["Title"] = "Confirm your account";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 text-center">
+                <h3>@OptimumCoaching.web.Program.ProjectName()</h3>
+                <h6 class="text-muted">
+                    Confirm your details to finish creating an account
+                    @if (!string.IsNullOrEmpty(Model.ProviderDisplayName))
+                    {
+                        <text>(via @Model.ProviderDisplayName)</text>
+                    }
+                </h6>
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-3">
+                    You're signing in with @Model.ProviderDisplayName for the first time.
+                    Review the information below — you can edit it before we create your account.
+                </p>
+
+                <form method="post" asp-page-handler="Confirmation" asp-route-returnUrl="@Model.ReturnUrl">
+                    <div asp-validation-summary="All" class="text-danger"></div>
+
+                    <div class="form-group mb-3">
+                        <label asp-for="Input.FullName" class="form-label">Full Name</label>
+                        <input asp-for="Input.FullName" class="form-control" autofocus />
+                        <span asp-validation-for="Input.FullName" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label asp-for="Input.Email" class="form-label">Email</label>
+                        <input asp-for="Input.Email" class="form-control" readonly />
+                        <span asp-validation-for="Input.Email" class="text-danger"></span>
+                        <small class="text-muted">Your email is verified by @Model.ProviderDisplayName.</small>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">Create account</button>
+                </form>
+
+                <hr />
+                <div class="text-center">
+                    Changed your mind? <a asp-page="./Login">Back to sign in</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

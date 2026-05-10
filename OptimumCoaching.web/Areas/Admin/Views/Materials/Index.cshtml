@@ -1,0 +1,138 @@
+@model IList<OptimumCoaching.core.ClassMaterial>
+@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+    ViewData["Title"] = "Class Materials";
+    var batchOptions = (IList<SelectListItem>)ViewBag.BatchOptions;
+    var topicOptions = ViewBag.TopicOptions as IList<SelectListItem> ?? new List<SelectListItem>();
+    var activeBatchId = ViewBag.ActiveBatchId as Guid?;
+    var batch = ViewBag.Batch as OptimumCoaching.core.Batch;
+    var canUpload = User.Identity != null && User.Identity.HasPermission(OptimumCoaching.core.Permissions.Materials.Upload);
+    var canDelete = User.Identity != null && User.Identity.HasPermission(OptimumCoaching.core.Permissions.Materials.Delete);
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-md-7 col-12 mb-1">
+        <h3 class="content-header-title mb-0"><i class="fa fa-folder-open mr-1 text-info"></i> Class Materials</h3>
+        @if (batch != null) { <small class="text-muted">@batch.Name · @(batch.Subject?.Name ?? "—")</small> }
+    </div>
+    <div class="content-header-right col-md-5 col-12 mb-1 text-md-right">
+        <form method="get" class="form-inline justify-content-md-end mb-1 d-inline-block">
+            <select name="batchId" class="form-control form-control-sm" onchange="this.form.submit()">
+                <option value="">— Choose a batch —</option>
+                @foreach (var o in batchOptions)
+                {
+                    if (Guid.TryParse(o.Value, out var g) && activeBatchId == g)
+                    { <option value="@o.Value" selected>@o.Text</option> }
+                    else
+                    { <option value="@o.Value">@o.Text</option> }
+                }
+            </select>
+        </form>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null) { <div class="alert alert-success">@TempData["SuccessMessage"]</div> }
+@if (TempData["ErrorMessage"] != null) { <div class="alert alert-danger">@TempData["ErrorMessage"]</div> }
+
+@if (!activeBatchId.HasValue)
+{
+    <div class="card"><div class="card-body text-center py-3"><p class="text-muted mb-0">Pick a batch to view its materials.</p></div></div>
+}
+else
+{
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                    <h4 class="card-title mb-0">Materials <span class="badge badge-pill badge-secondary ml-1">@Model.Count</span></h4>
+                </div>
+                <div class="card-body p-0">
+                    @if (!Model.Any())
+                    { <p class="text-muted text-center py-3 mb-0">No materials uploaded yet.</p> }
+                    else
+                    {
+                        <ul class="list-group list-group-flush">
+                            @foreach (var m in Model)
+                            {
+                                <li class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-start flex-wrap">
+                                        <div class="mr-2">
+                                            <strong>@m.Title</strong>
+                                            <span class="badge badge-pill badge-light ml-1">@m.Type</span>
+                                            @if (m.Topic != null)
+                                            { <span class="badge badge-pill badge-info ml-1">@m.Topic.Title</span> }
+                                            <div class="small text-muted">
+                                                @m.UploadedAt.ToString("dd MMM yyyy") · @(m.UploadedByUser?.FullName ?? "—")
+                                            </div>
+                                            @if (!string.IsNullOrWhiteSpace(m.Description))
+                                            { <div class="small mt-1">@m.Description</div> }
+                                        </div>
+                                        <div class="text-right">
+                                            @if (!string.IsNullOrWhiteSpace(m.Url))
+                                            { <a href="@m.Url" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary"><i class="fa fa-external-link mr-1"></i> Open</a> }
+                                            @if (!string.IsNullOrWhiteSpace(m.FilePath))
+                                            { <a href="@Url.Content(m.FilePath)" target="_blank" class="btn btn-sm btn-outline-success"><i class="fa fa-download mr-1"></i> File</a> }
+                                            @if (canDelete)
+                                            {
+                                                <form method="post" asp-action="Delete" asp-route-id="@m.Id" asp-route-batchId="@activeBatchId" class="d-inline" onsubmit="return confirm('Remove this material?');">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fa fa-trash"></i></button>
+                                                </form>
+                                            }
+                                        </div>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+        </div>
+
+        @if (canUpload)
+        {
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                        <h4 class="card-title mb-0">Add material</h4>
+                    </div>
+                    <form method="post" asp-action="Create" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="BatchId" value="@activeBatchId" />
+                        <div class="card-body">
+                            <div class="form-group"><label>Title</label><input name="Title" class="form-control" required /></div>
+                            <div class="form-group">
+                                <label>Type</label>
+                                <select name="Type" class="form-control">
+                                    @foreach (var t in Enum.GetValues<OptimumCoaching.core.MaterialType>())
+                                    { <option value="@((int)t)">@t</option> }
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Topic <span class="text-muted">(optional)</span></label>
+                                <select name="TopicId" class="form-control">
+                                    <option value="">—</option>
+                                    @foreach (var o in topicOptions) { <option value="@o.Value">@o.Text</option> }
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Video / Link URL</label>
+                                <input name="Url" class="form-control" placeholder="https://youtube.com/watch?v=…" />
+                                <small class="text-muted">For YouTube/Vimeo videos or external links.</small>
+                            </div>
+                            <div class="form-group">
+                                <label>or Upload file</label>
+                                <input type="file" name="file" class="form-control-file" />
+                                <small class="text-muted">PDF, slides, audio, video — up to 50 MB.</small>
+                            </div>
+                            <div class="form-group"><label>Description</label><textarea name="Description" class="form-control" rows="3"></textarea></div>
+                        </div>
+                        <div class="card-footer text-right">
+                            <button type="submit" class="btn btn-custom"><i class="fa fa-upload"></i> Add</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+}
