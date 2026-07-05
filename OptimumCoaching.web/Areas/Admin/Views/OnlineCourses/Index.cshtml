@@ -1,0 +1,125 @@
+@model IList<OnlineCourseListItem>
+@using OptimumCoaching.core
+@{
+    ViewData["Title"] = "Online Courses";
+    var today = DateTime.UtcNow.Date;
+}
+
+<style>
+    .oc-card { transition: transform .15s ease, box-shadow .15s ease; position: relative; }
+    .oc-card:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(0,0,0,.10); }
+    .oc-card-thumb { height: 130px; background:#f1f5f9; overflow:hidden; position: relative; }
+    .oc-card-thumb img { width:100%; height:100%; object-fit:cover; }
+    .oc-ribbon {
+        position:absolute; top:8px; left:-28px; transform:rotate(-28deg);
+        background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff;
+        padding:2px 32px; font-size:10px; font-weight:700;
+    }
+    .oc-promo {
+        position:absolute; bottom:8px; right:8px;
+        background:rgba(0,0,0,.65); color:#fff; padding:2px 7px;
+        border-radius:999px; font-size:10px;
+    }
+    .oc-mode-badge { position:absolute; top:8px; right:8px; }
+</style>
+
+<div class="content-header row">
+    <div class="content-header-left col-md-8 col-12 mb-1">
+        <h3 class="content-header-title mb-0">
+            <i class="fa fa-video-camera text-info mr-1"></i> Online Courses
+        </h3>
+        <div class="row breadcrumbs-top">
+            <div class="breadcrumb-wrapper col-12">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">Coaching</li>
+                    <li class="breadcrumb-item active">Online Courses</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+    <div class="content-header-right col-md-4 col-12 mb-1 text-md-right">
+        <a class="btn btn-custom btn-medium" asp-action="Create">
+            <i class="fa fa-plus"></i> New Online Course
+        </a>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null) { <div class="alert alert-success">@TempData["SuccessMessage"]</div> }
+@if (TempData["ErrorMessage"]   != null) { <div class="alert alert-danger">@TempData["ErrorMessage"]</div> }
+
+@if (!Model.Any())
+{
+    <div class="card">
+        <div class="card-body text-center py-4">
+            <i class="fa fa-video-camera fa-3x text-muted mb-2"></i>
+            <p class="text-muted mb-2">No online courses yet. Create the first one and publish it to start enrolling students.</p>
+            <a class="btn btn-custom" asp-action="Create"><i class="fa fa-plus mr-1"></i> Create your first online course</a>
+        </div>
+    </div>
+    return;
+}
+
+<div class="row">
+    @foreach (var c in Model)
+    {
+        var img = string.IsNullOrWhiteSpace(c.CoverImageUrl) ? "/images/no-image.jpg" : c.CoverImageUrl;
+        var offerActive = c.OfferedPrice.HasValue && c.OfferedPrice.Value < c.CourseFee
+                          && (!c.OfferEndsAt.HasValue || c.OfferEndsAt.Value.Date >= today);
+        var modeBadge = c.DeliveryMode == DeliveryMode.Online
+            ? ("badge-success", "Online")
+            : ("badge-info", "Hybrid");
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card oc-card h-100">
+                <div class="oc-card-thumb">
+                    <img src="@img" alt="@c.Name" />
+                    @if (offerActive && !string.IsNullOrWhiteSpace(c.OfferLabel))
+                    { <div class="oc-ribbon">@c.OfferLabel</div> }
+                    <span class="badge badge-pill @modeBadge.Item1 oc-mode-badge">@modeBadge.Item2</span>
+                    @if (!string.IsNullOrWhiteSpace(c.PromoVideoUrl))
+                    { <span class="oc-promo"><i class="fa fa-play-circle mr-1"></i>Promo</span> }
+                </div>
+                <div class="card-body">
+                    <h5 class="mb-1">@c.Name</h5>
+                    <small class="text-muted d-block">
+                        @(c.DepartmentName ?? "—")@(c.SubjectName != null ? " · " + c.SubjectName : "")
+                        @if (c.TeacherName != null) { <text> · @c.TeacherName</text> }
+                    </small>
+                    <div class="mt-2 small">
+                        @if (offerActive)
+                        {
+                            <span class="text-muted" style="text-decoration:line-through">৳ @c.CourseFee.ToString("N0")</span>
+                            <strong class="text-danger ml-1">৳ @c.OfferedPrice!.Value.ToString("N0")</strong>
+                        }
+                        else
+                        {
+                            <strong>৳ @c.CourseFee.ToString("N0")</strong>
+                        }
+                    </div>
+                    <div class="mt-2 d-flex flex-wrap" style="gap:.25rem;">
+                        @if (c.IsPublishedForEnrollment && c.IsActive)
+                        { <span class="badge badge-pill badge-success">Published</span> }
+                        else
+                        { <span class="badge badge-pill badge-secondary">Draft</span> }
+                        <span class="badge badge-pill badge-light"><i class="fa fa-users mr-1"></i>@c.EnrolledCount@(c.Capacity.HasValue ? " / " + c.Capacity : "")</span>
+                        <span class="badge badge-pill badge-light"><i class="fa fa-play-circle mr-1"></i>@c.LessonsCount lessons</span>
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@c.Id">
+                        <i class="fa fa-bar-chart mr-1"></i> Details
+                    </a>
+                    <div>
+                        <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@c.Id">
+                            <i class="fa fa-edit"></i>
+                        </a>
+                        <form asp-action="Delete" asp-route-id="@c.Id" method="post" class="d-inline"
+                              onsubmit="return confirm('Delete this online course? Enrollments will be retained for audit.');">
+                            @Html.AntiForgeryToken()
+                            <button class="btn btn-sm btn-outline-danger" type="submit"><i class="fa fa-trash"></i></button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

@@ -1,0 +1,98 @@
+@model OptimumCoaching.core.PaymentSettings
+@using OptimumCoaching.core
+@{
+    ViewData["Title"] = "Payment configuration";
+    var allMethods = (PaymentMethod[])ViewBag.AllMethods;
+    var enabled = (ISet<PaymentMethod>)ViewBag.EnabledMethods;
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-12 mb-1">
+        <h3 class="content-header-title mb-0"><i class="fa fa-cogs mr-1 text-primary"></i> Payment configuration</h3>
+        <div class="row breadcrumbs-top">
+            <div class="breadcrumb-wrapper col-12">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">Finance</li>
+                    <li class="breadcrumb-item active">Settings</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null) { <div class="alert alert-success">@TempData["SuccessMessage"]</div> }
+@if (TempData["ErrorMessage"]   != null) { <div class="alert alert-danger">@TempData["ErrorMessage"]</div> }
+
+<div class="row">
+    <div class="col-lg-8">
+        <form method="post" asp-action="Save">
+            @Html.AntiForgeryToken()
+            <div class="card">
+                <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                    <h4 class="card-title mb-0">Receipt numbering & display</h4>
+                </div>
+                <div class="card-body">
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Currency symbol</label>
+                        <div class="col-sm-8">
+                            <input name="currencySymbol" value="@Model.CurrencySymbol" class="form-control" style="max-width:120px" />
+                            <small class="text-muted">Used to label amounts in the UI (e.g. ৳, $, ₹).</small>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Receipt prefix</label>
+                        <div class="col-sm-8">
+                            <input name="receiptPrefix" value="@Model.ReceiptPrefix" class="form-control" maxlength="40" placeholder="e.g. OCMS-2026-" />
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Next receipt #</label>
+                        <div class="col-sm-8">
+                            <input type="number" min="1" name="nextReceiptNumber" value="@Model.NextReceiptNumber" class="form-control" style="max-width:160px" />
+                            <small class="text-muted">Next payment without a manual receipt number will be assigned <code>@(Model.ReceiptPrefix)@(Model.NextReceiptNumber.ToString("D6"))</code>.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-header border-bottom-blue-grey border-bottom-lighten-5 border-top">
+                    <h4 class="card-title mb-0">Enabled payment methods</h4>
+                    <small class="text-muted">Only ticked methods appear in payment recording dropdowns.</small>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        @foreach (var m in allMethods)
+                        {
+                            var isEnabled = enabled.Contains(m);
+                            <div class="col-sm-4 col-6 mb-1">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="enabledMethods" value="@((int)m)" id="m-@m" @(isEnabled ? "checked" : "") />
+                                    <label class="form-check-label" for="m-@m">@m</label>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="card-footer text-right">
+                    <button type="submit" class="btn btn-custom"><i class="fa fa-save"></i> Save settings</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h5><i class="fa fa-percent text-warning mr-1"></i> Result-based discount tiers</h5>
+                <p class="text-muted small">Define automatic discount slabs based on the student's exam result.</p>
+                <a class="btn btn-custom" asp-action="Tiers"><i class="fa fa-arrow-right"></i> Manage tiers</a>
+            </div>
+        </div>
+        <div class="card mt-1">
+            <div class="card-body small">
+                <strong>Late fees</strong>
+                <p class="text-muted mb-0">Configured per Batch — see the Batch edit form for <em>Fee due date</em>, <em>Late fee (flat)</em>, and <em>Late fee per day</em>.</p>
+            </div>
+        </div>
+    </div>
+</div>

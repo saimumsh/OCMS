@@ -1,0 +1,105 @@
+@model IList<OptimumCoaching.core.AttendanceSession>
+@using Microsoft.AspNetCore.Mvc.Rendering
+@using OptimumCoaching.core
+@{
+    ViewData["Title"] = "Attendance";
+    var batchOptions = (IList<SelectListItem>)ViewBag.BatchOptions;
+    var activeBatchId = ViewBag.ActiveBatchId as Guid?;
+    var batch = ViewBag.Batch as Batch;
+    var canMark = User.Identity != null && User.Identity.HasPermission(Permissions.Attendance.Mark);
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-md-7 col-12 mb-1">
+        <h3 class="content-header-title mb-0"><i class="fa fa-check-square-o mr-1 text-success"></i> Attendance</h3>
+        @if (batch != null)
+        { <small class="text-muted">@batch.Name · @(batch.Subject?.Name ?? "—")</small> }
+    </div>
+    <div class="content-header-right col-md-5 col-12 mb-1 text-md-right">
+        <form method="get" class="form-inline justify-content-md-end mb-1 d-inline-block">
+            <select name="batchId" class="form-control form-control-sm mr-1" onchange="this.form.submit()">
+                <option value="">— Choose batch —</option>
+                @foreach (var o in batchOptions)
+                {
+                    if (Guid.TryParse(o.Value, out var g) && activeBatchId == g)
+                    { <option value="@o.Value" selected>@o.Text</option> }
+                    else
+                    { <option value="@o.Value">@o.Text</option> }
+                }
+            </select>
+        </form>
+        @if (canMark && activeBatchId.HasValue)
+        {
+            <a class="btn btn-sm btn-custom" asp-action="Mark" asp-route-batchId="@activeBatchId" asp-route-date="@DateTime.UtcNow.ToString("yyyy-MM-dd")">
+                <i class="fa fa-plus mr-1"></i> Mark today
+            </a>
+        }
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null) { <div class="alert alert-success">@TempData["SuccessMessage"]</div> }
+@if (TempData["ErrorMessage"]   != null) { <div class="alert alert-danger">@TempData["ErrorMessage"]</div> }
+
+@if (!activeBatchId.HasValue)
+{
+    <div class="card"><div class="card-body text-center py-3"><p class="text-muted mb-0">Pick a batch to view or take attendance.</p></div></div>
+    return;
+}
+
+@if (!Model.Any())
+{
+    <div class="card"><div class="card-body text-center py-3"><p class="text-muted mb-0">No sessions recorded in the last 3 months. Click <strong>Mark today</strong> to start.</p></div></div>
+}
+else
+{
+    <div class="card">
+        <div class="card-body p-0">
+            <table class="table table-hover table-condensed mb-0 user-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Topic</th>
+                        <th class="text-center">Present</th>
+                        <th class="text-center">Late</th>
+                        <th class="text-center">Absent</th>
+                        <th class="text-center">Excused</th>
+                        <th>Taken by</th>
+                        <th class="text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in Model)
+                    {
+                        var p = s.Records.Count(r => !r.IsDeleted && r.Status == AttendanceStatus.Present);
+                        var l = s.Records.Count(r => !r.IsDeleted && r.Status == AttendanceStatus.Late);
+                        var a = s.Records.Count(r => !r.IsDeleted && r.Status == AttendanceStatus.Absent);
+                        var e = s.Records.Count(r => !r.IsDeleted && r.Status == AttendanceStatus.Excused);
+                        <tr>
+                            <td class="align-middle"><strong>@s.SessionDate.ToString("dd MMM yyyy")</strong>
+                                <div class="small text-muted">@s.SessionDate.ToString("dddd")</div>
+                            </td>
+                            <td class="align-middle">@(s.Topic?.Title ?? "—")</td>
+                            <td class="text-center align-middle"><span class="badge badge-success">@p</span></td>
+                            <td class="text-center align-middle"><span class="badge badge-warning">@l</span></td>
+                            <td class="text-center align-middle"><span class="badge badge-danger">@a</span></td>
+                            <td class="text-center align-middle"><span class="badge badge-secondary">@e</span></td>
+                            <td class="align-middle small">@(s.TakenByUser?.FullName ?? "—")</td>
+                            <td class="align-middle text-right">
+                                <a class="btn btn-sm btn-outline-primary" asp-action="Session" asp-route-id="@s.Id" title="View">
+                                    <i class="fa fa-eye"></i>
+                                </a>
+                                @if (canMark)
+                                {
+                                    <a class="btn btn-sm btn-outline-secondary" asp-action="Mark"
+                                       asp-route-batchId="@activeBatchId" asp-route-date="@s.SessionDate.ToString("yyyy-MM-dd")" title="Edit">
+                                        <i class="fa fa-pencil"></i>
+                                    </a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

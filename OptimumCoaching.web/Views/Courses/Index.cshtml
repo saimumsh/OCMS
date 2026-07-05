@@ -1,0 +1,112 @@
+@model IList<OptimumCoaching.core.Batch>
+@using OptimumCoaching.core
+@{
+    ViewData["Title"] = "Courses";
+    var today = DateTime.UtcNow.Date;
+}
+
+<style>
+    .course-card { position: relative; transition: transform .15s ease, box-shadow .15s ease; }
+    .course-card:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(0,0,0,.08); }
+    .course-thumb-wrap { position: relative; overflow: hidden; height: 180px; background:#f5f6fa; }
+    .course-thumb-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform .25s ease; }
+    .course-card:hover .course-thumb-wrap img { transform: scale(1.04); }
+    .course-ribbon {
+        position: absolute; top: 10px; left: -34px; transform: rotate(-30deg);
+        background: linear-gradient(135deg,#ef4444,#dc2626); color:#fff;
+        padding: 4px 40px; font-size: 11px; font-weight: 700;
+        letter-spacing: .5px; box-shadow: 0 2px 6px rgba(0,0,0,.25);
+    }
+    .course-promo-badge {
+        position: absolute; bottom: 10px; right: 10px;
+        background: rgba(0,0,0,.65); color:#fff; padding: 3px 8px;
+        border-radius: 999px; font-size: 11px;
+    }
+    .course-price-old { text-decoration: line-through; color:#9aa0a6; font-size: 0.85rem; margin-right: 4px; }
+    .course-price-new { color:#dc2626; font-weight: 700; }
+    .course-mode-badge { position: absolute; top: 10px; right: 10px; }
+</style>
+
+<div class="content-header row">
+    <div class="content-header-left col-12 mb-1">
+        <h3 class="content-header-title mb-0"><i class="fa fa-graduation-cap mr-1 text-primary"></i> Browse Courses</h3>
+        <small class="text-muted">Open enrollment — buy a recorded course or join a live cohort.</small>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null) { <div class="alert alert-success">@TempData["SuccessMessage"]</div> }
+@if (TempData["ErrorMessage"]   != null) { <div class="alert alert-danger">@TempData["ErrorMessage"]</div> }
+
+@if (!Model.Any())
+{
+    <div class="card"><div class="card-body text-center py-3"><p class="text-muted mb-0">No courses are open for enrollment right now.</p></div></div>
+    return;
+}
+
+<div class="row">
+    @foreach (var b in Model)
+    {
+        var img = string.IsNullOrWhiteSpace(b.CoverImageUrl) ? "/images/no-image.jpg" : b.CoverImageUrl;
+        var modeBadge = b.DeliveryMode switch
+        {
+            DeliveryMode.Online => ("badge-success", "Online"),
+            DeliveryMode.Hybrid => ("badge-info",    "Hybrid"),
+            _                   => ("badge-secondary","In person")
+        };
+        var hasPromo = !string.IsNullOrWhiteSpace(b.PromoVideoUrl);
+        var offerActive = b.OfferedPrice.HasValue && b.OfferedPrice.Value < b.CourseFee
+                          && (!b.OfferEndsAt.HasValue || b.OfferEndsAt.Value.Date >= today);
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card course-card h-100">
+                <div class="course-thumb-wrap">
+                    <img src="@img" alt="@b.Name" />
+                    @if (offerActive && !string.IsNullOrWhiteSpace(b.OfferLabel))
+                    {
+                        <div class="course-ribbon">@b.OfferLabel</div>
+                    }
+                    <span class="badge badge-pill @modeBadge.Item1 course-mode-badge">@modeBadge.Item2</span>
+                    @if (hasPromo)
+                    {
+                        <span class="course-promo-badge"><i class="fa fa-play-circle mr-1"></i>Preview</span>
+                    }
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title mb-1">@b.Name</h5>
+                    <small class="text-muted">
+                        @(b.Department?.Name ?? "—") · @(b.Subject?.Name ?? "—")
+                        @if (b.Teacher != null) { <text> · @b.Teacher.FullName</text> }
+                    </small>
+                    @if (!string.IsNullOrWhiteSpace(b.ShortDescription))
+                    { <p class="small mt-2 mb-0">@b.ShortDescription</p> }
+
+                    <div class="mt-2">
+                        @if (offerActive)
+                        {
+                            <span class="course-price-old">৳ @b.CourseFee.ToString("N0")</span>
+                            <span class="course-price-new">৳ @b.OfferedPrice!.Value.ToString("N0")</span>
+                            @if (b.OfferEndsAt.HasValue)
+                            {
+                                <div class="small text-danger mt-1">
+                                    <i class="fa fa-clock-o mr-1"></i>Ends @b.OfferEndsAt.Value.ToString("dd MMM")
+                                </div>
+                            }
+                        }
+                        else if (b.CourseFee > 0)
+                        {
+                            <span class="course-price-new">৳ @b.CourseFee.ToString("N0")</span>
+                        }
+                        else
+                        {
+                            <span class="badge badge-pill badge-success">Free</span>
+                        }
+                    </div>
+                </div>
+                <div class="card-footer text-right">
+                    <a class="btn btn-custom" asp-action="Details" asp-route-id="@b.Id">
+                        <i class="fa fa-arrow-right"></i> Details
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+</div>

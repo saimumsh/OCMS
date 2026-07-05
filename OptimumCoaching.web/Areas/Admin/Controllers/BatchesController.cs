@@ -114,7 +114,24 @@ namespace OptimumCoaching.web.Areas.Admin.Controllers
                 TeacherId = b.TeacherId,
                 StartDate = b.StartDate,
                 EndDate = b.EndDate,
-                Capacity = b.Capacity
+                Capacity = b.Capacity,
+                CourseFee = b.CourseFee,
+                MinimumEnrollment = b.MinimumEnrollment,
+                FullPaymentDiscountPercent = b.FullPaymentDiscountPercent,
+                FeeDueDate = b.FeeDueDate,
+                FeeDueDays = b.FeeDueDays,
+                LateFeeFlat = b.LateFeeFlat,
+                LateFeePerDay = b.LateFeePerDay,
+                DeliveryMode = b.DeliveryMode,
+                MeetingUrl = b.MeetingUrl,
+                MeetingNotes = b.MeetingNotes,
+                IsPublishedForEnrollment = b.IsPublishedForEnrollment,
+                ShortDescription = b.ShortDescription,
+                CoverImageUrl = b.CoverImageUrl,
+                PromoVideoUrl = b.PromoVideoUrl,
+                OfferLabel = b.OfferLabel,
+                OfferedPrice = b.OfferedPrice,
+                OfferEndsAt = b.OfferEndsAt
             };
             await PopulateOptionsAsync(model);
             return View(model);
@@ -235,7 +252,24 @@ namespace OptimumCoaching.web.Areas.Admin.Controllers
             TeacherId = m.TeacherId,
             StartDate = m.StartDate,
             EndDate = m.EndDate,
-            Capacity = m.Capacity
+            Capacity = m.Capacity,
+            CourseFee = m.CourseFee,
+            MinimumEnrollment = m.MinimumEnrollment,
+            FullPaymentDiscountPercent = m.FullPaymentDiscountPercent,
+            FeeDueDate = m.FeeDueDate,
+            FeeDueDays = m.FeeDueDays,
+            LateFeeFlat = m.LateFeeFlat,
+            LateFeePerDay = m.LateFeePerDay,
+            DeliveryMode = m.DeliveryMode,
+            MeetingUrl = m.MeetingUrl,
+            MeetingNotes = m.MeetingNotes,
+            IsPublishedForEnrollment = m.IsPublishedForEnrollment,
+            ShortDescription = m.ShortDescription,
+            CoverImageUrl = m.CoverImageUrl,
+            PromoVideoUrl = string.IsNullOrWhiteSpace(m.PromoVideoUrl) ? null : m.PromoVideoUrl.Trim(),
+            OfferLabel = string.IsNullOrWhiteSpace(m.OfferLabel) ? null : m.OfferLabel.Trim(),
+            OfferedPrice = m.OfferedPrice,
+            OfferEndsAt = m.OfferEndsAt
         };
 
         private async Task PopulateOptionsAsync(BatchFormViewModel model)

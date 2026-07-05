@@ -1,0 +1,96 @@
+@model OptimumCoaching.core.NoticeSettings
+@using OptimumCoaching.core
+@{
+    ViewData["Title"] = "Notice configuration";
+    var audiences = Enum.GetValues<NoticeAudience>();
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-12 mb-1">
+        <h3 class="content-header-title mb-0"><i class="fa fa-cogs mr-1 text-primary"></i> Notice configuration</h3>
+        <small class="text-muted">Defaults for new notices and auto-generated overdue alerts.</small>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null) { <div class="alert alert-success">@TempData["SuccessMessage"]</div> }
+@if (TempData["ErrorMessage"]   != null) { <div class="alert alert-danger">@TempData["ErrorMessage"]</div> }
+
+<div class="row">
+    <div class="col-lg-8">
+        <form method="post" asp-action="Save">
+            @Html.AntiForgeryToken()
+            <div class="card">
+                <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                    <h4 class="card-title mb-0">Defaults for new notices</h4>
+                </div>
+                <div class="card-body">
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Default audience</label>
+                        <div class="col-sm-8">
+                            <select name="defaultAudience" class="form-control" style="max-width:200px">
+                                @foreach (var a in audiences)
+                                {
+                                    if (a == Model.DefaultAudience) { <option value="@((int)a)" selected>@a</option> }
+                                    else { <option value="@((int)a)">@a</option> }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Default expiry (days)</label>
+                        <div class="col-sm-8">
+                            <input type="number" min="0" max="365" name="defaultExpiryDays" value="@Model.DefaultExpiryDays" class="form-control" style="max-width:120px" />
+                            <small class="text-muted">0 = no expiry.</small>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col-sm-8 offset-sm-4">
+                            <div class="form-check">
+                                <input type="checkbox" id="defaultPinned" name="defaultPinned" value="true" class="form-check-input" @(Model.DefaultPinned ? "checked" : "") />
+                                <label for="defaultPinned" class="form-check-label">Pin new notices by default</label>
+                                <input type="hidden" name="defaultPinned" value="false" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-header border-bottom-blue-grey border-bottom-lighten-5 border-top">
+                    <h4 class="card-title mb-0"><i class="fa fa-exclamation-triangle text-danger mr-1"></i> Fee-overdue alerts</h4>
+                    <small class="text-muted">Applied when the system auto-posts a notice for an overdue student.</small>
+                </div>
+                <div class="card-body">
+                    <div class="form-group row">
+                        <div class="col-sm-8 offset-sm-4">
+                            <div class="form-check">
+                                <input type="checkbox" id="overdueAlertPinned" name="overdueAlertPinned" value="true" class="form-check-input" @(Model.OverdueAlertPinned ? "checked" : "") />
+                                <label for="overdueAlertPinned" class="form-check-label">Pin overdue alerts</label>
+                                <input type="hidden" name="overdueAlertPinned" value="false" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Alert expires after</label>
+                        <div class="col-sm-8">
+                            <input type="number" min="1" max="365" name="overdueAlertExpiryDays" value="@Model.OverdueAlertExpiryDays" class="form-control" style="max-width:120px" />
+                            <small class="text-muted">days from the moment the alert is posted.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-footer text-right">
+                    <button type="submit" class="btn btn-custom"><i class="fa fa-save"></i> Save settings</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h5><i class="fa fa-clone text-info mr-1"></i> Notice templates</h5>
+                <p class="text-muted small">Reusable Title + Body for repeat notices.</p>
+                <a class="btn btn-custom" asp-action="Templates"><i class="fa fa-arrow-right"></i> Manage templates</a>
+            </div>
+        </div>
+    </div>
+</div>

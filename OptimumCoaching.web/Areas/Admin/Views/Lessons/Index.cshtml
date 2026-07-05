@@ -1,0 +1,178 @@
+@model IList<OptimumCoaching.core.CourseLesson>
+@using Microsoft.AspNetCore.Mvc.Rendering
+@using OptimumCoaching.core
+@{
+    ViewData["Title"] = "Recorded Lessons";
+    var batchOptions = (IList<SelectListItem>)ViewBag.BatchOptions;
+    var topicOptions = ViewBag.TopicOptions as IList<SelectListItem> ?? new List<SelectListItem>();
+    var activeBatchId = ViewBag.ActiveBatchId as Guid?;
+    var batch = ViewBag.Batch as Batch;
+    var canManage = User.Identity != null && User.Identity.HasPermission(Permissions.Lessons.Manage);
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-md-7 col-12 mb-1">
+        <h3 class="content-header-title mb-0"><i class="fa fa-play-circle mr-1 text-info"></i> Recorded Lessons</h3>
+        @if (batch != null)
+        { <small class="text-muted">@batch.Name · @(batch.Subject?.Name ?? "—")</small> }
+    </div>
+    <div class="content-header-right col-md-5 col-12 mb-1 text-md-right">
+        <form method="get" class="form-inline justify-content-md-end mb-1 d-inline-block">
+            <select name="batchId" class="form-control form-control-sm" onchange="this.form.submit()">
+                <option value="">— Choose a batch —</option>
+                @foreach (var o in batchOptions)
+                {
+                    if (Guid.TryParse(o.Value, out var g) && activeBatchId == g)
+                    { <option value="@o.Value" selected>@o.Text</option> }
+                    else
+                    { <option value="@o.Value">@o.Text</option> }
+                }
+            </select>
+        </form>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null) { <div class="alert alert-success">@TempData["SuccessMessage"]</div> }
+@if (TempData["ErrorMessage"]   != null) { <div class="alert alert-danger">@TempData["ErrorMessage"]</div> }
+
+@if (!activeBatchId.HasValue)
+{
+    <div class="card"><div class="card-body text-center py-3"><p class="text-muted mb-0">Pick a batch to manage its recorded lessons.</p></div></div>
+    return;
+}
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                <h4 class="card-title mb-0">Lessons <span class="badge badge-pill badge-secondary ml-1">@Model.Count</span></h4>
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.Any())
+                { <p class="text-muted text-center py-3 mb-0">No lessons added yet.</p> }
+                else
+                {
+                    <table class="table table-condensed mb-0 user-table">
+                        <thead>
+                            <tr>
+                                <th class="serial">#</th>
+                                <th>Title</th>
+                                <th>Topic</th>
+                                <th>Duration</th>
+                                <th>Source</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{ var sn = 0; }
+                            @foreach (var l in Model)
+                            {
+                                sn++;
+                                <tr>
+                                    <td class="align-middle">@l.SortOrder</td>
+                                    <td class="align-middle"><strong>@l.Title</strong>
+                                        @if (!string.IsNullOrWhiteSpace(l.Description))
+                                        { <div class="small text-muted">@l.Description</div> }
+                                    </td>
+                                    <td class="align-middle">@(l.Topic?.Title ?? "—")</td>
+                                    <td class="align-middle">@(l.DurationMinutes.HasValue ? $"{l.DurationMinutes} min" : "—")</td>
+                                    <td class="align-middle">
+                                        @if (!string.IsNullOrWhiteSpace(l.VideoUrl))
+                                        { <a href="@l.VideoUrl" target="_blank" class="badge badge-info">URL</a> }
+                                        @if (!string.IsNullOrWhiteSpace(l.FilePath))
+                                        { <a href="@Url.Content(l.FilePath)" target="_blank" class="badge badge-success">File</a> }
+                                        @if (!string.IsNullOrWhiteSpace(l.ResourcePath))
+                                        { <a href="@Url.Content(l.ResourcePath)" target="_blank" class="badge badge-secondary">Resource</a> }
+                                    </td>
+                                    <td class="align-middle text-center">
+                                        @if (l.IsPublished)
+                                        { <span class="badge badge-pill badge-success">Published</span> }
+                                        else
+                                        { <span class="badge badge-pill badge-secondary">Draft</span> }
+                                    </td>
+                                    <td class="align-middle text-right">
+                                        @if (canManage)
+                                        {
+                                            <form method="post" asp-action="Publish" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@l.Id" />
+                                                <input type="hidden" name="batchId" value="@activeBatchId" />
+                                                <input type="hidden" name="publish" value="@((!l.IsPublished).ToString().ToLower())" />
+                                                <button type="submit" class="btn btn-sm @(l.IsPublished ? "btn-outline-secondary" : "btn-outline-success")"
+                                                        title="@(l.IsPublished ? "Unpublish" : "Publish")">
+                                                    <i class="fa @(l.IsPublished ? "fa-eye-slash" : "fa-bullhorn")"></i>
+                                                </button>
+                                            </form>
+                                            <form method="post" asp-action="Delete" class="d-inline" onsubmit="return confirm('Remove this lesson?');">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@l.Id" />
+                                                <input type="hidden" name="batchId" value="@activeBatchId" />
+                                                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fa fa-trash"></i></button>
+                                            </form>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+
+    @if (canManage)
+    {
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                    <h4 class="card-title mb-0">Add lesson</h4>
+                </div>
+                <form method="post" asp-action="Create" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="BatchId" value="@activeBatchId" />
+                    <div class="card-body">
+                        <div class="form-group"><label>Title</label><input name="Title" class="form-control" required /></div>
+                        <div class="form-group"><label>Order</label><input name="SortOrder" type="number" value="0" class="form-control" /></div>
+                        <div class="form-group">
+                            <label>Topic <span class="text-muted">(optional)</span></label>
+                            <select name="TopicId" class="form-control">
+                                <option value="">—</option>
+                                @foreach (var o in topicOptions) { <option value="@o.Value">@o.Text</option> }
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Video URL</label>
+                            <input name="VideoUrl" class="form-control" placeholder="YouTube / Vimeo / Drive" />
+                        </div>
+                        <div class="form-group">
+                            <label>or Upload video</label>
+                            <input type="file" name="video" class="form-control-file" accept="video/*" />
+                        </div>
+                        <div class="form-group">
+                            <label>Resource (PDF / slides)</label>
+                            <input type="file" name="resource" class="form-control-file" accept=".pdf,.ppt,.pptx,.doc,.docx" />
+                        </div>
+                        <div class="form-group">
+                            <label>Duration (min)</label>
+                            <input name="DurationMinutes" type="number" min="1" class="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label>Recorded on <span class="text-muted">(if class recording)</span></label>
+                            <input name="RecordedOn" type="date" class="form-control" />
+                        </div>
+                        <div class="form-group"><label>Description</label><textarea name="Description" class="form-control" rows="3"></textarea></div>
+                        <div class="form-group form-check">
+                            <input type="checkbox" id="pub" name="IsPublished" value="true" class="form-check-input" checked />
+                            <label for="pub" class="form-check-label">Publish immediately</label>
+                            <input type="hidden" name="IsPublished" value="false" />
+                        </div>
+                    </div>
+                    <div class="card-footer text-right">
+                        <button type="submit" class="btn btn-custom"><i class="fa fa-plus"></i> Add lesson</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
+</div>

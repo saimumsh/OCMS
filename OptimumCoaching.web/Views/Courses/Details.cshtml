@@ -1,0 +1,203 @@
+@model OptimumCoaching.core.Batch
+@using OptimumCoaching.core
+@{
+    ViewData["Title"] = Model.Name;
+    var img = string.IsNullOrWhiteSpace(Model.CoverImageUrl) ? "/images/no-image.jpg" : Model.CoverImageUrl;
+    var modeLabel = Model.DeliveryMode switch
+    {
+        DeliveryMode.Online => "Online (live)",
+        DeliveryMode.Hybrid => "Hybrid",
+        _                   => "In person"
+    };
+    var today = DateTime.UtcNow.Date;
+    var offerActive = Model.OfferedPrice.HasValue && Model.OfferedPrice.Value < Model.CourseFee
+                      && (!Model.OfferEndsAt.HasValue || Model.OfferEndsAt.Value.Date >= today);
+    var displayPrice = offerActive ? Model.OfferedPrice!.Value : Model.CourseFee;
+    var savings = offerActive ? (Model.CourseFee - Model.OfferedPrice!.Value) : 0m;
+
+    string? promoEmbed = null;
+    var raw = Model.PromoVideoUrl?.Trim();
+    if (!string.IsNullOrEmpty(raw))
+    {
+        try
+        {
+            var uri = new Uri(raw, UriKind.Absolute);
+            var host = uri.Host.ToLowerInvariant();
+            if (host.Contains("youtube.com") || host.Contains("youtu.be"))
+            {
+                string? id = null;
+                if (host.Contains("youtu.be")) { id = uri.AbsolutePath.Trim('/'); }
+                else
+                {
+                    var qs = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+                    if (qs.TryGetValue("v", out var v)) id = v.ToString();
+                    else if (uri.AbsolutePath.StartsWith("/embed/")) id = uri.AbsolutePath.Substring(7);
+                }
+                if (!string.IsNullOrWhiteSpace(id)) promoEmbed = $"https://www.youtube.com/embed/{id}";
+            }
+            else if (host.Contains("vimeo.com"))
+            {
+                var id = uri.AbsolutePath.Trim('/');
+                if (!string.IsNullOrWhiteSpace(id)) promoEmbed = $"https://player.vimeo.com/video/{id}";
+            }
+        }
+        catch { /* ignore — fall back to plain link */ }
+    }
+}
+
+<style>
+    .promo-embed { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; background:#000; border-radius:.25rem; }
+    .promo-embed iframe, .promo-embed video { position: absolute; top:0; left:0; width:100%; height:100%; border:0; }
+    .price-old { text-decoration: line-through; color:#9aa0a6; font-size: 1rem; }
+    .price-new { color:#dc2626; font-weight: 800; font-size: 2rem; line-height: 1; }
+    .offer-banner {
+        background: linear-gradient(135deg,#fff7ed,#fee2e2);
+        border-left: 4px solid #dc2626; border-radius:.25rem;
+        padding: .65rem .9rem; margin-bottom: .9rem;
+    }
+</style>
+
+<div class="content-header row">
+    <div class="content-header-left col-12 mb-1">
+        <h3 class="content-header-title mb-0">@Model.Name</h3>
+        <div class="row breadcrumbs-top">
+            <div class="breadcrumb-wrapper col-12">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Courses</a></li>
+                    <li class="breadcrumb-item active">@Model.Name</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (TempData["ErrorMessage"] != null) { <div class="alert alert-danger">@TempData["ErrorMessage"]</div> }
+
+<div class="row">
+    <div class="col-md-7 mb-3">
+        <div class="card">
+            @if (!string.IsNullOrEmpty(promoEmbed))
+            {
+                <div class="promo-embed">
+                    <iframe src="@promoEmbed" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture"></iframe>
+                </div>
+            }
+            else
+            {
+                <img src="@img" alt="@Model.Name" style="width:100%; max-height:320px; object-fit:cover;" />
+            }
+            <div class="card-body">
+                @if (!string.IsNullOrEmpty(promoEmbed) && !string.IsNullOrWhiteSpace(Model.PromoVideoUrl))
+                {
+                    <a href="@Model.PromoVideoUrl" target="_blank" class="small text-muted">
+                        <i class="fa fa-external-link mr-1"></i>Open promo on source
+                    </a>
+                }
+                else if (!string.IsNullOrWhiteSpace(Model.PromoVideoUrl))
+                {
+                    <a href="@Model.PromoVideoUrl" target="_blank" class="btn btn-sm btn-outline-primary mb-2">
+                        <i class="fa fa-play-circle mr-1"></i>Watch promo video
+                    </a>
+                }
+
+                <h4 class="mb-2 mt-2">About this course</h4>
+                <p>@(Model.Description ?? Model.ShortDescription ?? "—")</p>
+
+                <dl class="row mb-0 mt-3">
+                    <dt class="col-sm-4 text-muted small">Department</dt>
+                    <dd class="col-sm-8">@(Model.Department?.Name ?? "—")</dd>
+
+                    <dt class="col-sm-4 text-muted small">Subject</dt>
+                    <dd class="col-sm-8">@(Model.Subject?.Name ?? "—")</dd>
+
+                    @if (Model.Class != null)
+                    {
+                        <dt class="col-sm-4 text-muted small">Class</dt>
+                        <dd class="col-sm-8">@Model.Class.Name</dd>
+                    }
+
+                    @if (Model.Teacher != null)
+                    {
+                        <dt class="col-sm-4 text-muted small">Teacher</dt>
+                        <dd class="col-sm-8">@Model.Teacher.FullName</dd>
+                    }
+
+                    <dt class="col-sm-4 text-muted small">Delivery mode</dt>
+                    <dd class="col-sm-8">@modeLabel</dd>
+
+                    <dt class="col-sm-4 text-muted small">Schedule</dt>
+                    <dd class="col-sm-8">
+                        @(Model.StartDate?.ToString("dd MMM yyyy") ?? "?") &mdash;
+                        @(Model.EndDate?.ToString("dd MMM yyyy") ?? "?")
+                    </dd>
+
+                    @if (Model.Capacity.HasValue)
+                    {
+                        <dt class="col-sm-4 text-muted small">Capacity</dt>
+                        <dd class="col-sm-8">@Model.Capacity students</dd>
+                    }
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-5 mb-3">
+        <div class="card">
+            <div class="card-body text-center">
+                @if (offerActive)
+                {
+                    <div class="offer-banner text-left">
+                        <strong class="text-danger"><i class="fa fa-tag mr-1"></i>@(Model.OfferLabel ?? "Limited-time offer")</strong>
+                        @if (Model.OfferEndsAt.HasValue)
+                        {
+                            <div class="small text-muted mt-1">
+                                Ends @Model.OfferEndsAt.Value.ToString("dd MMM yyyy") · save ৳ @savings.ToString("N0")
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="small text-muted mt-1">Save ৳ @savings.ToString("N0")</div>
+                        }
+                    </div>
+                }
+                @if (offerActive)
+                {
+                    <div class="price-old">৳ @Model.CourseFee.ToString("N0")</div>
+                }
+                <div class="price-new">৳ @displayPrice.ToString("N0")</div>
+                <small class="text-muted">Course fee</small>
+                @if (Model.MinimumEnrollment > 0)
+                {
+                    <div class="mt-2 small">
+                        Minimum to enroll: <strong>৳ @Model.MinimumEnrollment.ToString("N0")</strong>
+                    </div>
+                }
+                @if (Model.FullPaymentDiscountPercent > 0)
+                {
+                    <div class="small text-success">
+                        Save extra <strong>@Model.FullPaymentDiscountPercent%</strong> on full payment
+                    </div>
+                }
+            </div>
+            <div class="card-footer">
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <form method="post" asp-action="Enroll" asp-route-id="@Model.Id">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-success btn-block">
+                            <i class="fa fa-shopping-cart mr-1"></i> Enroll &amp; pay
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <a asp-area="Identity" asp-page="/Account/Login"
+                       asp-route-returnUrl="@Url.Action("Details", "Courses", new { id = Model.Id })"
+                       class="btn btn-success btn-block">
+                        <i class="fa fa-sign-in mr-1"></i> Sign in to enroll
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+</div>

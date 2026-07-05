@@ -22,6 +22,17 @@ namespace OptimumCoaching.core
         public Guid? DepartmentId { get; set; }
         public Department? Department { get; set; }
 
+        // Optional single-student target. When set, only this student sees
+        // the notice — used for system-generated alerts (e.g. fee overdue).
+        public Guid? StudentId { get; set; }
+        public Student? Student { get; set; }
+
+        // Tag for auto-generated notices so the system can find/dedupe them
+        // without colliding with admin-posted notices. Free-form string;
+        // examples: "fee-overdue", "exam-published".
+        [MaxLength(40)]
+        public string? SystemTag { get; set; }
+
         [Display(Name = "Pin to top")]
         public bool IsPinned { get; set; }
 

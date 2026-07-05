@@ -1,0 +1,74 @@
+@model IList<OptimumCoaching.core.AttendanceRecord>
+@using OptimumCoaching.core
+@{
+    ViewData["Title"] = "My Attendance";
+    var batch = (Batch)ViewBag.Batch;
+    var summary = (OptimumCoaching.service.StudentAttendanceSummary)ViewBag.Summary;
+    var pctBadge = summary.PercentPresent >= 75 ? "badge-success"
+                 : summary.PercentPresent >= 50 ? "badge-warning"
+                 : "badge-danger";
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-12 mb-1">
+        <h3 class="content-header-title mb-0"><i class="fa fa-check-square-o mr-1 text-success"></i> My Attendance</h3>
+        <small class="text-muted">@batch.Name · @(batch.Subject?.Name ?? "—")</small>
+    </div>
+</div>
+
+<section class="oc-stats row">
+    <div class="col-6 col-md-3 mb-2"><div class="oc-stat oc-stat--success"><div class="oc-stat__icon"><i class="fa fa-check"></i></div><div><div class="oc-stat__value">@summary.PresentCount</div><div class="oc-stat__label">Present</div></div></div></div>
+    <div class="col-6 col-md-3 mb-2"><div class="oc-stat oc-stat--warning"><div class="oc-stat__icon"><i class="fa fa-clock-o"></i></div><div><div class="oc-stat__value">@summary.LateCount</div><div class="oc-stat__label">Late</div></div></div></div>
+    <div class="col-6 col-md-3 mb-2"><div class="oc-stat oc-stat--primary"><div class="oc-stat__icon"><i class="fa fa-times"></i></div><div><div class="oc-stat__value">@summary.AbsentCount</div><div class="oc-stat__label">Absent</div></div></div></div>
+    <div class="col-6 col-md-3 mb-2"><div class="oc-stat oc-stat--info"><div class="oc-stat__icon"><i class="fa fa-info"></i></div><div><div class="oc-stat__value">@summary.ExcusedCount</div><div class="oc-stat__label">Excused</div></div></div></div>
+</section>
+
+<div class="card mb-2">
+    <div class="card-body">
+        <div class="d-flex justify-content-between mb-1">
+            <strong>Attendance percentage</strong>
+            <span class="badge badge-pill @pctBadge">@summary.PercentPresent%</span>
+        </div>
+        <div class="progress" style="height: 8px;">
+            <div class="progress-bar bg-success" style="width: @summary.PercentPresent%"></div>
+        </div>
+        <small class="text-muted">Computed over @summary.TotalSessions session(s). Late counts as present; Excused is excluded.</small>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+        <h4 class="card-title mb-0">Recent sessions</h4>
+    </div>
+    <div class="card-body p-0">
+        @if (!Model.Any())
+        { <p class="text-muted text-center py-3 mb-0">No sessions recorded yet.</p> }
+        else
+        {
+            <table class="table table-condensed mb-0 user-table">
+                <thead><tr><th>Date</th><th>Topic</th><th class="text-center">Status</th><th>Remarks</th></tr></thead>
+                <tbody>
+                    @foreach (var r in Model)
+                    {
+                        var badge = r.Status switch
+                        {
+                            AttendanceStatus.Present => ("badge-success", "Present"),
+                            AttendanceStatus.Late    => ("badge-warning", "Late"),
+                            AttendanceStatus.Absent  => ("badge-danger",  "Absent"),
+                            AttendanceStatus.Excused => ("badge-secondary","Excused"),
+                            _                        => ("badge-light",   "—")
+                        };
+                        <tr>
+                            <td class="align-middle"><strong>@r.Session.SessionDate.ToString("dd MMM yyyy")</strong>
+                                <div class="small text-muted">@r.Session.SessionDate.ToString("dddd")</div>
+                            </td>
+                            <td class="align-middle">@(r.Session.Topic?.Title ?? "—")</td>
+                            <td class="align-middle text-center"><span class="badge badge-pill @badge.Item1">@badge.Item2</span></td>
+                            <td class="align-middle">@(r.Remarks ?? "—")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>

@@ -13,6 +13,103 @@
     }
 }
 
+@{
+    // Online batches get a quick "Join live" call-to-action on the student dashboard.
+    var isOnlineBatch = Model.Batch != null
+        && Model.Batch.DeliveryMode != OptimumCoaching.core.DeliveryMode.Offline
+        && !string.IsNullOrWhiteSpace(Model.Batch.MeetingUrl);
+
+    var dashToday = DateTime.UtcNow.Date;
+}
+
+@* ============================================================
+   FEATURED COURSES — shown on every dashboard variant
+   ============================================================ *@
+@if (Model.FeaturedCourses != null && Model.FeaturedCourses.Any())
+{
+    <style>
+        .featured-strip { background: linear-gradient(135deg,#eef2ff,#fdf2f8); border-radius:.5rem; padding: 1rem; margin-bottom: 1rem; }
+        .featured-strip h4 { margin: 0; }
+        .featured-rail { display: flex; gap: .75rem; overflow-x: auto; padding-bottom: .25rem; scroll-snap-type: x mandatory; }
+        .featured-rail::-webkit-scrollbar { height: 6px; }
+        .featured-rail::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .featured-tile {
+            flex: 0 0 260px; scroll-snap-align: start;
+            background:#fff; border-radius:.4rem; overflow: hidden;
+            box-shadow: 0 2px 6px rgba(0,0,0,.06); position: relative;
+            transition: transform .15s ease, box-shadow .15s ease;
+        }
+        .featured-tile:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(0,0,0,.10); }
+        .featured-thumb { position: relative; height: 130px; background:#f1f5f9; }
+        .featured-thumb img { width:100%; height:100%; object-fit: cover; }
+        .featured-ribbon {
+            position: absolute; top: 8px; left: -28px; transform: rotate(-28deg);
+            background: linear-gradient(135deg,#ef4444,#dc2626); color:#fff;
+            padding: 2px 32px; font-size: 10px; font-weight: 700; letter-spacing: .4px;
+        }
+        .featured-promo {
+            position: absolute; bottom: 8px; right: 8px;
+            background: rgba(0,0,0,.65); color:#fff; padding: 2px 7px;
+            border-radius: 999px; font-size: 10px;
+        }
+        .featured-body { padding: .6rem .75rem; }
+        .featured-title { font-weight: 600; font-size: .9rem; margin: 0 0 .25rem 0;
+            display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+        .featured-meta { font-size: .72rem; color: #64748b; margin-bottom: .25rem; }
+        .featured-price-old { text-decoration: line-through; color:#94a3b8; font-size:.75rem; margin-right: 3px; }
+        .featured-price-new { color:#dc2626; font-weight: 700; font-size: .95rem; }
+    </style>
+
+    <section class="featured-strip">
+        <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap">
+            <h4><i class="fa fa-bullhorn text-danger mr-1"></i>Featured Courses</h4>
+            <a class="btn btn-sm btn-outline-primary" asp-controller="Courses" asp-action="Index">
+                Browse all <i class="fa fa-arrow-right ml-1"></i>
+            </a>
+        </div>
+        <div class="featured-rail">
+            @foreach (var fc in Model.FeaturedCourses)
+            {
+                var thumb = string.IsNullOrWhiteSpace(fc.CoverImageUrl) ? "/images/no-image.jpg" : fc.CoverImageUrl;
+                var fHasPromo = !string.IsNullOrWhiteSpace(fc.PromoVideoUrl);
+                var fOfferActive = fc.OfferedPrice.HasValue && fc.OfferedPrice.Value < fc.CourseFee
+                                   && (!fc.OfferEndsAt.HasValue || fc.OfferEndsAt.Value.Date >= dashToday);
+                <a class="featured-tile text-decoration-none text-dark"
+                   asp-controller="Courses" asp-action="Details" asp-route-id="@fc.Id">
+                    <div class="featured-thumb">
+                        <img src="@thumb" alt="@fc.Name" />
+                        @if (fOfferActive && !string.IsNullOrWhiteSpace(fc.OfferLabel))
+                        { <div class="featured-ribbon">@fc.OfferLabel</div> }
+                        @if (fHasPromo)
+                        { <span class="featured-promo"><i class="fa fa-play-circle mr-1"></i>Preview</span> }
+                    </div>
+                    <div class="featured-body">
+                        <p class="featured-title">@fc.Name</p>
+                        <div class="featured-meta">
+                            @(fc.Department?.Name ?? "—")@(fc.Subject != null ? " · " + fc.Subject.Name : "")
+                        </div>
+                        <div>
+                            @if (fOfferActive)
+                            {
+                                <span class="featured-price-old">৳ @fc.CourseFee.ToString("N0")</span>
+                                <span class="featured-price-new">৳ @fc.OfferedPrice!.Value.ToString("N0")</span>
+                            }
+                            else if (fc.CourseFee > 0)
+                            {
+                                <span class="featured-price-new">৳ @fc.CourseFee.ToString("N0")</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-pill badge-success">Free</span>
+                            }
+                        </div>
+                    </div>
+                </a>
+            }
+        </div>
+    </section>
+}
+
 @* ============================================================
    TEACHER DASHBOARD
    ============================================================ *@
@@ -255,6 +352,30 @@
     return;
 }
 
+@* Due-fee banner — shown when any of the student's accounts is overdue. *@
+@if (Model.DueAlerts.Any())
+{
+    <div class="alert alert-danger d-flex justify-content-between align-items-start flex-wrap">
+        <div class="mr-2">
+            <strong><i class="fa fa-exclamation-triangle mr-1"></i> Fee overdue</strong>
+            <ul class="mb-0 mt-1 pl-3">
+                @foreach (var d in Model.DueAlerts)
+                {
+                    <li>
+                        <strong>@d.BatchName</strong> — @d.DaysOverdue day(s) overdue,
+                        balance <strong>@d.Balance.ToString("N0")</strong>
+                        @if (d.LateFee > 0)
+                        { <text>+ late fee <strong>@d.LateFee.ToString("N0")</strong> = total <strong>@d.TotalOwed.ToString("N0")</strong></text> }
+                    </li>
+                }
+            </ul>
+        </div>
+        <a class="btn btn-light btn-sm align-self-center" asp-controller="StudentFinance" asp-action="Pay">
+            <i class="fa fa-money mr-1"></i> Pay now
+        </a>
+    </div>
+}
+
 @{
     var s = Model.Student;
     var stuAvatar = string.IsNullOrWhiteSpace(s.ImageUrl) ? null : Url.Content(s.ImageUrl);
@@ -344,8 +465,14 @@
 <div class="row">
     <div class="col-lg-7 mb-3">
         <div class="card">
-            <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+            <div class="card-header border-bottom-blue-grey border-bottom-lighten-5 d-flex justify-content-between align-items-center">
                 <h4 class="card-title mb-0"><i class="fa fa-cube mr-1 text-info"></i> My Batch</h4>
+                @if (isOnlineBatch)
+                {
+                    <a class="btn btn-sm btn-success" asp-controller="Live" asp-action="Join" asp-route-id="@Model.Batch!.Id" target="_blank">
+                        <i class="fa fa-video-camera mr-1"></i> Join Live
+                    </a>
+                }
             </div>
             <div class="card-body">
                 @if (Model.Batch == null)
@@ -435,6 +562,59 @@
 
         <partial name="_NoticesCard" model="Model.Notices" />
 
+        @if (Model.MyOnlineCourses != null && Model.MyOnlineCourses.Any())
+        {
+            <div class="card mt-1">
+                <div class="card-header border-bottom-blue-grey border-bottom-lighten-5 d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0">
+                        <i class="fa fa-video-camera mr-1 text-info"></i> My Online Courses
+                        <span class="badge badge-pill badge-secondary ml-1">@Model.MyOnlineCourses.Count</span>
+                    </h4>
+                    <a class="btn btn-sm btn-outline-primary" asp-controller="MyOnlineCourses" asp-action="Index">
+                        See all <i class="fa fa-arrow-right ml-1"></i>
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        @foreach (var oc in Model.MyOnlineCourses.Take(4))
+                        {
+                            var b = oc.Batch;
+                            var bal = oc.FeeAccount?.Balance ?? 0m;
+                            <li class="list-group-item d-flex justify-content-between align-items-start flex-wrap">
+                                <div class="mr-2">
+                                    <a asp-controller="MyOnlineCourses" asp-action="Details" asp-route-id="@oc.Enrollment.Id"
+                                       class="font-weight-bold text-decoration-none">@b.Name</a>
+                                    <span class="badge badge-pill @(b.DeliveryMode == OptimumCoaching.core.DeliveryMode.Online ? "badge-success" : "badge-info") ml-1">
+                                        @b.DeliveryMode
+                                    </span>
+                                    <div class="small text-muted">
+                                        @(b.Subject?.Name ?? b.Department?.Name ?? "—")
+                                        @if (b.Teacher != null) { <text> · @b.Teacher.FullName</text> }
+                                    </div>
+                                    <div class="progress mt-1" style="width: 200px; height: 4px;">
+                                        <div class="progress-bar bg-success" style="width:@oc.LessonProgressPercent%"></div>
+                                    </div>
+                                    <small class="text-muted">@oc.LessonsCompleted / @oc.LessonsCount lessons</small>
+                                </div>
+                                <div class="text-right">
+                                    @if (b.DeliveryMode != OptimumCoaching.core.DeliveryMode.Offline && !string.IsNullOrWhiteSpace(b.MeetingUrl))
+                                    {
+                                        <a class="btn btn-sm btn-success mb-1" asp-controller="Live" asp-action="Join" asp-route-id="@b.Id" target="_blank">
+                                            <i class="fa fa-video-camera"></i> Join
+                                        </a>
+                                    }
+                                    @if (bal > 0)
+                                    {
+                                        <div><small class="text-danger">Balance ৳ @bal.ToString("N0")</small></div>
+                                    }
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        }
+
         @if (Model.FeeAccount != null)
         {
             var fa = Model.FeeAccount;
@@ -473,6 +653,44 @@
                     </div>
                     @if (!string.IsNullOrWhiteSpace(fa.DiscountReason))
                     { <small class="text-muted d-block mt-1">Discount: @fa.DiscountReason</small> }
+                </div>
+                @if (fa.Balance > 0)
+                {
+                    <div class="card-footer text-right p-2">
+                        <a class="btn btn-success btn-sm" asp-controller="StudentFinance" asp-action="Pay" asp-route-accountId="@fa.Id">
+                            <i class="fa fa-paper-plane mr-1"></i> Pay / submit
+                        </a>
+                        <a class="btn btn-outline-secondary btn-sm" asp-controller="StudentFinance" asp-action="MyPayments">
+                            <i class="fa fa-list mr-1"></i> My submissions
+                        </a>
+                    </div>
+                }
+            </div>
+        }
+
+        @if (Model.AttendanceSummary is { TotalSessions: > 0 } att)
+        {
+            var attBadge = att.PercentPresent >= 75 ? "badge-success"
+                         : att.PercentPresent >= 50 ? "badge-warning"
+                         : "badge-danger";
+            <div class="card mt-1">
+                <div class="card-header border-bottom-blue-grey border-bottom-lighten-5 d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0">
+                        <i class="fa fa-check-square-o mr-1 text-success"></i> Attendance
+                    </h4>
+                    <span class="badge badge-pill @attBadge">@att.PercentPresent% present</span>
+                </div>
+                <div class="card-body">
+                    <div class="progress mb-2" style="height: 6px;">
+                        <div class="progress-bar bg-success" style="width: @att.PercentPresent%"></div>
+                    </div>
+                    <div class="d-flex justify-content-between small text-muted flex-wrap">
+                        <span><strong>@att.PresentCount</strong> Present</span>
+                        <span><strong>@att.LateCount</strong> Late</span>
+                        <span><strong>@att.AbsentCount</strong> Absent</span>
+                        <span><strong>@att.ExcusedCount</strong> Excused</span>
+                        <span><strong>@att.TotalSessions</strong> Sessions</span>
+                    </div>
                 </div>
             </div>
         }

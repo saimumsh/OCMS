@@ -1,0 +1,88 @@
+@model OptimumCoaching.core.AttendanceSession
+@using OptimumCoaching.core
+@{
+    ViewData["Title"] = $"Attendance — {Model.Batch.Name} · {Model.SessionDate:dd MMM yyyy}";
+    var canMark = User.Identity != null && User.Identity.HasPermission(Permissions.Attendance.Mark);
+    var records = Model.Records.Where(r => !r.IsDeleted).OrderBy(r => r.Student.FullName).ToList();
+    var p = records.Count(r => r.Status == AttendanceStatus.Present);
+    var l = records.Count(r => r.Status == AttendanceStatus.Late);
+    var a = records.Count(r => r.Status == AttendanceStatus.Absent);
+    var e = records.Count(r => r.Status == AttendanceStatus.Excused);
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-md-9 col-12 mb-1">
+        <h3 class="content-header-title mb-0">
+            <i class="fa fa-check-square-o mr-1 text-success"></i> @Model.Batch.Name
+            <small class="text-muted">· @Model.SessionDate.ToString("dddd, dd MMM yyyy")</small>
+        </h3>
+        <div class="row breadcrumbs-top">
+            <div class="breadcrumb-wrapper col-12">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index" asp-route-batchId="@Model.BatchId">Attendance</a></li>
+                    <li class="breadcrumb-item active">@Model.SessionDate.ToString("dd MMM yyyy")</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+    <div class="content-header-right col-md-3 col-12 mb-1 text-md-right">
+        @if (canMark)
+        {
+            <a class="btn btn-custom" asp-action="Mark" asp-route-batchId="@Model.BatchId" asp-route-date="@Model.SessionDate.ToString("yyyy-MM-dd")">
+                <i class="fa fa-pencil mr-1"></i> Edit
+            </a>
+        }
+    </div>
+</div>
+
+<section class="oc-stats row">
+    <div class="col-6 col-md-3 mb-2"><div class="oc-stat oc-stat--success"><div class="oc-stat__icon"><i class="fa fa-check"></i></div><div><div class="oc-stat__value">@p</div><div class="oc-stat__label">Present</div></div></div></div>
+    <div class="col-6 col-md-3 mb-2"><div class="oc-stat oc-stat--warning"><div class="oc-stat__icon"><i class="fa fa-clock-o"></i></div><div><div class="oc-stat__value">@l</div><div class="oc-stat__label">Late</div></div></div></div>
+    <div class="col-6 col-md-3 mb-2"><div class="oc-stat oc-stat--primary"><div class="oc-stat__icon"><i class="fa fa-times"></i></div><div><div class="oc-stat__value">@a</div><div class="oc-stat__label">Absent</div></div></div></div>
+    <div class="col-6 col-md-3 mb-2"><div class="oc-stat oc-stat--info"><div class="oc-stat__icon"><i class="fa fa-info"></i></div><div><div class="oc-stat__value">@e</div><div class="oc-stat__label">Excused</div></div></div></div>
+</section>
+
+@if (Model.Topic != null || !string.IsNullOrWhiteSpace(Model.Note))
+{
+    <div class="card mb-2">
+        <div class="card-body">
+            @if (Model.Topic != null) { <div><strong>Topic:</strong> @Model.Topic.Title</div> }
+            @if (!string.IsNullOrWhiteSpace(Model.Note)) { <div><strong>Note:</strong> @Model.Note</div> }
+            @if (Model.TakenByUser != null) { <small class="text-muted">Recorded by @Model.TakenByUser.FullName</small> }
+        </div>
+    </div>
+}
+
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-condensed mb-0 user-table">
+            <thead>
+                <tr><th>#</th><th>Student</th><th>Status</th><th>Remarks</th></tr>
+            </thead>
+            <tbody>
+                @{ var sn = 0; }
+                @foreach (var r in records)
+                {
+                    sn++;
+                    var badge = r.Status switch
+                    {
+                        AttendanceStatus.Present => ("badge-success", "Present"),
+                        AttendanceStatus.Late    => ("badge-warning", "Late"),
+                        AttendanceStatus.Absent  => ("badge-danger",  "Absent"),
+                        AttendanceStatus.Excused => ("badge-secondary","Excused"),
+                        _                        => ("badge-light",   "—")
+                    };
+                    <tr>
+                        <td class="align-middle">@sn</td>
+                        <td class="align-middle">@r.Student.FullName
+                            @if (!string.IsNullOrWhiteSpace(r.Student.StudentCode))
+                            { <span class="badge badge-light ml-1">@r.Student.StudentCode</span> }
+                        </td>
+                        <td class="align-middle"><span class="badge badge-pill @badge.Item1">@badge.Item2</span></td>
+                        <td class="align-middle">@(r.Remarks ?? "—")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

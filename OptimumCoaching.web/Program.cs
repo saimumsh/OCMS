@@ -47,6 +47,8 @@ namespace OptimumCoaching.web
             services.AddScoped<IBatchService, BatchService>();
             services.AddScoped<IBatchUpdateService, BatchUpdateService>();
             services.AddScoped<INoticeService, NoticeService>();
+            services.AddScoped<INoticeSettingsService, NoticeSettingsService>();
+            services.AddScoped<INoticeTemplateService, NoticeTemplateService>();
             services.AddScoped<IMessagingService, MessagingService>();
             services.AddScoped<IExamService, ExamService>();
             services.AddScoped<IExamResultService, ExamResultService>();
@@ -54,9 +56,19 @@ namespace OptimumCoaching.web
             services.AddScoped<ITopicService, TopicService>();
             services.AddScoped<IClassMaterialService, ClassMaterialService>();
             services.AddScoped<IClassRoutineService, ClassRoutineService>();
+            services.AddScoped<ICourseLessonService, CourseLessonService>();
+            services.AddScoped<ILessonCommentService, LessonCommentService>();
+            services.AddScoped<IAssignmentService, AssignmentService>();
+            services.AddScoped<IOnlineEnrollmentService, OnlineEnrollmentService>();
+            services.AddScoped<ICourseCatalogService, CourseCatalogService>();
             services.AddScoped<IBatchTeacherService, BatchTeacherService>();
+            services.AddScoped<IPaymentSettingsService, PaymentSettingsService>();
+            services.AddScoped<IResultDiscountTierService, ResultDiscountTierService>();
             services.AddScoped<IFeeService, FeeService>();
+            services.AddScoped<IFeePaymentRequestService, FeePaymentRequestService>();
+            services.AddScoped<IFeeDueAlertService, FeeDueAlertService>();
             services.AddScoped<ISalaryService, SalaryService>();
+            services.AddScoped<IAttendanceService, AttendanceService>();
 
             // Permission-based authorization (VitalityCash-style policy provider)
             services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();

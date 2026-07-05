@@ -1,0 +1,110 @@
+@model OptimumCoaching.core.Assignment
+@using OptimumCoaching.core
+@{
+    ViewData["Title"] = Model.Title;
+    var sub = ViewBag.Submission as AssignmentSubmission;
+    var canSubmit = sub == null || sub.Status != SubmissionStatus.Graded;
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-12 mb-1">
+        <h3 class="content-header-title mb-0">@Model.Title</h3>
+        <div class="row breadcrumbs-top">
+            <div class="breadcrumb-wrapper col-12">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Assignments">Assignments</a></li>
+                    <li class="breadcrumb-item active">@Model.Title</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null) { <div class="alert alert-success">@TempData["SuccessMessage"]</div> }
+@if (TempData["ErrorMessage"]   != null) { <div class="alert alert-danger">@TempData["ErrorMessage"]</div> }
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card mb-2">
+            <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                <h4 class="card-title mb-0">Instructions</h4>
+                <small class="text-muted">
+                    Max @Model.MaxScore
+                    @if (Model.DueDate.HasValue) { <text> · Due @Model.DueDate.Value.ToString("dd MMM yyyy")</text> }
+                </small>
+            </div>
+            <div class="card-body">
+                <div style="white-space: pre-wrap">@Model.Instructions</div>
+                @if (!string.IsNullOrWhiteSpace(Model.AttachmentPath))
+                {
+                    <div class="mt-2">
+                        <a href="@Url.Content(Model.AttachmentPath)" target="_blank" class="btn btn-sm btn-outline-secondary">
+                            <i class="fa fa-paperclip mr-1"></i> Question file
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+
+        @if (sub != null)
+        {
+            <div class="card mb-2">
+                <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                    <h4 class="card-title mb-0">My submission
+                        @if (sub.Status == SubmissionStatus.Graded)
+                        { <span class="badge badge-pill badge-success ml-1">Graded · @sub.Score?.ToString("0.##") / @Model.MaxScore</span> }
+                        else
+                        { <span class="badge badge-pill badge-secondary ml-1">Submitted</span> }
+                    </h4>
+                    <small class="text-muted">Last submitted @sub.SubmittedAt.ToString("dd MMM yyyy, HH:mm")</small>
+                </div>
+                <div class="card-body">
+                    @if (!string.IsNullOrWhiteSpace(sub.ResponseText))
+                    { <div style="white-space: pre-wrap">@sub.ResponseText</div> }
+                    @if (!string.IsNullOrWhiteSpace(sub.FilePath))
+                    {
+                        <div class="mt-1">
+                            <a href="@Url.Content(sub.FilePath)" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="fa fa-download mr-1"></i> My file
+                            </a>
+                        </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(sub.Feedback))
+                    {
+                        <hr />
+                        <strong>Teacher feedback</strong>
+                        <div style="white-space: pre-wrap">@sub.Feedback</div>
+                        @if (sub.GradedByUser != null)
+                        { <small class="text-muted">— @sub.GradedByUser.FullName · @(sub.GradedAt?.ToString("dd MMM yyyy"))</small> }
+                    }
+                </div>
+            </div>
+        }
+
+        @if (canSubmit)
+        {
+            <div class="card">
+                <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                    <h4 class="card-title mb-0">@(sub == null ? "Submit your work" : "Re-submit")</h4>
+                </div>
+                <form method="post" asp-action="SubmitAssignment" asp-route-id="@Model.Id" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label>Response text <span class="text-muted">(optional)</span></label>
+                            <textarea name="responseText" class="form-control" rows="5">@(sub?.ResponseText)</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Upload file</label>
+                            <input type="file" name="file" class="form-control-file" />
+                            <small class="text-muted">PDF, DOC, images, video — up to 50 MB.</small>
+                        </div>
+                    </div>
+                    <div class="card-footer text-right">
+                        <button type="submit" class="btn btn-custom"><i class="fa fa-paper-plane mr-1"></i> Submit</button>
+                    </div>
+                </form>
+            </div>
+        }
+    </div>
+</div>

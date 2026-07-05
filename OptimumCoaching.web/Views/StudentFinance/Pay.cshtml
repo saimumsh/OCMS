@@ -1,0 +1,86 @@
+@{
+    ViewData["Title"] = "Submit payment";
+    var accounts = (IList<OptimumCoaching.core.StudentFeeAccount>)ViewBag.Accounts;
+    var enabledMethods = (ISet<OptimumCoaching.core.PaymentMethod>)ViewBag.EnabledMethods;
+    var methods = enabledMethods.Count > 0
+        ? Enum.GetValues<OptimumCoaching.core.PaymentMethod>().Where(m => enabledMethods.Contains(m)).ToArray()
+        : Enum.GetValues<OptimumCoaching.core.PaymentMethod>();
+    var selected = ViewBag.SelectedAccountId as Guid?;
+    var payable = accounts.Where(a => a.Balance > 0).ToList();
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-12 mb-1">
+        <h3 class="content-header-title mb-0"><i class="fa fa-money mr-1 text-success"></i> Submit payment</h3>
+        <small class="text-muted">Pay via bKash / Nagad / bank, then submit the transaction here for Finance to verify.</small>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null) { <div class="alert alert-success">@TempData["SuccessMessage"]</div> }
+@if (TempData["ErrorMessage"]   != null) { <div class="alert alert-danger">@TempData["ErrorMessage"]</div> }
+
+@if (!payable.Any())
+{
+    <div class="card"><div class="card-body text-center py-3">
+        <p class="text-muted mb-2">You have no outstanding fees to pay 🎉</p>
+        <a asp-controller="Home" asp-action="UserDashboard" class="btn btn-custom-default"><i class="fa fa-arrow-left"></i> Back to dashboard</a>
+    </div></div>
+    return;
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <form method="post" asp-action="Pay" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <div class="card">
+                <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                    <h4 class="card-title mb-0">Payment details</h4>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label>Fee account</label>
+                        <select name="accountId" class="form-control" required>
+                            <option value="">— Choose batch —</option>
+                            @foreach (var a in payable)
+                            {
+                                if (selected == a.Id)
+                                { <option value="@a.Id" selected>@a.Batch.Name — Balance @a.Balance.ToString("N0")</option> }
+                                else
+                                { <option value="@a.Id">@a.Batch.Name — Balance @a.Balance.ToString("N0")</option> }
+                            }
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-sm-6">
+                            <label>Amount</label>
+                            <input name="amount" type="number" step="0.01" min="0.01" class="form-control" required />
+                        </div>
+                        <div class="form-group col-sm-6">
+                            <label>Method</label>
+                            <select name="method" class="form-control">
+                                @foreach (var m in methods) { <option value="@((int)m)">@m</option> }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Transaction reference</label>
+                        <input name="transactionReference" class="form-control" placeholder="bKash trx id / bank ref / cheque number" />
+                    </div>
+                    <div class="form-group">
+                        <label>Receipt / screenshot <span class="text-muted">(optional)</span></label>
+                        <input type="file" name="receipt" class="form-control-file" accept="image/*,.pdf" />
+                        <small class="text-muted">Upload your bKash/Nagad confirmation screenshot or bank slip.</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Note</label>
+                        <textarea name="note" class="form-control" rows="2" placeholder="Anything Finance should know"></textarea>
+                    </div>
+                </div>
+                <div class="card-footer text-right">
+                    <a asp-action="MyPayments" class="btn btn-custom-default mr-1"><i class="fa fa-list"></i> My submissions</a>
+                    <button type="submit" class="btn btn-custom"><i class="fa fa-paper-plane"></i> Submit for verification</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

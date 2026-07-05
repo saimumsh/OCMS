@@ -1,0 +1,135 @@
+@model OptimumCoaching.service.AttendanceMarkingGrid
+@using Microsoft.AspNetCore.Mvc.Rendering
+@using OptimumCoaching.core
+@{
+    var batch = (Batch)ViewBag.Batch;
+    var topicOptions = (IList<SelectListItem>)ViewBag.TopicOptions;
+    ViewData["Title"] = $"Mark attendance — {batch.Name}";
+    var statuses = new[] { AttendanceStatus.Present, AttendanceStatus.Late, AttendanceStatus.Absent, AttendanceStatus.Excused };
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-md-9 col-12 mb-1">
+        <h3 class="content-header-title mb-0">
+            <i class="fa fa-check-square-o mr-1 text-success"></i> @batch.Name
+            <small class="text-muted">· @Model.SessionDate.ToString("dddd, dd MMM yyyy")</small>
+        </h3>
+        <div class="row breadcrumbs-top">
+            <div class="breadcrumb-wrapper col-12">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index" asp-route-batchId="@batch.Id">Attendance</a></li>
+                    <li class="breadcrumb-item active">Mark</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+    <div class="content-header-right col-md-3 col-12 mb-1 text-md-right">
+        <form method="get" asp-action="Mark" class="form-inline justify-content-md-end">
+            <input type="hidden" name="batchId" value="@batch.Id" />
+            <input type="date" name="date" value="@Model.SessionDate.ToString("yyyy-MM-dd")"
+                   class="form-control form-control-sm" onchange="this.form.submit()" />
+        </form>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null) { <div class="alert alert-success">@TempData["SuccessMessage"]</div> }
+@if (TempData["ErrorMessage"]   != null) { <div class="alert alert-danger">@TempData["ErrorMessage"]</div> }
+
+@if (!Model.Rows.Any())
+{
+    <div class="card"><div class="card-body text-center py-3"><p class="text-muted mb-0">No students enrolled in this batch.</p></div></div>
+    return;
+}
+
+<form method="post" asp-action="Save">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="batchId" value="@batch.Id" />
+    <input type="hidden" name="date" value="@Model.SessionDate.ToString("yyyy-MM-dd")" />
+
+    <div class="card">
+        <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+            <div class="row align-items-end">
+                <div class="col-md-5">
+                    <label class="small mb-0">Topic (optional)</label>
+                    <select name="topicId" class="form-control form-control-sm">
+                        <option value="">—</option>
+                        @foreach (var o in topicOptions)
+                        {
+                            if (Model.TopicId.HasValue && Guid.TryParse(o.Value, out var g) && g == Model.TopicId)
+                            { <option value="@o.Value" selected>@o.Text</option> }
+                            else
+                            { <option value="@o.Value">@o.Text</option> }
+                        }
+                    </select>
+                </div>
+                <div class="col-md-7">
+                    <label class="small mb-0">Note</label>
+                    <input name="note" value="@Model.Note" class="form-control form-control-sm" placeholder="Optional context for this session" />
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            <table class="table table-condensed mb-0 user-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Student</th>
+                        <th>Code</th>
+                        <th>Status</th>
+                        <th>Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int i = 0; i < Model.Rows.Count; i++)
+                    {
+                        var r = Model.Rows[i];
+                        <tr>
+                            <td class="align-middle">@(i + 1)</td>
+                            <td class="align-middle">@r.StudentName</td>
+                            <td class="align-middle"><span class="badge badge-light">@(r.StudentCode ?? "—")</span></td>
+                            <td class="align-middle">
+                                <input type="hidden" name="rows[@i].StudentId" value="@r.StudentId" />
+                                <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                                    @foreach (var st in statuses)
+                                    {
+                                        var checkedAttr = r.Status == st ? "checked" : "";
+                                        var btnClass = st switch
+                                        {
+                                            AttendanceStatus.Present  => "btn-outline-success",
+                                            AttendanceStatus.Late     => "btn-outline-warning",
+                                            AttendanceStatus.Absent   => "btn-outline-danger",
+                                            _                         => "btn-outline-secondary"
+                                        };
+                                        var label = st switch
+                                        {
+                                            AttendanceStatus.Present  => "P",
+                                            AttendanceStatus.Late     => "L",
+                                            AttendanceStatus.Absent   => "A",
+                                            _                         => "E"
+                                        };
+                                        <label class="btn btn-sm @btnClass @(r.Status == st ? "active" : "")" title="@st">
+                                            <input type="radio" name="rows[@i].Status" value="@((int)st)" @checkedAttr autocomplete="off"> @label
+                                        </label>
+                                    }
+                                </div>
+                            </td>
+                            <td class="align-middle">
+                                <input name="rows[@i].Remarks" value="@r.Remarks" class="form-control form-control-sm" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card-footer text-right">
+            <a class="btn btn-custom-default mr-1" asp-action="Index" asp-route-batchId="@batch.Id">
+                <i class="fa fa-times"></i> Cancel
+            </a>
+            <button type="submit" class="btn btn-custom">
+                <i class="fa fa-save"></i> Save attendance
+            </button>
+        </div>
+    </div>
+</form>

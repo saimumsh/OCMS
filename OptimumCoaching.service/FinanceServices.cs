@@ -9,10 +9,14 @@ namespace OptimumCoaching.service
     {
         private readonly ApplicationDbContext _db;
         private readonly IUnitOfWork _uow;
+        private readonly IPaymentSettingsService _settings;
 
-        public FeeService(ApplicationDbContext db, IUnitOfWork uow)
+        public FeeService(
+            ApplicationDbContext db,
+            IUnitOfWork uow,
+            IPaymentSettingsService settings)
         {
-            _db = db; _uow = uow;
+            _db = db; _uow = uow; _settings = settings;
         }
 
         public async Task<(bool Success, string Message, StudentFeeAccount? Account)> EnsureAccountAsync(
@@ -84,6 +88,11 @@ namespace OptimumCoaching.service
             if (newPaid > account.FinalFee + 0.001m)
                 return (false, $"Amount exceeds remaining balance of {account.Balance:0.00}", null);
 
+            // Auto-assign a receipt number if the user didn't type one.
+            var resolvedReceipt = string.IsNullOrWhiteSpace(receiptNumber)
+                ? await _settings.ReserveReceiptNumberAsync(recordedBy)
+                : receiptNumber;
+
             var payment = new FeePayment
             {
                 Id = Guid.NewGuid(),
@@ -91,7 +100,7 @@ namespace OptimumCoaching.service
                 Amount = amount,
                 PaidOn = paidOn == default ? DateTime.UtcNow : paidOn,
                 Method = method,
-                ReceiptNumber = receiptNumber,
+                ReceiptNumber = resolvedReceipt,
                 Note = note,
                 RecordedByUserId = recordedBy,
                 IsActive = true,

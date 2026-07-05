@@ -37,8 +37,14 @@ namespace OptimumCoaching.service
                 .ToListAsync();
         }
 
-        public async Task<IList<Notice>> GetForReceiverAsync(
+        public Task<IList<Notice>> GetForReceiverAsync(
             NoticeAudience audience, Guid? departmentId, int take = 20)
+            => GetForReceiverAsync(audience, departmentId, studentId: null, take);
+
+        // Overload that filters out per-student targeted notices to only the
+        // current viewer's StudentId — passes null when not a Student.
+        public async Task<IList<Notice>> GetForReceiverAsync(
+            NoticeAudience audience, Guid? departmentId, Guid? studentId, int take = 20)
         {
             var now = DateTime.UtcNow;
 
@@ -51,7 +57,9 @@ namespace OptimumCoaching.service
                 .Where(n => n.Audience == audience || n.Audience == NoticeAudience.Both)
                 // Department-scoped notices are only shown to the same department;
                 // notices with no department apply to everyone.
-                .Where(n => n.DepartmentId == null || n.DepartmentId == departmentId);
+                .Where(n => n.DepartmentId == null || n.DepartmentId == departmentId)
+                // Per-student notices are only shown to the matching student.
+                .Where(n => n.StudentId == null || n.StudentId == studentId);
 
             return await q
                 .OrderByDescending(n => n.IsPinned)

@@ -8,7 +8,10 @@
     var batch = ViewBag.Batch as Batch;
     var canRecord = User.Identity != null && User.Identity.HasPermission(Permissions.Finance.RecordPayment);
     var canManage = User.Identity != null && User.Identity.HasPermission(Permissions.Finance.ManageFees);
-    var methods = Enum.GetValues<PaymentMethod>();
+    var enabledMethods = ViewBag.EnabledMethods as ISet<PaymentMethod>;
+    var methods = enabledMethods != null && enabledMethods.Count > 0
+        ? Enum.GetValues<PaymentMethod>().Where(m => enabledMethods.Contains(m)).ToArray()
+        : Enum.GetValues<PaymentMethod>();
 }
 
 <div class="content-header row">
@@ -25,6 +28,9 @@
         }
     </div>
     <div class="content-header-right col-md-5 col-12 mb-1 text-md-right">
+        <a class="btn btn-sm btn-custom-default mr-1" asp-action="Students">
+            <i class="fa fa-user mr-1"></i> By student
+        </a>
         <form method="get" class="form-inline justify-content-md-end mb-1 d-inline-block">
             <select name="batchId" class="form-control form-control-sm" onchange="this.form.submit()">
                 <option value="">— Choose batch —</option>

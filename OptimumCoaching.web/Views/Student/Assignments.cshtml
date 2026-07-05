@@ -1,0 +1,57 @@
+@model IList<OptimumCoaching.core.Assignment>
+@using OptimumCoaching.core
+@{
+    ViewData["Title"] = "Assignments";
+    var batch = (Batch)ViewBag.Batch;
+    var subs = ViewBag.Submissions as Dictionary<Guid, AssignmentSubmission?> ?? new();
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-12 mb-1">
+        <h3 class="content-header-title mb-0">
+            <i class="fa fa-tasks mr-1 text-info"></i> Assignments
+            <span class="badge badge-pill badge-secondary ml-1">@Model.Count</span>
+        </h3>
+        <small class="text-muted">@batch.Name</small>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="card"><div class="card-body text-center py-3"><p class="text-muted mb-0">No assignments published yet.</p></div></div>
+    return;
+}
+
+<div class="card">
+    <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+            @foreach (var a in Model)
+            {
+                subs.TryGetValue(a.Id, out var sub);
+                var statusBadge = sub == null ? ("badge-warning", "Not submitted")
+                    : sub.Status switch
+                    {
+                        SubmissionStatus.Graded   => ("badge-success",  $"Graded: {sub.Score?.ToString("0.##") ?? "—"} / {a.MaxScore}"),
+                        SubmissionStatus.Returned => ("badge-info",     "Returned"),
+                        _                         => ("badge-secondary","Submitted")
+                    };
+                var overdue = a.DueDate.HasValue && sub == null && a.DueDate.Value < DateTime.UtcNow;
+                <li class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap">
+                        <div>
+                            <a asp-action="Assignment" asp-route-id="@a.Id"><strong>@a.Title</strong></a>
+                            <span class="badge badge-pill @statusBadge.Item1 ml-2">@statusBadge.Item2</span>
+                            @if (overdue) { <span class="badge badge-pill badge-danger ml-1">Overdue</span> }
+                            <div class="small text-muted">
+                                Max @a.MaxScore
+                                @if (a.DueDate.HasValue) { <text> · Due @a.DueDate.Value.ToString("dd MMM yyyy")</text> }
+                                @if (a.Topic != null) { <text> · @a.Topic.Title</text> }
+                            </div>
+                        </div>
+                        <a class="btn btn-sm btn-outline-primary" asp-action="Assignment" asp-route-id="@a.Id">Open</a>
+                    </div>
+                </li>
+            }
+        </ul>
+    </div>
+</div>

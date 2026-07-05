@@ -93,6 +93,129 @@
                         <textarea asp-for="Description" class="form-control" rows="3"></textarea>
                     </div>
                 </div>
+
+                <hr />
+                <h5 class="mb-2"><i class="fa fa-money text-success mr-1"></i> Fees</h5>
+
+                <div class="form-group row">
+                    <label asp-for="CourseFee" class="col-sm-3 col-form-label label-control"></label>
+                    <div class="col-sm-4">
+                        <input asp-for="CourseFee" class="form-control" type="number" step="0.01" min="0" />
+                    </div>
+                    <label asp-for="MinimumEnrollment" class="col-sm-2 col-form-label label-control"></label>
+                    <div class="col-sm-3">
+                        <input asp-for="MinimumEnrollment" class="form-control" type="number" step="0.01" min="0" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label asp-for="FullPaymentDiscountPercent" class="col-sm-3 col-form-label label-control"></label>
+                    <div class="col-sm-9">
+                        <input asp-for="FullPaymentDiscountPercent" class="form-control" type="number" step="0.01" min="0" max="100" style="max-width:140px" />
+                        <small class="text-muted">Optional incentive when a student clears the whole fee in one payment.</small>
+                    </div>
+                </div>
+
+                <hr />
+                <h5 class="mb-2"><i class="fa fa-globe text-primary mr-1"></i> Public catalog</h5>
+
+                <div class="form-group row">
+                    <div class="col-sm-9 offset-sm-3">
+                        <div class="form-check">
+                            <input asp-for="IsPublishedForEnrollment" class="form-check-input" />
+                            <label asp-for="IsPublishedForEnrollment" class="form-check-label"></label>
+                            <small class="text-muted d-block">When ticked, the batch appears on the public <code>/Courses</code> catalog and students can self-enroll.</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label asp-for="ShortDescription" class="col-sm-3 col-form-label label-control"></label>
+                    <div class="col-sm-9">
+                        <input asp-for="ShortDescription" class="form-control" maxlength="500" placeholder="One-liner shown in the catalog card" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label asp-for="CoverImageUrl" class="col-sm-3 col-form-label label-control"></label>
+                    <div class="col-sm-9">
+                        <input asp-for="CoverImageUrl" class="form-control" placeholder="https://…/cover.jpg" />
+                        <small class="text-muted">A square or 16:9 hero image works best (≥800px wide).</small>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label asp-for="PromoVideoUrl" class="col-sm-3 col-form-label label-control"></label>
+                    <div class="col-sm-9">
+                        <input asp-for="PromoVideoUrl" class="form-control" placeholder="https://www.youtube.com/watch?v=…" />
+                        <small class="text-muted">YouTube, Vimeo or Drive link — embedded on the public course page.</small>
+                    </div>
+                </div>
+
+                <hr />
+                <h5 class="mb-2"><i class="fa fa-tag text-danger mr-1"></i> Limited-time offer</h5>
+                <div class="form-group row">
+                    <label asp-for="OfferLabel" class="col-sm-3 col-form-label label-control"></label>
+                    <div class="col-sm-9">
+                        <input asp-for="OfferLabel" class="form-control" maxlength="80" placeholder="e.g. Early-bird, Eid Sale, Save 20%" />
+                        <small class="text-muted">Shown as a colored ribbon on catalog cards. Leave blank to hide.</small>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label asp-for="OfferedPrice" class="col-sm-3 col-form-label label-control"></label>
+                    <div class="col-sm-4">
+                        <input asp-for="OfferedPrice" class="form-control" type="number" step="0.01" min="0" placeholder="Discounted price" />
+                    </div>
+                    <label asp-for="OfferEndsAt" class="col-sm-2 col-form-label label-control"></label>
+                    <div class="col-sm-3">
+                        <input asp-for="OfferEndsAt" class="form-control" type="date" />
+                    </div>
+                </div>
+
+                <hr />
+                <h5 class="mb-2"><i class="fa fa-video-camera text-info mr-1"></i> Delivery mode</h5>
+
+                <div class="form-group row">
+                    <label asp-for="DeliveryMode" class="col-sm-3 col-form-label label-control"></label>
+                    <div class="col-sm-9">
+                        <select asp-for="DeliveryMode" class="form-control" style="max-width:200px"
+                                asp-items="Html.GetEnumSelectList<OptimumCoaching.core.DeliveryMode>()"></select>
+                        <small class="text-muted">Online/Hybrid batches show a "Join live" button on dashboards.</small>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label asp-for="MeetingUrl" class="col-sm-3 col-form-label label-control"></label>
+                    <div class="col-sm-9">
+                        <input asp-for="MeetingUrl" class="form-control" placeholder="https://zoom.us/j/… or https://meet.google.com/…" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label asp-for="MeetingNotes" class="col-sm-3 col-form-label label-control"></label>
+                    <div class="col-sm-9">
+                        <textarea asp-for="MeetingNotes" class="form-control" rows="2" placeholder="Passcode, dial-in, etc."></textarea>
+                    </div>
+                </div>
+
+                <hr />
+                <h5 class="mb-2"><i class="fa fa-clock-o text-warning mr-1"></i> Late-fee policy</h5>
+
+                <div class="form-group row">
+                    <label asp-for="FeeDueDate" class="col-sm-3 col-form-label label-control"></label>
+                    <div class="col-sm-4">
+                        <input asp-for="FeeDueDate" class="form-control" type="date" />
+                    </div>
+                    <label asp-for="FeeDueDays" class="col-sm-2 col-form-label label-control"></label>
+                    <div class="col-sm-3">
+                        <input asp-for="FeeDueDays" class="form-control" type="number" min="0" />
+                        <small class="text-muted">Used when no absolute date is set.</small>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label asp-for="LateFeeFlat" class="col-sm-3 col-form-label label-control"></label>
+                    <div class="col-sm-4">
+                        <input asp-for="LateFeeFlat" class="form-control" type="number" step="0.01" min="0" />
+                    </div>
+                    <label asp-for="LateFeePerDay" class="col-sm-2 col-form-label label-control"></label>
+                    <div class="col-sm-3">
+                        <input asp-for="LateFeePerDay" class="form-control" type="number" step="0.01" min="0" />
+                    </div>
+                </div>
             </div>
             <div class="card-footer text-right">
                 <a class="btn btn-custom-default btn-medium mr-1" asp-action="Index">

@@ -1,0 +1,58 @@
+@model IList<OptimumCoaching.core.ClassMaterial>
+@using OptimumCoaching.core
+@{
+    ViewData["Title"] = "Class Materials";
+    var batch = (Batch)ViewBag.Batch;
+    var grouped = Model.GroupBy(m => m.Topic?.Title ?? "General")
+                       .OrderBy(g => g.Key);
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-12 mb-1">
+        <h3 class="content-header-title mb-0">
+            <i class="fa fa-folder-open mr-1 text-info"></i> Class Materials
+            <span class="badge badge-pill badge-secondary ml-1">@Model.Count</span>
+        </h3>
+        <small class="text-muted">@batch.Name · @(batch.Subject?.Name ?? "—")</small>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="card"><div class="card-body text-center py-3"><p class="text-muted mb-0">No materials uploaded yet.</p></div></div>
+    return;
+}
+
+@foreach (var group in grouped)
+{
+    <div class="card mb-2">
+        <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+            <h4 class="card-title mb-0">@group.Key <span class="badge badge-pill badge-secondary ml-1">@group.Count()</span></h4>
+        </div>
+        <div class="card-body p-0">
+            <ul class="list-group list-group-flush">
+                @foreach (var m in group)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-start flex-wrap">
+                        <div>
+                            <strong>@m.Title</strong>
+                            <span class="badge badge-pill badge-light ml-1">@m.Type</span>
+                            <div class="small text-muted">
+                                Uploaded @m.UploadedAt.ToString("dd MMM yyyy")
+                                @if (m.UploadedByUser != null) { <text> · @m.UploadedByUser.FullName</text> }
+                            </div>
+                            @if (!string.IsNullOrWhiteSpace(m.Description))
+                            { <div class="small mt-1">@m.Description</div> }
+                        </div>
+                        <div>
+                            @if (!string.IsNullOrWhiteSpace(m.Url))
+                            { <a href="@m.Url" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary"><i class="fa fa-external-link mr-1"></i> Open</a> }
+                            @if (!string.IsNullOrWhiteSpace(m.FilePath))
+                            { <a href="@Url.Content(m.FilePath)" target="_blank" class="btn btn-sm btn-outline-success"><i class="fa fa-download mr-1"></i> Download</a> }
+                        </div>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+}

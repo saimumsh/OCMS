@@ -1,0 +1,93 @@
+@model IList<OptimumCoaching.core.FeePaymentRequest>
+@using OptimumCoaching.core
+@{
+    ViewData["Title"] = "Pending payments";
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-12 mb-1">
+        <h3 class="content-header-title mb-0">
+            <i class="fa fa-inbox mr-1 text-warning"></i> Pending payment submissions
+            <span class="badge badge-pill badge-warning ml-1">@Model.Count</span>
+        </h3>
+        <small class="text-muted">Verify the student's transaction and either approve (credits the fee account) or reject.</small>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null) { <div class="alert alert-success">@TempData["SuccessMessage"]</div> }
+@if (TempData["ErrorMessage"]   != null) { <div class="alert alert-danger">@TempData["ErrorMessage"]</div> }
+
+@if (!Model.Any())
+{
+    <div class="card"><div class="card-body text-center py-3"><p class="text-muted mb-0">No pending submissions. ✅</p></div></div>
+    return;
+}
+
+<div class="row">
+    @foreach (var r in Model)
+    {
+        <div class="col-lg-6 mb-2">
+            <div class="card h-100">
+                <div class="card-header border-bottom-blue-grey border-bottom-lighten-5 d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>@r.Account.Student.FullName</strong>
+                        @if (!string.IsNullOrWhiteSpace(r.Account.Student.StudentCode))
+                        { <span class="badge badge-light ml-1">@r.Account.Student.StudentCode</span> }
+                        <div class="small text-muted">@r.Account.Batch.Name</div>
+                    </div>
+                    <span class="badge badge-pill badge-warning">@r.SubmittedAt.ToString("dd MMM, HH:mm")</span>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-2">
+                        <dt class="col-sm-4 text-muted small">Amount</dt>
+                        <dd class="col-sm-8"><strong>@r.Amount.ToString("N2")</strong> (balance @r.Account.Balance.ToString("N2"))</dd>
+
+                        <dt class="col-sm-4 text-muted small">Method</dt>
+                        <dd class="col-sm-8"><span class="badge badge-light">@r.Method</span></dd>
+
+                        <dt class="col-sm-4 text-muted small">Reference</dt>
+                        <dd class="col-sm-8">@(r.TransactionReference ?? "—")</dd>
+
+                        @if (!string.IsNullOrWhiteSpace(r.Note))
+                        {
+                            <dt class="col-sm-4 text-muted small">Note</dt>
+                            <dd class="col-sm-8">@r.Note</dd>
+                        }
+                    </dl>
+
+                    @if (!string.IsNullOrWhiteSpace(r.ReceiptImagePath))
+                    {
+                        var lower = r.ReceiptImagePath.ToLowerInvariant();
+                        var isImage = lower.EndsWith(".jpg") || lower.EndsWith(".jpeg")
+                                   || lower.EndsWith(".png") || lower.EndsWith(".gif") || lower.EndsWith(".webp");
+                        <div class="text-center">
+                            @if (isImage)
+                            {
+                                <a href="@Url.Content(r.ReceiptImagePath)" target="_blank">
+                                    <img src="@Url.Content(r.ReceiptImagePath)" alt="receipt" class="img-fluid" style="max-height:220px; border:1px solid #eee; border-radius:4px;" />
+                                </a>
+                            }
+                            else
+                            {
+                                <a href="@Url.Content(r.ReceiptImagePath)" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="fa fa-file mr-1"></i> View receipt
+                                </a>
+                            }
+                        </div>
+                    }
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <form method="post" asp-action="ApproveRequest" asp-route-id="@r.Id" onsubmit="return confirm('Approve and credit this payment?');">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-success"><i class="fa fa-check mr-1"></i> Approve</button>
+                    </form>
+                    <form method="post" asp-action="RejectRequest" asp-route-id="@r.Id" class="form-inline flex-grow-1 ml-2">
+                        @Html.AntiForgeryToken()
+                        <input name="reason" class="form-control form-control-sm flex-grow-1 mr-1" placeholder="Reason (optional)" />
+                        <button type="submit" class="btn btn-outline-danger"><i class="fa fa-times mr-1"></i> Reject</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+</div>

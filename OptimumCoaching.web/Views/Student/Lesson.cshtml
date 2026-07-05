@@ -1,0 +1,103 @@
+@model OptimumCoaching.core.CourseLesson
+@using OptimumCoaching.core
+@{
+    ViewData["Title"] = Model.Title;
+    var comments = ViewBag.Comments as IList<LessonComment> ?? new List<LessonComment>();
+    var topLevel = comments.Where(c => c.ParentCommentId == null).ToList();
+    var repliesByParent = comments.Where(c => c.ParentCommentId.HasValue)
+        .GroupBy(c => c.ParentCommentId!.Value)
+        .ToDictionary(g => g.Key, g => g.OrderBy(c => c.PostedAt).ToList());
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-12 mb-1">
+        <h3 class="content-header-title mb-0">@Model.Title</h3>
+        <div class="row breadcrumbs-top">
+            <div class="breadcrumb-wrapper col-12">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Lessons">Lessons</a></li>
+                    <li class="breadcrumb-item active">@Model.Title</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null) { <div class="alert alert-success">@TempData["SuccessMessage"]</div> }
+@if (TempData["ErrorMessage"]   != null) { <div class="alert alert-danger">@TempData["ErrorMessage"]</div> }
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card mb-2">
+            <div class="card-body">
+                @if (!string.IsNullOrWhiteSpace(Model.Description))
+                { <p>@Model.Description</p> }
+                <div class="d-flex flex-wrap mb-2">
+                    @if (Model.Topic != null) { <span class="badge badge-info mr-1">@Model.Topic.Title</span> }
+                    @if (Model.DurationMinutes.HasValue) { <span class="badge badge-light mr-1">@Model.DurationMinutes min</span> }
+                    @if (Model.RecordedOn.HasValue) { <span class="badge badge-secondary mr-1">Recording · @Model.RecordedOn.Value.ToString("dd MMM yyyy")</span> }
+                </div>
+                <div>
+                    @if (!string.IsNullOrWhiteSpace(Model.VideoUrl))
+                    { <a href="@Model.VideoUrl" target="_blank" class="btn btn-outline-primary mr-1"><i class="fa fa-play mr-1"></i> Watch on source</a> }
+                    @if (!string.IsNullOrWhiteSpace(Model.FilePath))
+                    { <a href="@Url.Content(Model.FilePath)" target="_blank" class="btn btn-outline-success mr-1"><i class="fa fa-download mr-1"></i> Download video</a> }
+                    @if (!string.IsNullOrWhiteSpace(Model.ResourcePath))
+                    { <a href="@Url.Content(Model.ResourcePath)" target="_blank" class="btn btn-outline-secondary"><i class="fa fa-file mr-1"></i> Resource</a> }
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                <h4 class="card-title mb-0"><i class="fa fa-comments mr-1 text-info"></i> Comments <span class="badge badge-pill badge-secondary ml-1">@comments.Count</span></h4>
+            </div>
+            <div class="card-body">
+                <form method="post" asp-action="PostComment" class="mb-3">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="lessonId" value="@Model.Id" />
+                    <div class="form-group mb-1">
+                        <textarea name="body" class="form-control" rows="2" required placeholder="Ask a question or share a thought…"></textarea>
+                    </div>
+                    <div class="text-right">
+                        <button type="submit" class="btn btn-custom btn-sm"><i class="fa fa-paper-plane mr-1"></i> Post</button>
+                    </div>
+                </form>
+
+                @if (!topLevel.Any())
+                { <p class="text-muted mb-0">No comments yet — be the first to ask.</p> }
+                else
+                {
+                    foreach (var c in topLevel)
+                    {
+                        <div class="border-top pt-2 mt-2">
+                            <strong>@(c.AuthorUser?.FullName ?? "Anonymous")</strong>
+                            <small class="text-muted ml-1">@c.PostedAt.ToString("dd MMM yyyy, HH:mm")</small>
+                            <div style="white-space: pre-wrap">@c.Body</div>
+                            @if (repliesByParent.TryGetValue(c.Id, out var replies))
+                            {
+                                foreach (var r in replies)
+                                {
+                                    <div class="ml-4 mt-2 pt-2 border-top">
+                                        <strong>@(r.AuthorUser?.FullName ?? "Anonymous")</strong>
+                                        <small class="text-muted ml-1">@r.PostedAt.ToString("dd MMM yyyy, HH:mm")</small>
+                                        <div style="white-space: pre-wrap">@r.Body</div>
+                                    </div>
+                                }
+                            }
+                            <form method="post" asp-action="PostComment" class="ml-4 mt-2">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="lessonId" value="@Model.Id" />
+                                <input type="hidden" name="parentCommentId" value="@c.Id" />
+                                <div class="form-inline">
+                                    <input name="body" class="form-control form-control-sm flex-grow-1 mr-1" placeholder="Reply…" required />
+                                    <button type="submit" class="btn btn-sm btn-outline-primary">Reply</button>
+                                </div>
+                            </form>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>

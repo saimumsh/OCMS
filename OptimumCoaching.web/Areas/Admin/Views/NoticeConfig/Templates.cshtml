@@ -1,0 +1,117 @@
+@model IList<OptimumCoaching.core.NoticeTemplate>
+@using OptimumCoaching.core
+@{
+    ViewData["Title"] = "Notice templates";
+    var audiences = Enum.GetValues<NoticeAudience>();
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-12 mb-1">
+        <h3 class="content-header-title mb-0"><i class="fa fa-clone mr-1 text-info"></i> Notice templates</h3>
+        <div class="row breadcrumbs-top">
+            <div class="breadcrumb-wrapper col-12">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Notice configuration</a></li>
+                    <li class="breadcrumb-item active">Templates</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null) { <div class="alert alert-success">@TempData["SuccessMessage"]</div> }
+@if (TempData["ErrorMessage"]   != null) { <div class="alert alert-danger">@TempData["ErrorMessage"]</div> }
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                <h4 class="card-title mb-0">Templates <span class="badge badge-pill badge-secondary ml-1">@Model.Count</span></h4>
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.Any())
+                { <p class="text-muted text-center py-3 mb-0">No templates yet.</p> }
+                else
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var t in Model)
+                        {
+                            var formId = $"tpl-{t.Id}";
+                            <li class="list-group-item">
+                                <form id="@formId" method="post" asp-action="UpdateTemplate" class="d-none">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@t.Id" />
+                                </form>
+                                <div class="row align-items-center">
+                                    <div class="col-md-3 mb-1">
+                                        <label class="small text-muted">Name</label>
+                                        <input form="@formId" name="name" value="@t.Name" class="form-control form-control-sm" required />
+                                    </div>
+                                    <div class="col-md-4 mb-1">
+                                        <label class="small text-muted">Title</label>
+                                        <input form="@formId" name="title" value="@t.Title" class="form-control form-control-sm" required />
+                                    </div>
+                                    <div class="col-md-3 mb-1">
+                                        <label class="small text-muted">Default audience</label>
+                                        <select form="@formId" name="defaultAudience" class="form-control form-control-sm">
+                                            @foreach (var a in audiences)
+                                            {
+                                                if (a == t.DefaultAudience) { <option value="@((int)a)" selected>@a</option> }
+                                                else { <option value="@((int)a)">@a</option> }
+                                            }
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2 mb-1 text-right">
+                                        <button type="submit" form="@formId" class="btn btn-sm btn-outline-primary" title="Save"><i class="fa fa-check"></i></button>
+                                        <form method="post" asp-action="DeleteTemplate" asp-route-id="@t.Id" class="d-inline" onsubmit="return confirm('Remove this template?');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Remove"><i class="fa fa-times"></i></button>
+                                        </form>
+                                    </div>
+                                </div>
+                                <div class="form-group mb-0 mt-1">
+                                    <label class="small text-muted">Body</label>
+                                    <textarea form="@formId" name="body" class="form-control form-control-sm" rows="3" required>@t.Body</textarea>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                <h4 class="card-title mb-0">Add template</h4>
+            </div>
+            <form method="post" asp-action="AddTemplate">
+                @Html.AntiForgeryToken()
+                <div class="card-body">
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input name="name" class="form-control" required placeholder="e.g. Class cancelled" />
+                    </div>
+                    <div class="form-group">
+                        <label>Title</label>
+                        <input name="title" class="form-control" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Body</label>
+                        <textarea name="body" class="form-control" rows="4" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Default audience</label>
+                        <select name="defaultAudience" class="form-control">
+                            @foreach (var a in audiences) { <option value="@((int)a)">@a</option> }
+                        </select>
+                    </div>
+                </div>
+                <div class="card-footer text-right">
+                    <button type="submit" class="btn btn-custom"><i class="fa fa-plus"></i> Add</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

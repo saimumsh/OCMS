@@ -1,0 +1,91 @@
+@model IList<OptimumCoaching.core.ClassRoutineSlot>
+@using OptimumCoaching.core
+@{
+    ViewData["Title"] = "My Routine";
+    var batch = (Batch)ViewBag.Batch;
+    var overrides = ViewBag.Overrides as IList<ClassSessionOverride> ?? new List<ClassSessionOverride>();
+    var days = new[] { DayOfWeek.Sunday, DayOfWeek.Monday, DayOfWeek.Tuesday,
+                       DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday,
+                       DayOfWeek.Saturday };
+    var slotsByDay = Model.GroupBy(s => s.Day).ToDictionary(g => g.Key, g => g.OrderBy(s => s.StartTime).ToList());
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-12 mb-1">
+        <h3 class="content-header-title mb-0"><i class="fa fa-calendar mr-1 text-info"></i> My Class Routine</h3>
+        <small class="text-muted">@batch.Name · @(batch.Subject?.Name ?? "—")</small>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-7 mb-3">
+        <div class="card">
+            <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                <h4 class="card-title mb-0">Weekly schedule</h4>
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.Any())
+                { <p class="text-muted text-center py-3 mb-0">No routine published yet.</p> }
+                else
+                {
+                    <table class="table table-condensed mb-0 user-table">
+                        <thead><tr><th>Day</th><th>Time</th><th>Topic / Teacher</th><th>Room</th></tr></thead>
+                        <tbody>
+                            @foreach (var d in days)
+                            {
+                                if (!slotsByDay.TryGetValue(d, out var daySlots)) continue;
+                                foreach (var slot in daySlots)
+                                {
+                                    <tr>
+                                        <td class="align-middle"><strong>@d</strong></td>
+                                        <td class="align-middle">@slot.StartTime.ToString(@"hh\:mm") – @slot.EndTime.ToString(@"hh\:mm")</td>
+                                        <td class="align-middle">
+                                            @(slot.Topic?.Title ?? "—")
+                                            @if (slot.Teacher != null)
+                                            { <div class="small text-muted">@slot.Teacher.FullName</div> }
+                                        </td>
+                                        <td class="align-middle">@(slot.Room ?? "—")</td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5 mb-3">
+        <div class="card">
+            <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                <h4 class="card-title mb-0">Upcoming changes</h4>
+                <small class="text-muted">Cancellations and extra sessions in the next 60 days.</small>
+            </div>
+            <div class="card-body p-0">
+                @if (!overrides.Any())
+                { <p class="text-muted text-center py-3 mb-0">No changes scheduled.</p> }
+                else
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var ov in overrides)
+                        {
+                            <li class="list-group-item">
+                                <strong>@ov.SessionDate.ToString("dd MMM yyyy")</strong>
+                                @if (ov.IsCancelled) { <span class="badge badge-pill badge-danger ml-1">Cancelled</span> }
+                                else if (ov.RoutineSlotId.HasValue) { <span class="badge badge-pill badge-info ml-1">Override</span> }
+                                else { <span class="badge badge-pill badge-success ml-1">Extra</span> }
+                                <div class="small text-muted">
+                                    @if (ov.StartTime.HasValue && ov.EndTime.HasValue)
+                                    { <text>@ov.StartTime.Value.ToString(@"hh\:mm") – @ov.EndTime.Value.ToString(@"hh\:mm") · </text> }
+                                    @(ov.Topic?.Title ?? "—") · @(ov.Teacher?.FullName ?? "—")
+                                </div>
+                                @if (!string.IsNullOrWhiteSpace(ov.Note))
+                                { <div class="small mt-1">@ov.Note</div> }
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+</div>

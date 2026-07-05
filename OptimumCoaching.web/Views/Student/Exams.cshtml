@@ -1,0 +1,88 @@
+@using OptimumCoaching.core
+@{
+    ViewData["Title"] = "Exam Schedule";
+    var batch = (Batch)ViewBag.Batch;
+    var upcoming = (IList<Exam>)ViewBag.Upcoming;
+    var past = (IList<Exam>)ViewBag.Past;
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-12 mb-1">
+        <h3 class="content-header-title mb-0"><i class="fa fa-pencil-square-o mr-1 text-info"></i> Exam Schedule</h3>
+        <small class="text-muted">@batch.Name · @(batch.Subject?.Name ?? "—")</small>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6 mb-2">
+        <div class="card">
+            <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                <h4 class="card-title mb-0">
+                    <i class="fa fa-clock-o text-warning mr-1"></i> Upcoming
+                    <span class="badge badge-pill badge-secondary ml-1">@upcoming.Count</span>
+                </h4>
+            </div>
+            <div class="card-body p-0">
+                @if (!upcoming.Any())
+                { <p class="text-muted text-center py-3 mb-0">No upcoming exams.</p> }
+                else
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var ex in upcoming)
+                        {
+                            <li class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <strong>@ex.Title</strong>
+                                        <span class="badge badge-light ml-1">@ex.Type</span>
+                                        <div class="small text-muted">
+                                            Total @ex.TotalMarks · Pass @ex.PassMarks
+                                            @if (ex.DurationMinutes.HasValue) { <text> · @ex.DurationMinutes min</text> }
+                                        </div>
+                                        @if (!string.IsNullOrWhiteSpace(ex.Syllabus))
+                                        { <div class="small mt-1">@ex.Syllabus</div> }
+                                    </div>
+                                    <div class="text-right text-nowrap">
+                                        <div><strong>@ex.ExamDate.ToString("dd MMM")</strong></div>
+                                        <small class="text-muted">@ex.ExamDate.ToString("yyyy")</small>
+                                    </div>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-2">
+        <div class="card">
+            <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                <h4 class="card-title mb-0">
+                    <i class="fa fa-history text-muted mr-1"></i> Past
+                    <span class="badge badge-pill badge-secondary ml-1">@past.Count</span>
+                </h4>
+            </div>
+            <div class="card-body p-0">
+                @if (!past.Any())
+                { <p class="text-muted text-center py-3 mb-0">No past exams.</p> }
+                else
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var ex in past)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>@ex.Title</strong>
+                                    <span class="badge badge-light ml-1">@ex.Type</span>
+                                    <div class="small text-muted">Total @ex.TotalMarks</div>
+                                </div>
+                                <small class="text-muted text-nowrap">@ex.ExamDate.ToString("dd MMM yyyy")</small>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+</div>

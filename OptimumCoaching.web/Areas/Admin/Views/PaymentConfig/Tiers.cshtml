@@ -1,0 +1,105 @@
+@model IList<OptimumCoaching.core.ResultDiscountTier>
+@{
+    ViewData["Title"] = "Result discount tiers";
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-12 mb-1">
+        <h3 class="content-header-title mb-0"><i class="fa fa-percent mr-1 text-warning"></i> Result-based discount tiers</h3>
+        <div class="row breadcrumbs-top">
+            <div class="breadcrumb-wrapper col-12">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Payment configuration</a></li>
+                    <li class="breadcrumb-item active">Tiers</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null) { <div class="alert alert-success">@TempData["SuccessMessage"]</div> }
+@if (TempData["ErrorMessage"]   != null) { <div class="alert alert-danger">@TempData["ErrorMessage"]</div> }
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                <h4 class="card-title mb-0">Tiers <span class="badge badge-pill badge-secondary ml-1">@Model.Count</span></h4>
+                <small class="text-muted">A student qualifies for the highest tier whose minimum result % they have achieved.</small>
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.Any())
+                { <p class="text-muted text-center py-3 mb-0">No tiers configured yet.</p> }
+                else
+                {
+                    <table class="table table-condensed mb-0 user-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th class="text-right">Min result %</th>
+                                <th class="text-right">Discount %</th>
+                                <th class="text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var t in Model)
+                            {
+                                var formId = $"tier-{t.Id}";
+                                <tr>
+                                    <td class="align-middle">
+                                        <form id="@formId" method="post" asp-action="UpdateTier">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@t.Id" />
+                                        </form>
+                                        <input form="@formId" name="name" value="@t.Name" class="form-control form-control-sm" required />
+                                    </td>
+                                    <td class="align-middle">
+                                        <input form="@formId" name="minResultPercent" value="@t.MinResultPercent" type="number" step="0.01" min="0" max="100" class="form-control form-control-sm text-right" style="width:120px" required />
+                                    </td>
+                                    <td class="align-middle">
+                                        <input form="@formId" name="discountPercent" value="@t.DiscountPercent" type="number" step="0.01" min="0.01" max="100" class="form-control form-control-sm text-right" style="width:120px" required />
+                                    </td>
+                                    <td class="align-middle text-right">
+                                        <button type="submit" form="@formId" class="btn btn-sm btn-outline-primary" title="Save"><i class="fa fa-check"></i></button>
+                                        <form method="post" asp-action="DeleteTier" asp-route-id="@t.Id" class="d-inline" onsubmit="return confirm('Remove this tier?');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Remove"><i class="fa fa-times"></i></button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                <h4 class="card-title mb-0">Add tier</h4>
+            </div>
+            <form method="post" asp-action="AddTier">
+                @Html.AntiForgeryToken()
+                <div class="card-body">
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input name="name" class="form-control" required placeholder="e.g. Golden A+, Top 10%" />
+                    </div>
+                    <div class="form-group">
+                        <label>Minimum result %</label>
+                        <input name="minResultPercent" type="number" step="0.01" min="0" max="100" class="form-control" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Discount %</label>
+                        <input name="discountPercent" type="number" step="0.01" min="0.01" max="100" class="form-control" required />
+                    </div>
+                </div>
+                <div class="card-footer text-right">
+                    <button type="submit" class="btn btn-custom"><i class="fa fa-plus"></i> Add tier</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -79,6 +79,17 @@ namespace OptimumCoaching.core
             public const string AssignStudents = "Permissions.Batches.AssignStudents";
         }
 
+        // Dedicated permission set for the Online Courses admin area.
+        // Kept separate from Batches so coaches/marketers can be granted
+        // online-course management without touching offline batches.
+        public static class OnlineCourses
+        {
+            public const string ListView = "Permissions.OnlineCourses.ListView";
+            public const string AddEdit = "Permissions.OnlineCourses.AddEdit";
+            public const string Delete = "Permissions.OnlineCourses.Delete";
+            public const string ManageEnrollments = "Permissions.OnlineCourses.ManageEnrollments";
+        }
+
         public static class BatchUpdates
         {
             public const string ListView = "Permissions.BatchUpdates.ListView";
@@ -148,6 +159,26 @@ namespace OptimumCoaching.core
         {
             // Student-facing: see their own fee balance + history.
             public const string ListView = "Permissions.MyFinance.ListView";
+        }
+
+        public static class Lessons
+        {
+            public const string ListView = "Permissions.Lessons.ListView";
+            public const string Manage = "Permissions.Lessons.Manage";   // add / edit / publish / delete
+        }
+
+        public static class Assignments
+        {
+            public const string ListView = "Permissions.Assignments.ListView";
+            public const string Manage = "Permissions.Assignments.Manage";  // create / edit / publish
+            public const string Grade = "Permissions.Assignments.Grade";    // grade submissions
+        }
+
+        public static class Attendance
+        {
+            public const string ListView = "Permissions.Attendance.ListView";    // see sessions and reports
+            public const string Mark = "Permissions.Attendance.Mark";            // open a session and record per-student status
+            public const string Reports = "Permissions.Attendance.Reports";      // aggregate reports (per-batch / per-student)
         }
     }
 }

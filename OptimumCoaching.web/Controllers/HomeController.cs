@@ -26,6 +26,9 @@ namespace OptimumCoaching.web.Controllers
         private readonly IClassMaterialService _materialService;
         private readonly IClassRoutineService _routineService;
         private readonly IFeeService _feeService;
+        private readonly IFeeDueAlertService _dueAlertService;
+        private readonly IAttendanceService _attendanceService;
+        private readonly IOnlineEnrollmentService _onlineEnrollments;
         private readonly ApplicationDbContext _db;
 
         public HomeController(
@@ -43,6 +46,9 @@ namespace OptimumCoaching.web.Controllers
             IClassMaterialService materialService,
             IClassRoutineService routineService,
             IFeeService feeService,
+            IFeeDueAlertService dueAlertService,
+            IAttendanceService attendanceService,
+            IOnlineEnrollmentService onlineEnrollments,
             ApplicationDbContext db)
         {
             _logger = logger;
@@ -59,6 +65,9 @@ namespace OptimumCoaching.web.Controllers
             _materialService = materialService;
             _routineService = routineService;
             _feeService = feeService;
+            _dueAlertService = dueAlertService;
+            _attendanceService = attendanceService;
+            _onlineEnrollments = onlineEnrollments;
             _db = db;
         }
 
@@ -120,6 +129,20 @@ namespace OptimumCoaching.web.Controllers
 
             var vm = new StudentDashboardViewModel { FullName = user.FullName };
 
+            // Published batches shown as an ad strip on every user dashboard.
+            // Priority: active offers first, then newest publications.
+            var today = DateTime.UtcNow.Date;
+            vm.FeaturedCourses = await _db.Batches
+                .Where(b => !b.IsDeleted && b.IsActive && b.IsPublishedForEnrollment)
+                .Include(b => b.Department)
+                .Include(b => b.Subject)
+                .Include(b => b.Teacher)
+                .OrderByDescending(b => b.OfferedPrice.HasValue
+                                        && (!b.OfferEndsAt.HasValue || b.OfferEndsAt.Value >= today))
+                .ThenByDescending(b => b.Created)
+                .Take(6)
+                .ToListAsync();
+
             var asStudent = await _studentService.GetByUserIdAsync(user.Id);
             if (asStudent != null)
             {
@@ -129,18 +152,33 @@ namespace OptimumCoaching.web.Controllers
                     vm.Batch = await _batchService.GetByIdAsync(asStudent.BatchId.Value);
                     vm.Updates = await _batchUpdateService.GetForBatchAsync(asStudent.BatchId.Value, take: 10);
                 }
+                // Auto-post overdue notices (idempotent — once per day per account).
+                await _dueAlertService.EnsureAlertsForStudentAsync(asStudent.Id, user.Id);
+                vm.DueAlerts = await _dueAlertService.GetForStudentAsync(asStudent.Id);
+
                 vm.Notices = await _noticeService.GetForReceiverAsync(
-                    NoticeAudience.Students, asStudent.DepartmentId, take: 10);
+                    NoticeAudience.Students, asStudent.DepartmentId, asStudent.Id, take: 10);
                 vm.UpcomingExams = await _examService.GetUpcomingForStudentAsync(asStudent.Id, take: 5);
                 vm.MyResults = await _examResultService.GetForStudentAsync(asStudent.Id, publishedOnly: true);
 
                 if (asStudent.BatchId.HasValue)
                 {
+                    // Lazy-ensure the fee account so dashboards always show the
+                    // Course fees card. Idempotent — returns the existing row
+                    // when present, creates it when not (e.g., dummy data, or
+                    // students enrolled before the Finance module shipped).
+                    await _feeService.EnsureAccountAsync(asStudent.Id, asStudent.BatchId.Value, user.Id);
+
                     vm.Materials = (await _materialService.GetForBatchAsync(asStudent.BatchId.Value)).Take(8).ToList();
                     vm.RoutineSlots = await _routineService.GetSlotsForBatchAsync(asStudent.BatchId.Value);
                     vm.FeeAccount = await _feeService.GetAccountAsync(asStudent.Id, asStudent.BatchId.Value);
                     vm.ExamAdmitEligible = await _feeService.IsExamAdmitEligibleAsync(asStudent.Id, asStudent.BatchId.Value);
+                    vm.AttendanceSummary = await _attendanceService.GetStudentSummaryAsync(asStudent.Id, asStudent.BatchId.Value);
                 }
+
+                // Multi-enrollment list — online/hybrid courses they've signed
+                // up for via the catalog, independent of the primary batch.
+                vm.MyOnlineCourses = await _onlineEnrollments.GetForStudentAsync(asStudent.Id);
             }
             else
             {

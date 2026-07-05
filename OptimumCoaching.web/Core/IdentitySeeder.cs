@@ -61,6 +61,10 @@ namespace OptimumCoaching.web.Core
                 Permissions.Batches.AddEdit,
                 Permissions.Batches.Delete,
                 Permissions.Batches.AssignStudents,
+                Permissions.OnlineCourses.ListView,
+                Permissions.OnlineCourses.AddEdit,
+                Permissions.OnlineCourses.Delete,
+                Permissions.OnlineCourses.ManageEnrollments,
                 Permissions.BatchUpdates.ListView,
                 Permissions.BatchUpdates.Post,
                 Permissions.BatchUpdates.Delete,
@@ -85,11 +89,19 @@ namespace OptimumCoaching.web.Core
                 Permissions.Routine.ListView,
                 Permissions.Routine.AddEdit,
                 Permissions.Routine.Delete,
+                Permissions.Lessons.ListView,
+                Permissions.Lessons.Manage,
+                Permissions.Assignments.ListView,
+                Permissions.Assignments.Manage,
+                Permissions.Assignments.Grade,
                 Permissions.Finance.ListView,
                 Permissions.Finance.ManageFees,
                 Permissions.Finance.RecordPayment,
                 Permissions.Finance.ViewSalaries,
                 Permissions.Finance.RecordSalary,
+                Permissions.Attendance.ListView,
+                Permissions.Attendance.Mark,
+                Permissions.Attendance.Reports,
                 Permissions.Users.ListView,
             });
 
@@ -113,6 +125,9 @@ namespace OptimumCoaching.web.Core
                 Permissions.Batches.ListView,
                 Permissions.Batches.AddEdit,
                 Permissions.Batches.AssignStudents,
+                Permissions.OnlineCourses.ListView,
+                Permissions.OnlineCourses.AddEdit,
+                Permissions.OnlineCourses.ManageEnrollments,
                 Permissions.BatchUpdates.ListView,
                 Permissions.BatchUpdates.Post,
                 Permissions.Students.ListView,
@@ -126,6 +141,9 @@ namespace OptimumCoaching.web.Core
                 Permissions.Materials.Upload,
                 Permissions.Routine.ListView,
                 Permissions.Routine.AddEdit,
+                Permissions.Attendance.ListView,
+                Permissions.Attendance.Mark,
+                Permissions.Attendance.Reports,
             });
 
             // 2b-teacher) Teacher role grants — can post class updates and exams for their batches.
@@ -145,6 +163,13 @@ namespace OptimumCoaching.web.Core
                 Permissions.Materials.ListView,
                 Permissions.Materials.Upload,
                 Permissions.Routine.ListView,
+                Permissions.Attendance.ListView,
+                Permissions.Attendance.Mark,
+                Permissions.Lessons.ListView,
+                Permissions.Lessons.Manage,
+                Permissions.Assignments.ListView,
+                Permissions.Assignments.Manage,
+                Permissions.Assignments.Grade,
             });
 
             // 2c) Default departments per stream

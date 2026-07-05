@@ -1,0 +1,83 @@
+@model IList<OptimumCoaching.service.DueAlertRow>
+@{
+    ViewData["Title"] = "Overdue fees";
+    var totalBal = Model.Sum(r => r.Balance);
+    var totalLate = Model.Sum(r => r.LateFee);
+    var totalOwed = Model.Sum(r => r.TotalOwed);
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-12 mb-1">
+        <h3 class="content-header-title mb-0">
+            <i class="fa fa-exclamation-triangle mr-1 text-danger"></i> Overdue fees
+            <span class="badge badge-pill badge-danger ml-1">@Model.Count</span>
+        </h3>
+        <small class="text-muted">Students whose fee balance is past the due date (configured per batch).</small>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="card"><div class="card-body text-center py-3"><p class="text-muted mb-0">No overdue accounts. ✅</p></div></div>
+    return;
+}
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-condensed mb-0 user-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Student</th>
+                        <th>Code</th>
+                        <th>Batch</th>
+                        <th class="text-center">Due</th>
+                        <th class="text-center">Days late</th>
+                        <th class="text-right">Balance</th>
+                        <th class="text-right">Late fee</th>
+                        <th class="text-right">Total owed</th>
+                        <th class="text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{ var sn = 0; }
+                    @foreach (var r in Model)
+                    {
+                        sn++;
+                        <tr>
+                            <td class="align-middle">@sn</td>
+                            <td class="align-middle"><strong>@r.StudentName</strong></td>
+                            <td class="align-middle">
+                                @if (!string.IsNullOrWhiteSpace(r.StudentCode))
+                                { <span class="badge badge-light">@r.StudentCode</span> }
+                            </td>
+                            <td class="align-middle">@r.BatchName</td>
+                            <td class="text-center align-middle small">@r.DueDate.ToString("dd MMM yyyy")</td>
+                            <td class="text-center align-middle">
+                                <span class="badge badge-pill badge-danger">@r.DaysOverdue</span>
+                            </td>
+                            <td class="text-right align-middle">@r.Balance.ToString("N0")</td>
+                            <td class="text-right align-middle">@r.LateFee.ToString("N0")</td>
+                            <td class="text-right align-middle"><strong>@r.TotalOwed.ToString("N0")</strong></td>
+                            <td class="text-right align-middle">
+                                <a class="btn btn-sm btn-outline-primary" asp-action="StudentLedger" asp-route-id="@r.StudentId" title="Open ledger">
+                                    <i class="fa fa-book"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr class="bg-light">
+                        <th colspan="6" class="text-right">Totals</th>
+                        <th class="text-right">@totalBal.ToString("N0")</th>
+                        <th class="text-right">@totalLate.ToString("N0")</th>
+                        <th class="text-right">@totalOwed.ToString("N0")</th>
+                        <th></th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,28 @@
+@model BatchFormViewModel
+@{
+    ViewData["Title"] = "Edit Online Course";
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-md-9 col-12 mb-1">
+        <h3 class="content-header-title mb-0"><i class="fa fa-video-camera text-info mr-1"></i> Edit Online Course</h3>
+        <div class="row breadcrumbs-top">
+            <div class="breadcrumb-wrapper col-12">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Online Courses</a></li>
+                    <li class="breadcrumb-item"><a asp-action="Details" asp-route-id="@Model.Id">@Model.Name</a></li>
+                    <li class="breadcrumb-item active">Edit</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section id="online-course-edit">
+    <form method="post" asp-action="Edit">
+        @Html.AntiForgeryToken()
+        <partial name="~/Areas/Admin/Views/Batches/_BatchForm.cshtml" model="Model" />
+    </form>
+</section>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

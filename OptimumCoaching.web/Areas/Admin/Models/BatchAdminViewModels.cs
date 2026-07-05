@@ -55,6 +55,62 @@ namespace OptimumCoaching.web.Areas.Admin.Models
         [Range(1, 1000), Display(Name = "Capacity")]
         public int? Capacity { get; set; }
 
+        // ---- Fees ---------------------------------------------------
+        [Range(0, 1_000_000_000), Display(Name = "Course fee")]
+        public decimal CourseFee { get; set; }
+
+        [Range(0, 1_000_000_000), Display(Name = "Minimum to enroll")]
+        public decimal MinimumEnrollment { get; set; }
+
+        [Range(0, 100), Display(Name = "Full-payment discount %")]
+        public decimal FullPaymentDiscountPercent { get; set; }
+
+        // ---- Late-fee policy ---------------------------------------
+        [Display(Name = "Fee due date"), DataType(DataType.Date)]
+        public DateTime? FeeDueDate { get; set; }
+
+        [Range(0, 3650), Display(Name = "Due days after enrollment")]
+        public int? FeeDueDays { get; set; }
+
+        [Range(0, 1_000_000_000), Display(Name = "Late fee (flat)")]
+        public decimal LateFeeFlat { get; set; }
+
+        [Range(0, 1_000_000_000), Display(Name = "Late fee per day")]
+        public decimal LateFeePerDay { get; set; }
+
+        // ---- Delivery mode ----
+        [Display(Name = "Delivery mode")]
+        public DeliveryMode DeliveryMode { get; set; } = DeliveryMode.Offline;
+
+        [MaxLength(500), Url, Display(Name = "Meeting link")]
+        public string? MeetingUrl { get; set; }
+
+        [MaxLength(1000), Display(Name = "Meeting notes")]
+        public string? MeetingNotes { get; set; }
+
+        // ---- Public catalog ----
+        [Display(Name = "Open for public enrollment")]
+        public bool IsPublishedForEnrollment { get; set; }
+
+        [MaxLength(500), Display(Name = "Short description")]
+        public string? ShortDescription { get; set; }
+
+        [MaxLength(500), Display(Name = "Cover image URL")]
+        public string? CoverImageUrl { get; set; }
+
+        // ---- Promo + offer ----
+        [MaxLength(500), Url, Display(Name = "Promo video URL")]
+        public string? PromoVideoUrl { get; set; }
+
+        [MaxLength(80), Display(Name = "Offer label")]
+        public string? OfferLabel { get; set; }
+
+        [Range(0, 1_000_000_000), Display(Name = "Offer price")]
+        public decimal? OfferedPrice { get; set; }
+
+        [Display(Name = "Offer ends on"), DataType(DataType.Date)]
+        public DateTime? OfferEndsAt { get; set; }
+
         public IEnumerable<SelectListItem> DepartmentOptions { get; set; } = Enumerable.Empty<SelectListItem>();
         public IEnumerable<SelectListItem> ClassOptions { get; set; } = Enumerable.Empty<SelectListItem>();
         public IEnumerable<SelectListItem> SubjectOptions { get; set; } = Enumerable.Empty<SelectListItem>();

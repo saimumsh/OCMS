@@ -1,0 +1,112 @@
+@model IList<OptimumCoaching.web.Areas.Admin.Controllers.FinanceController.StudentFeeRow>
+@{
+    ViewData["Title"] = "Student Fees — by student";
+    var q = ViewBag.Query as string;
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-md-7 col-12 mb-1">
+        <h3 class="content-header-title mb-0"><i class="fa fa-user-graduate mr-1 text-info"></i> Student Fees</h3>
+        <div class="row breadcrumbs-top">
+            <div class="breadcrumb-wrapper col-12">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">Finance</li>
+                    <li class="breadcrumb-item active">By student</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+    <div class="content-header-right col-md-5 col-12 mb-1 text-md-right">
+        <a class="btn btn-sm btn-custom-default mr-1" asp-action="StudentFees">
+            <i class="fa fa-th mr-1"></i> By batch
+        </a>
+        <form method="get" class="form-inline justify-content-md-end d-inline-block">
+            <input type="search" name="q" value="@q" placeholder="Search name, code, email, phone"
+                   class="form-control form-control-sm user-search" />
+        </form>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null) { <div class="alert alert-success">@TempData["SuccessMessage"]</div> }
+@if (TempData["ErrorMessage"]   != null) { <div class="alert alert-danger">@TempData["ErrorMessage"]</div> }
+
+@if (!Model.Any())
+{
+    <div class="card"><div class="card-body text-center py-3">
+        <p class="text-muted mb-0">
+            @if (!string.IsNullOrWhiteSpace(q)) { <text>No students match "@q".</text> }
+            else { <text>No fee accounts yet. Accounts are created when a student is approved + assigned to a batch.</text> }
+        </p>
+    </div></div>
+}
+else
+{
+    var totalFinal = Model.Sum(r => r.FinalFee);
+    var totalPaid  = Model.Sum(r => r.AmountPaid);
+    var totalBal   = Model.Sum(r => r.Balance);
+
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-condensed mb-0 user-table">
+                    <thead>
+                        <tr>
+                            <th class="serial">#</th>
+                            <th>Student</th>
+                            <th>Code</th>
+                            <th>Contact</th>
+                            <th class="text-center">Accounts</th>
+                            <th class="text-right">Final fee</th>
+                            <th class="text-right">Paid</th>
+                            <th class="text-right">Balance</th>
+                            <th class="text-right"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{ var sn = 0; }
+                        @foreach (var r in Model)
+                        {
+                            sn++;
+                            <tr>
+                                <td class="align-middle">@sn</td>
+                                <td class="align-middle"><strong>@r.FullName</strong></td>
+                                <td class="align-middle">
+                                    @if (!string.IsNullOrWhiteSpace(r.StudentCode))
+                                    { <span class="badge badge-light">@r.StudentCode</span> }
+                                    else
+                                    { <span class="text-muted">—</span> }
+                                </td>
+                                <td class="align-middle small">
+                                    @if (!string.IsNullOrWhiteSpace(r.Email)) { <div>@r.Email</div> }
+                                    @if (!string.IsNullOrWhiteSpace(r.PhoneNumber)) { <div class="text-muted">@r.PhoneNumber</div> }
+                                </td>
+                                <td class="align-middle text-center">
+                                    @r.AccountCount
+                                    @if (r.UnpaidAccounts > 0)
+                                    { <span class="badge badge-pill badge-warning ml-1">@r.UnpaidAccounts due</span> }
+                                </td>
+                                <td class="align-middle text-right">@r.FinalFee.ToString("N0")</td>
+                                <td class="align-middle text-right">@r.AmountPaid.ToString("N0")</td>
+                                <td class="align-middle text-right"><strong>@r.Balance.ToString("N0")</strong></td>
+                                <td class="align-middle text-right">
+                                    <a class="btn btn-sm btn-outline-primary" asp-action="StudentLedger" asp-route-id="@r.StudentId">
+                                        <i class="fa fa-book"></i> Open
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr class="bg-light">
+                            <th colspan="5" class="text-right">Totals</th>
+                            <th class="text-right">@totalFinal.ToString("N0")</th>
+                            <th class="text-right">@totalPaid.ToString("N0")</th>
+                            <th class="text-right">@totalBal.ToString("N0")</th>
+                            <th></th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+}

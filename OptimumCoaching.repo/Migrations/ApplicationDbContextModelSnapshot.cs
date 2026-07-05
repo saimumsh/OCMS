@@ -282,6 +282,237 @@ namespace OptimumCoaching.repo.Migrations
                     b.ToTable("AspNetUserRoles", (string)null);
                 });
 
+            modelBuilder.Entity("OptimumCoaching.core.Assignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AttachmentPath")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("BatchId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Instructions")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("LastModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("MaxScore")
+                        .HasColumnType("decimal(8,2)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid?>("TopicId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TopicId");
+
+                    b.HasIndex("BatchId", "DueDate");
+
+                    b.ToTable("Assignments", (string)null);
+                });
+
+            modelBuilder.Entity("OptimumCoaching.core.AssignmentSubmission", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AssignmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Feedback")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("FilePath")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("GradedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("GradedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("LastModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ResponseText")
+                        .HasMaxLength(8000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("Score")
+                        .HasColumnType("decimal(8,2)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("SubmittedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GradedByUserId");
+
+                    b.HasIndex("StudentId");
+
+                    b.HasIndex("AssignmentId", "StudentId")
+                        .IsUnique();
+
+                    b.ToTable("AssignmentSubmissions", (string)null);
+                });
+
+            modelBuilder.Entity("OptimumCoaching.core.AttendanceRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("LastModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Remarks")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentId");
+
+                    b.HasIndex("SessionId", "StudentId")
+                        .IsUnique();
+
+                    b.ToTable("AttendanceRecords", (string)null);
+                });
+
+            modelBuilder.Entity("OptimumCoaching.core.AttendanceSession", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BatchId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("LastModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("SessionDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("TakenByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("TopicId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TakenByUserId");
+
+                    b.HasIndex("TopicId");
+
+                    b.HasIndex("BatchId", "SessionDate")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.ToTable("AttendanceSessions", (string)null);
+                });
+
             modelBuilder.Entity("OptimumCoaching.core.Batch", b =>
                 {
                     b.Property<Guid>("Id")
@@ -301,11 +532,18 @@ namespace OptimumCoaching.repo.Migrations
                     b.Property<decimal>("CourseFee")
                         .HasColumnType("decimal(12,2)");
 
+                    b.Property<string>("CoverImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<DateTime>("Created")
                         .HasColumnType("datetime2");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("DeliveryMode")
+                        .HasColumnType("int");
 
                     b.Property<Guid?>("DepartmentId")
                         .HasColumnType("uniqueidentifier");
@@ -317,6 +555,12 @@ namespace OptimumCoaching.repo.Migrations
                     b.Property<DateTime?>("EndDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("FeeDueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("FeeDueDays")
+                        .HasColumnType("int");
+
                     b.Property<decimal>("FullPaymentDiscountPercent")
                         .HasColumnType("decimal(5,2)");
 
@@ -326,11 +570,28 @@ namespace OptimumCoaching.repo.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsPublishedForEnrollment")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime?>("LastModified")
                         .HasColumnType("datetime2");
 
                     b.Property<Guid?>("LastModifiedBy")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("LateFeeFlat")
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<decimal>("LateFeePerDay")
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<string>("MeetingNotes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("MeetingUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<decimal>("MinimumEnrollment")
                         .HasColumnType("decimal(12,2)");
@@ -339,6 +600,24 @@ namespace OptimumCoaching.repo.Migrations
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
+
+                    b.Property<DateTime?>("OfferEndsAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("OfferLabel")
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<decimal?>("OfferedPrice")
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<string>("PromoVideoUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("ShortDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<DateTime?>("StartDate")
                         .HasColumnType("datetime2");
@@ -363,7 +642,7 @@ namespace OptimumCoaching.repo.Migrations
 
                     b.HasIndex("TeacherId");
 
-                    b.ToTable("Batches");
+                    b.ToTable("Batches", (string)null);
                 });
 
             modelBuilder.Entity("OptimumCoaching.core.BatchTeacher", b =>
@@ -418,7 +697,7 @@ namespace OptimumCoaching.repo.Migrations
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
 
-                    b.ToTable("BatchTeachers");
+                    b.ToTable("BatchTeachers", (string)null);
                 });
 
             modelBuilder.Entity("OptimumCoaching.core.BatchTopicAssignment", b =>
@@ -468,7 +747,7 @@ namespace OptimumCoaching.repo.Migrations
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
 
-                    b.ToTable("BatchTopicAssignments");
+                    b.ToTable("BatchTopicAssignments", (string)null);
                 });
 
             modelBuilder.Entity("OptimumCoaching.core.BatchUpdate", b =>
@@ -520,7 +799,7 @@ namespace OptimumCoaching.repo.Migrations
 
                     b.HasIndex("BatchId", "PostedAt");
 
-                    b.ToTable("BatchUpdates");
+                    b.ToTable("BatchUpdates", (string)null);
                 });
 
             modelBuilder.Entity("OptimumCoaching.core.Class", b =>
@@ -571,7 +850,7 @@ namespace OptimumCoaching.repo.Migrations
 
                     b.HasIndex("DepartmentId");
 
-                    b.ToTable("Classes");
+                    b.ToTable("Classes", (string)null);
                 });
 
             modelBuilder.Entity("OptimumCoaching.core.ClassMaterial", b =>
@@ -638,7 +917,7 @@ namespace OptimumCoaching.repo.Migrations
 
                     b.HasIndex("BatchId", "UploadedAt");
 
-                    b.ToTable("ClassMaterials");
+                    b.ToTable("ClassMaterials", (string)null);
                 });
 
             modelBuilder.Entity("OptimumCoaching.core.ClassRoutineSlot", b =>
@@ -674,6 +953,10 @@ namespace OptimumCoaching.repo.Migrations
                     b.Property<Guid?>("LastModifiedBy")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("MeetingUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<string>("Room")
                         .HasMaxLength(120)
                         .HasColumnType("nvarchar(120)");
@@ -695,7 +978,7 @@ namespace OptimumCoaching.repo.Migrations
 
                     b.HasIndex("BatchId", "Day", "StartTime");
 
-                    b.ToTable("ClassRoutineSlots");
+                    b.ToTable("ClassRoutineSlots", (string)null);
                 });
 
             modelBuilder.Entity("OptimumCoaching.core.ClassSessionOverride", b =>
@@ -731,6 +1014,10 @@ namespace OptimumCoaching.repo.Migrations
                     b.Property<Guid?>("LastModifiedBy")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("MeetingUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<string>("Note")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
@@ -764,7 +1051,7 @@ namespace OptimumCoaching.repo.Migrations
 
                     b.HasIndex("BatchId", "SessionDate");
 
-                    b.ToTable("ClassSessionOverrides");
+                    b.ToTable("ClassSessionOverrides", (string)null);
                 });
 
             modelBuilder.Entity("OptimumCoaching.core.Conversation", b =>
@@ -819,7 +1106,7 @@ namespace OptimumCoaching.repo.Migrations
 
                     b.HasIndex("TargetRole", "LastMessageAt");
 
-                    b.ToTable("Conversations");
+                    b.ToTable("Conversations", (string)null);
                 });
 
             modelBuilder.Entity("OptimumCoaching.core.ConversationReadState", b =>
@@ -837,7 +1124,132 @@ namespace OptimumCoaching.repo.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ConversationReadStates");
+                    b.ToTable("ConversationReadStates", (string)null);
+                });
+
+            modelBuilder.Entity("OptimumCoaching.core.CourseEnrollment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BatchId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("EnrolledOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("LastModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<decimal>("PriceAtEnrollment")
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BatchId");
+
+                    b.HasIndex("StudentId", "BatchId")
+                        .IsUnique();
+
+                    b.ToTable("CourseEnrollments", (string)null);
+                });
+
+            modelBuilder.Entity("OptimumCoaching.core.CourseLesson", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BatchId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<int?>("DurationMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FilePath")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("LastModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("RecordedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ResourcePath")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid?>("TopicId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("VideoUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TopicId");
+
+                    b.HasIndex("BatchId", "SortOrder");
+
+                    b.ToTable("CourseLessons", (string)null);
                 });
 
             modelBuilder.Entity("OptimumCoaching.core.Department", b =>
@@ -889,7 +1301,7 @@ namespace OptimumCoaching.repo.Migrations
                     b.HasIndex("Stream", "Name")
                         .IsUnique();
 
-                    b.ToTable("Departments");
+                    b.ToTable("Departments", (string)null);
                 });
 
             modelBuilder.Entity("OptimumCoaching.core.Exam", b =>
@@ -950,7 +1362,7 @@ namespace OptimumCoaching.repo.Migrations
 
                     b.HasIndex("BatchId", "ExamDate");
 
-                    b.ToTable("Exams");
+                    b.ToTable("Exams", (string)null);
                 });
 
             modelBuilder.Entity("OptimumCoaching.core.ExamResult", b =>
@@ -1009,7 +1421,7 @@ namespace OptimumCoaching.repo.Migrations
                     b.HasIndex("ExamId", "StudentId")
                         .IsUnique();
 
-                    b.ToTable("ExamResults");
+                    b.ToTable("ExamResults", (string)null);
                 });
 
             modelBuilder.Entity("OptimumCoaching.core.FeePayment", b =>
@@ -1065,7 +1477,87 @@ namespace OptimumCoaching.repo.Migrations
 
                     b.HasIndex("AccountId", "PaidOn");
 
-                    b.ToTable("FeePayments");
+                    b.ToTable("FeePayments", (string)null);
+                });
+
+            modelBuilder.Entity("OptimumCoaching.core.FeePaymentRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("LastModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("LinkedPaymentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Method")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("ReceiptImagePath")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ReviewedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("SubmittedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("SubmittedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TransactionReference")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReviewedByUserId");
+
+                    b.HasIndex("SubmittedByUserId");
+
+                    b.HasIndex("AccountId", "SubmittedAt");
+
+                    b.HasIndex("Status", "SubmittedAt");
+
+                    b.ToTable("FeePaymentRequests", (string)null);
                 });
 
             modelBuilder.Entity("OptimumCoaching.core.Group", b =>
@@ -1116,7 +1608,7 @@ namespace OptimumCoaching.repo.Migrations
                         .IsUnique()
                         .HasFilter("[Code] IS NOT NULL");
 
-                    b.ToTable("Groups");
+                    b.ToTable("Groups", (string)null);
                 });
 
             modelBuilder.Entity("OptimumCoaching.core.Guardian", b =>
@@ -1186,7 +1678,59 @@ namespace OptimumCoaching.repo.Migrations
                         .IsUnique()
                         .HasFilter("[UserId] IS NOT NULL");
 
-                    b.ToTable("Guardians");
+                    b.ToTable("Guardians", (string)null);
+                });
+
+            modelBuilder.Entity("OptimumCoaching.core.LessonComment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AuthorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("LastModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("LessonId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ParentCommentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("PostedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorUserId");
+
+                    b.HasIndex("ParentCommentId");
+
+                    b.HasIndex("LessonId", "PostedAt");
+
+                    b.ToTable("LessonComments", (string)null);
                 });
 
             modelBuilder.Entity("OptimumCoaching.core.Message", b =>
@@ -1233,7 +1777,7 @@ namespace OptimumCoaching.repo.Migrations
 
                     b.HasIndex("ConversationId", "SentAt");
 
-                    b.ToTable("Messages");
+                    b.ToTable("Messages", (string)null);
                 });
 
             modelBuilder.Entity("OptimumCoaching.core.Notice", b =>
@@ -1283,6 +1827,13 @@ namespace OptimumCoaching.repo.Migrations
                     b.Property<Guid?>("PostedByUserId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("StudentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SystemTag")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -1298,7 +1849,148 @@ namespace OptimumCoaching.repo.Migrations
 
                     b.HasIndex("Audience", "PostedAt");
 
-                    b.ToTable("Notices");
+                    b.HasIndex("StudentId", "SystemTag");
+
+                    b.ToTable("Notices", (string)null);
+                });
+
+            modelBuilder.Entity("OptimumCoaching.core.NoticeSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("DefaultAudience")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DefaultExpiryDays")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("DefaultPinned")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("LastModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("OverdueAlertExpiryDays")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("OverdueAlertPinned")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("NoticeSettingsRows", (string)null);
+                });
+
+            modelBuilder.Entity("OptimumCoaching.core.NoticeTemplate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("DefaultAudience")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("LastModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name");
+
+                    b.ToTable("NoticeTemplates", (string)null);
+                });
+
+            modelBuilder.Entity("OptimumCoaching.core.PaymentSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CurrencySymbol")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("EnabledMethodsCsv")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("LastModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("NextReceiptNumber")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ReceiptPrefix")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PaymentSettingsRows", (string)null);
                 });
 
             modelBuilder.Entity("OptimumCoaching.core.Permission", b =>
@@ -1348,7 +2040,49 @@ namespace OptimumCoaching.repo.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Permissions");
+                    b.ToTable("Permissions", (string)null);
+                });
+
+            modelBuilder.Entity("OptimumCoaching.core.ResultDiscountTier", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("DiscountPercent")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("LastModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("MinResultPercent")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MinResultPercent");
+
+                    b.ToTable("ResultDiscountTiers", (string)null);
                 });
 
             modelBuilder.Entity("OptimumCoaching.core.RolePermission", b =>
@@ -1369,7 +2103,7 @@ namespace OptimumCoaching.repo.Migrations
 
                     b.HasIndex("PermissionId");
 
-                    b.ToTable("RolePermissions");
+                    b.ToTable("RolePermissions", (string)null);
                 });
 
             modelBuilder.Entity("OptimumCoaching.core.Student", b =>
@@ -1487,7 +2221,7 @@ namespace OptimumCoaching.repo.Migrations
                         .IsUnique()
                         .HasFilter("[UserId] IS NOT NULL");
 
-                    b.ToTable("Students");
+                    b.ToTable("Students", (string)null);
                 });
 
             modelBuilder.Entity("OptimumCoaching.core.StudentAcademicRecord", b =>
@@ -1544,7 +2278,7 @@ namespace OptimumCoaching.repo.Migrations
 
                     b.HasIndex("StudentId", "SortOrder");
 
-                    b.ToTable("StudentAcademicRecords");
+                    b.ToTable("StudentAcademicRecords", (string)null);
                 });
 
             modelBuilder.Entity("OptimumCoaching.core.StudentFeeAccount", b =>
@@ -1584,6 +2318,9 @@ namespace OptimumCoaching.repo.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<DateTime?>("LastDueAlertAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime?>("LastModified")
                         .HasColumnType("datetime2");
 
@@ -1604,7 +2341,53 @@ namespace OptimumCoaching.repo.Migrations
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
 
-                    b.ToTable("StudentFeeAccounts");
+                    b.ToTable("StudentFeeAccounts", (string)null);
+                });
+
+            modelBuilder.Entity("OptimumCoaching.core.StudentLessonProgress", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("FirstOpenedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModified")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("LastModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("LessonId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentId");
+
+                    b.HasIndex("LessonId", "StudentId")
+                        .IsUnique();
+
+                    b.ToTable("StudentLessonProgresses", (string)null);
                 });
 
             modelBuilder.Entity("OptimumCoaching.core.Subject", b =>
@@ -1660,7 +2443,7 @@ namespace OptimumCoaching.repo.Migrations
 
                     b.HasIndex("DepartmentId");
 
-                    b.ToTable("Subjects");
+                    b.ToTable("Subjects", (string)null);
                 });
 
             modelBuilder.Entity("OptimumCoaching.core.Teacher", b =>
@@ -1741,7 +2524,7 @@ namespace OptimumCoaching.repo.Migrations
                         .IsUnique()
                         .HasFilter("[UserId] IS NOT NULL");
 
-                    b.ToTable("Teachers");
+                    b.ToTable("Teachers", (string)null);
                 });
 
             modelBuilder.Entity("OptimumCoaching.core.TeacherReport", b =>
@@ -1810,7 +2593,7 @@ namespace OptimumCoaching.repo.Migrations
 
                     b.HasIndex("Status", "Created");
 
-                    b.ToTable("TeacherReports");
+                    b.ToTable("TeacherReports", (string)null);
                 });
 
             modelBuilder.Entity("OptimumCoaching.core.TeacherReview", b =>
@@ -1863,7 +2646,7 @@ namespace OptimumCoaching.repo.Migrations
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
 
-                    b.ToTable("TeacherReviews");
+                    b.ToTable("TeacherReviews", (string)null);
                 });
 
             modelBuilder.Entity("OptimumCoaching.core.TeacherSalaryPayment", b =>
@@ -1925,7 +2708,7 @@ namespace OptimumCoaching.repo.Migrations
 
                     b.HasIndex("TeacherId", "PeriodMonth");
 
-                    b.ToTable("TeacherSalaryPayments");
+                    b.ToTable("TeacherSalaryPayments", (string)null);
                 });
 
             modelBuilder.Entity("OptimumCoaching.core.Topic", b =>
@@ -1975,7 +2758,7 @@ namespace OptimumCoaching.repo.Migrations
 
                     b.HasIndex("SubjectId", "Title");
 
-                    b.ToTable("Topics");
+                    b.ToTable("Topics", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
@@ -2031,6 +2814,94 @@ namespace OptimumCoaching.repo.Migrations
                     b.Navigation("Role");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("OptimumCoaching.core.Assignment", b =>
+                {
+                    b.HasOne("OptimumCoaching.core.Batch", "Batch")
+                        .WithMany()
+                        .HasForeignKey("BatchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OptimumCoaching.core.Topic", "Topic")
+                        .WithMany()
+                        .HasForeignKey("TopicId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Batch");
+
+                    b.Navigation("Topic");
+                });
+
+            modelBuilder.Entity("OptimumCoaching.core.AssignmentSubmission", b =>
+                {
+                    b.HasOne("OptimumCoaching.core.Assignment", "Assignment")
+                        .WithMany("Submissions")
+                        .HasForeignKey("AssignmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OptimumCoaching.core.ApplicationUser", "GradedByUser")
+                        .WithMany()
+                        .HasForeignKey("GradedByUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("OptimumCoaching.core.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Assignment");
+
+                    b.Navigation("GradedByUser");
+
+                    b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("OptimumCoaching.core.AttendanceRecord", b =>
+                {
+                    b.HasOne("OptimumCoaching.core.AttendanceSession", "Session")
+                        .WithMany("Records")
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OptimumCoaching.core.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Session");
+
+                    b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("OptimumCoaching.core.AttendanceSession", b =>
+                {
+                    b.HasOne("OptimumCoaching.core.Batch", "Batch")
+                        .WithMany()
+                        .HasForeignKey("BatchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OptimumCoaching.core.ApplicationUser", "TakenByUser")
+                        .WithMany()
+                        .HasForeignKey("TakenByUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("OptimumCoaching.core.Topic", "Topic")
+                        .WithMany()
+                        .HasForeignKey("TopicId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Batch");
+
+                    b.Navigation("TakenByUser");
+
+                    b.Navigation("Topic");
                 });
 
             modelBuilder.Entity("OptimumCoaching.core.Batch", b =>
@@ -2250,6 +3121,43 @@ namespace OptimumCoaching.repo.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("OptimumCoaching.core.CourseEnrollment", b =>
+                {
+                    b.HasOne("OptimumCoaching.core.Batch", "Batch")
+                        .WithMany()
+                        .HasForeignKey("BatchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OptimumCoaching.core.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Batch");
+
+                    b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("OptimumCoaching.core.CourseLesson", b =>
+                {
+                    b.HasOne("OptimumCoaching.core.Batch", "Batch")
+                        .WithMany()
+                        .HasForeignKey("BatchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OptimumCoaching.core.Topic", "Topic")
+                        .WithMany()
+                        .HasForeignKey("TopicId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Batch");
+
+                    b.Navigation("Topic");
+                });
+
             modelBuilder.Entity("OptimumCoaching.core.Exam", b =>
                 {
                     b.HasOne("OptimumCoaching.core.Batch", "Batch")
@@ -2298,6 +3206,32 @@ namespace OptimumCoaching.repo.Migrations
                     b.Navigation("RecordedByUser");
                 });
 
+            modelBuilder.Entity("OptimumCoaching.core.FeePaymentRequest", b =>
+                {
+                    b.HasOne("OptimumCoaching.core.StudentFeeAccount", "Account")
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OptimumCoaching.core.ApplicationUser", "ReviewedByUser")
+                        .WithMany()
+                        .HasForeignKey("ReviewedByUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("OptimumCoaching.core.ApplicationUser", "SubmittedByUser")
+                        .WithMany()
+                        .HasForeignKey("SubmittedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Account");
+
+                    b.Navigation("ReviewedByUser");
+
+                    b.Navigation("SubmittedByUser");
+                });
+
             modelBuilder.Entity("OptimumCoaching.core.Group", b =>
                 {
                     b.HasOne("OptimumCoaching.core.Batch", "Batch")
@@ -2316,6 +3250,32 @@ namespace OptimumCoaching.repo.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("OptimumCoaching.core.LessonComment", b =>
+                {
+                    b.HasOne("OptimumCoaching.core.ApplicationUser", "AuthorUser")
+                        .WithMany()
+                        .HasForeignKey("AuthorUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("OptimumCoaching.core.CourseLesson", "Lesson")
+                        .WithMany()
+                        .HasForeignKey("LessonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OptimumCoaching.core.LessonComment", "ParentComment")
+                        .WithMany()
+                        .HasForeignKey("ParentCommentId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("AuthorUser");
+
+                    b.Navigation("Lesson");
+
+                    b.Navigation("ParentComment");
                 });
 
             modelBuilder.Entity("OptimumCoaching.core.Message", b =>
@@ -2349,9 +3309,16 @@ namespace OptimumCoaching.repo.Migrations
                         .HasForeignKey("PostedByUserId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("OptimumCoaching.core.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.Navigation("Department");
 
                     b.Navigation("PostedByUser");
+
+                    b.Navigation("Student");
                 });
 
             modelBuilder.Entity("OptimumCoaching.core.RolePermission", b =>
@@ -2430,6 +3397,25 @@ namespace OptimumCoaching.repo.Migrations
                         .IsRequired();
 
                     b.Navigation("Batch");
+
+                    b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("OptimumCoaching.core.StudentLessonProgress", b =>
+                {
+                    b.HasOne("OptimumCoaching.core.CourseLesson", "Lesson")
+                        .WithMany()
+                        .HasForeignKey("LessonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OptimumCoaching.core.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Lesson");
 
                     b.Navigation("Student");
                 });
@@ -2559,6 +3545,16 @@ namespace OptimumCoaching.repo.Migrations
             modelBuilder.Entity("OptimumCoaching.core.ApplicationUser", b =>
                 {
                     b.Navigation("UserRoles");
+                });
+
+            modelBuilder.Entity("OptimumCoaching.core.Assignment", b =>
+                {
+                    b.Navigation("Submissions");
+                });
+
+            modelBuilder.Entity("OptimumCoaching.core.AttendanceSession", b =>
+                {
+                    b.Navigation("Records");
                 });
 
             modelBuilder.Entity("OptimumCoaching.core.Conversation", b =>

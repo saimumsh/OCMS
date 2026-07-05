@@ -31,6 +31,11 @@ namespace OptimumCoaching.core
 
         [MaxLength(120), Display(Name = "Room / location")]
         public string? Room { get; set; }
+
+        // Optional override for the batch-default meeting URL. Useful when a
+        // specific topic uses a different Zoom room.
+        [MaxLength(500), Url, Display(Name = "Meeting link")]
+        public string? MeetingUrl { get; set; }
     }
 
     // A one-off override for a specific calendar date — cancels or moves the
@@ -69,5 +74,10 @@ namespace OptimumCoaching.core
 
         [MaxLength(500), Display(Name = "Note")]
         public string? Note { get; set; }
+
+        // Optional override for this one session — wins over the slot link
+        // and the batch default. Empty means inherit from the slot/batch.
+        [MaxLength(500), Url, Display(Name = "Meeting link")]
+        public string? MeetingUrl { get; set; }
     }
 }

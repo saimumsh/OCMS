@@ -118,6 +118,12 @@ namespace OptimumCoaching.web.Core
 
                 var startOffsetDays = rng.Next(-180, 30);
                 var lengthDays = rng.Next(60, 180);
+                // Course fee in a believable Bangladeshi coaching range,
+                // rounded to the nearest 500. Half the batches get a past
+                // due date so the overdue-banner demo lights up out of the
+                // box; the rest get a future due date.
+                var courseFee = rng.Next(8, 36) * 500m; // 4,000 – 18,000
+                var dueOffset = i % 2 == 0 ? -rng.Next(3, 25) : rng.Next(15, 60);
                 var batch = new Batch
                 {
                     Id = Guid.NewGuid(),
@@ -131,6 +137,12 @@ namespace OptimumCoaching.web.Core
                     StartDate = DateTime.UtcNow.AddDays(startOffsetDays),
                     EndDate = DateTime.UtcNow.AddDays(startOffsetDays + lengthDays),
                     Capacity = rng.Next(15, 45),
+                    CourseFee = courseFee,
+                    MinimumEnrollment = Math.Round(courseFee * 0.30m / 100m) * 100m,
+                    FullPaymentDiscountPercent = i % 3 == 0 ? 10m : 0m,
+                    FeeDueDate = DateTime.UtcNow.Date.AddDays(dueOffset),
+                    LateFeeFlat = 0m,
+                    LateFeePerDay = i % 4 == 0 ? 20m : 0m,
                     IsActive = true,
                     Created = DateTime.UtcNow
                 };
@@ -184,6 +196,56 @@ namespace OptimumCoaching.web.Core
                 });
             }
             db.Students.AddRange(students);
+            await db.SaveChangesAsync();
+
+            // ----- Fee accounts + sample payments -----
+            // Create a StudentFeeAccount for every approved student with a
+            // batch, then drop 0–3 payments on each so the dashboards have
+            // realistic balances (unpaid / partial / paid in full).
+            var feeAccounts = new List<StudentFeeAccount>();
+            var feePayments = new List<FeePayment>();
+            var adminForPayments = await userManager.FindByEmailAsync($"admin1@{DummyDomain}");
+            foreach (var stu in students.Where(s => s.ApprovalStatus == StudentApprovalStatus.Approved && s.BatchId.HasValue))
+            {
+                var batch = batches.First(b => b.Id == stu.BatchId);
+                if (batch.CourseFee <= 0) continue;
+
+                var account = new StudentFeeAccount
+                {
+                    Id = Guid.NewGuid(),
+                    StudentId = stu.Id,
+                    BatchId = batch.Id,
+                    FinalFee = batch.CourseFee,
+                    AmountPaid = 0m,
+                    DiscountAmount = 0m,
+                    Status = FeeAccountStatus.Unpaid,
+                    IsActive = true,
+                    Created = stu.Created,
+                    CreatedBy = adminForPayments?.Id
+                };
+
+                // Distribution: 35% PaidInFull, 35% PartiallyPaid, 30% Unpaid.
+                var roll = rng.Next(100);
+                if (roll < 35)
+                {
+                    var p = NewPayment(account.Id, batch.CourseFee, stu.Created.AddDays(rng.Next(0, 30)), adminForPayments?.Id, rng);
+                    feePayments.Add(p);
+                    account.AmountPaid = batch.CourseFee;
+                    account.Status = FeeAccountStatus.PaidInFull;
+                    account.FullyPaidOn = p.PaidOn;
+                }
+                else if (roll < 70)
+                {
+                    var partial = Math.Round(batch.CourseFee * (decimal)(0.3 + rng.NextDouble() * 0.5), 2);
+                    feePayments.Add(NewPayment(account.Id, partial, stu.Created.AddDays(rng.Next(0, 30)), adminForPayments?.Id, rng));
+                    account.AmountPaid = partial;
+                    account.Status = FeeAccountStatus.PartiallyPaid;
+                }
+
+                feeAccounts.Add(account);
+            }
+            db.StudentFeeAccounts.AddRange(feeAccounts);
+            db.FeePayments.AddRange(feePayments);
             await db.SaveChangesAsync();
 
             // ----- Batch updates -----
@@ -344,6 +406,25 @@ namespace OptimumCoaching.web.Core
             if (!await userManager.IsInRoleAsync(user, roleName))
                 await userManager.AddToRoleAsync(user, roleName);
             return user;
+        }
+
+        private static FeePayment NewPayment(Guid accountId, decimal amount, DateTime paidOn, Guid? actor, Random rng)
+        {
+            var methods = new[] { PaymentMethod.bKash, PaymentMethod.Cash, PaymentMethod.BankTransfer, PaymentMethod.Nagad };
+            return new FeePayment
+            {
+                Id = Guid.NewGuid(),
+                AccountId = accountId,
+                Amount = amount,
+                PaidOn = paidOn,
+                Method = methods[rng.Next(methods.Length)],
+                ReceiptNumber = $"DEMO-{rng.Next(100000, 999999)}",
+                Note = "Seed payment",
+                RecordedByUserId = actor,
+                IsActive = true,
+                Created = paidOn,
+                CreatedBy = actor
+            };
         }
 
         private static string FakePhone(Random rng) =>

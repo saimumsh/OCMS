@@ -28,9 +28,22 @@ namespace OptimumCoaching.web.Models
         // Student-side finance.
         public StudentFeeAccount? FeeAccount { get; set; }
         public bool ExamAdmitEligible { get; set; }
+        public IList<OptimumCoaching.service.DueAlertRow> DueAlerts { get; set; } = new List<OptimumCoaching.service.DueAlertRow>();
+
+        // Student-side attendance.
+        public OptimumCoaching.service.StudentAttendanceSummary? AttendanceSummary { get; set; }
 
         // Teacher-side: review/rating overview.
         public TeacherRatingSnapshot? RatingSnapshot { get; set; }
+
+        // Featured / advertised courses for the dashboard carousel.
+        public IList<Batch> FeaturedCourses { get; set; } = new List<Batch>();
+
+        // Student-side: online (and hybrid) courses the student has signed up
+        // for via the public catalog. Separate from `Batch` (their primary
+        // offline batch) so a student can hold multiple at once.
+        public IList<OptimumCoaching.service.OnlineEnrollmentSummary> MyOnlineCourses { get; set; }
+            = new List<OptimumCoaching.service.OnlineEnrollmentSummary>();
     }
 
     public class TeacherRatingSnapshot

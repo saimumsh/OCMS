@@ -1,0 +1,91 @@
+@model IList<OptimumCoaching.service.LessonWithProgress>
+@using OptimumCoaching.core
+@{
+    ViewData["Title"] = "Lessons";
+    var batch = (Batch)ViewBag.Batch;
+    var completed = Model.Count(m => m.IsCompleted);
+    var pct = Model.Any() ? (int)Math.Round(completed * 100.0 / Model.Count) : 0;
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-12 mb-1">
+        <h3 class="content-header-title mb-0">
+            <i class="fa fa-play-circle mr-1 text-info"></i> Lessons
+            <span class="badge badge-pill badge-secondary ml-1">@Model.Count</span>
+        </h3>
+        <small class="text-muted">@batch.Name · @(batch.Subject?.Name ?? "—")</small>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null) { <div class="alert alert-success">@TempData["SuccessMessage"]</div> }
+@if (TempData["ErrorMessage"]   != null) { <div class="alert alert-danger">@TempData["ErrorMessage"]</div> }
+
+@if (Model.Any())
+{
+    <div class="card mb-2">
+        <div class="card-body">
+            <div class="d-flex justify-content-between mb-1">
+                <strong>Progress</strong>
+                <span class="text-muted">@completed of @Model.Count completed (@pct%)</span>
+            </div>
+            <div class="progress" style="height: 8px;">
+                <div class="progress-bar bg-success" style="width: @pct%"></div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (!Model.Any())
+{
+    <div class="card"><div class="card-body text-center py-3"><p class="text-muted mb-0">No lessons published yet.</p></div></div>
+    return;
+}
+
+<div class="card">
+    <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+            @foreach (var item in Model)
+            {
+                var l = item.Lesson;
+                <li class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap">
+                        <div class="mr-2">
+                            <a asp-action="Lesson" asp-route-id="@l.Id"><strong>@l.Title</strong></a>
+                            @if (l.Topic != null)
+                            { <span class="badge badge-pill badge-info ml-1">@l.Topic.Title</span> }
+                            @if (l.RecordedOn.HasValue)
+                            { <span class="badge badge-pill badge-secondary ml-1">Rec · @l.RecordedOn.Value.ToString("dd MMM")</span> }
+                            @if (item.IsCompleted)
+                            { <span class="badge badge-pill badge-success ml-1"><i class="fa fa-check mr-1"></i>Completed</span> }
+                            <div class="small text-muted">
+                                @if (l.DurationMinutes.HasValue) { <text>@l.DurationMinutes min · </text> }
+                                @if (item.FirstOpenedAt.HasValue)
+                                { <text>First opened @item.FirstOpenedAt.Value.ToString("dd MMM yyyy") · </text> }
+                                @if (item.CompletedAt.HasValue)
+                                { <text>Completed @item.CompletedAt.Value.ToString("dd MMM yyyy") · </text> }
+                            </div>
+                            @if (!string.IsNullOrWhiteSpace(l.Description))
+                            { <div class="small mt-1">@l.Description</div> }
+                        </div>
+                        <div class="text-right">
+                            @if (!string.IsNullOrWhiteSpace(l.VideoUrl))
+                            { <a href="@l.VideoUrl" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary mb-1"><i class="fa fa-play mr-1"></i> Watch</a> }
+                            @if (!string.IsNullOrWhiteSpace(l.FilePath))
+                            { <a href="@Url.Content(l.FilePath)" target="_blank" class="btn btn-sm btn-outline-success mb-1"><i class="fa fa-download mr-1"></i> Video</a> }
+                            @if (!string.IsNullOrWhiteSpace(l.ResourcePath))
+                            { <a href="@Url.Content(l.ResourcePath)" target="_blank" class="btn btn-sm btn-outline-secondary mb-1"><i class="fa fa-file mr-1"></i> Resource</a> }
+                            <form method="post" asp-action="ToggleLessonComplete" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@l.Id" />
+                                <input type="hidden" name="completed" value="@((!item.IsCompleted).ToString().ToLower())" />
+                                <button type="submit" class="btn btn-sm @(item.IsCompleted ? "btn-outline-secondary" : "btn-success") mb-1">
+                                    @(item.IsCompleted ? "Mark incomplete" : "Mark completed")
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </li>
+            }
+        </ul>
+    </div>
+</div>

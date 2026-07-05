@@ -1,0 +1,241 @@
+@model OptimumCoaching.service.OnlineEnrollmentSummary
+@using OptimumCoaching.core
+@{
+    var b = Model.Batch;
+    var e = Model.Enrollment;
+    ViewData["Title"] = b.Name;
+    Layout = "_DashboardLayout";
+
+    var lessons = (IList<CourseLesson>)ViewBag.Lessons;
+    var materials = (IList<ClassMaterial>)ViewBag.Materials;
+    var slots = (IList<ClassRoutineSlot>)ViewBag.RoutineSlots;
+    var img = string.IsNullOrWhiteSpace(b.CoverImageUrl) ? "/images/no-image.jpg" : b.CoverImageUrl;
+    var balance = Model.FeeAccount?.Balance ?? 0m;
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-12 mb-1">
+        <h3 class="content-header-title mb-0">
+            @b.Name
+            <span class="badge badge-pill @(b.DeliveryMode == DeliveryMode.Online ? "badge-success" : "badge-info") ml-1">@b.DeliveryMode</span>
+        </h3>
+        <div class="row breadcrumbs-top">
+            <div class="breadcrumb-wrapper col-12">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">My Online Courses</a></li>
+                    <li class="breadcrumb-item active">@b.Name</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null) { <div class="alert alert-success">@TempData["SuccessMessage"]</div> }
+@if (TempData["ErrorMessage"]   != null) { <div class="alert alert-danger">@TempData["ErrorMessage"]</div> }
+
+<div class="row">
+    <div class="col-lg-8 mb-3">
+        <div class="card">
+            <img src="@img" alt="@b.Name" style="width:100%; max-height:260px; object-fit:cover;" />
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start flex-wrap mb-2">
+                    <div>
+                        <h4 class="mb-1">@b.Name</h4>
+                        <small class="text-muted">
+                            @(b.Department?.Name ?? "—")@(b.Subject != null ? " · " + b.Subject.Name : "")
+                            @if (b.Teacher != null) { <text> · @b.Teacher.FullName</text> }
+                        </small>
+                    </div>
+                    @if (b.DeliveryMode != DeliveryMode.Offline && !string.IsNullOrWhiteSpace(b.MeetingUrl))
+                    {
+                        <a class="btn btn-success" asp-controller="Live" asp-action="Join" asp-route-id="@b.Id" target="_blank">
+                            <i class="fa fa-video-camera mr-1"></i> Join Live Class
+                        </a>
+                    }
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(b.Description))
+                { <p class="mb-0">@b.Description</p> }
+            </div>
+        </div>
+
+        <div class="card mt-1">
+            <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                <h4 class="card-title mb-0">
+                    <i class="fa fa-play-circle mr-1 text-info"></i> Lessons
+                    <span class="badge badge-pill badge-secondary ml-1">@(lessons?.Count ?? 0)</span>
+                </h4>
+            </div>
+            <div class="card-body p-0">
+                @if (lessons == null || !lessons.Any())
+                {
+                    <p class="text-muted text-center py-3 mb-0">No lessons published yet.</p>
+                }
+                else
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var l in lessons.OrderBy(x => x.SortOrder).ThenBy(x => x.Title))
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>@l.Title</strong>
+                                    @if (l.Topic != null)
+                                    { <span class="badge badge-pill badge-light ml-1">@l.Topic.Title</span> }
+                                    @if (l.DurationMinutes.HasValue)
+                                    { <small class="text-muted ml-1"><i class="fa fa-clock-o mr-1"></i>@l.DurationMinutes min</small> }
+                                    @if (!string.IsNullOrWhiteSpace(l.Description))
+                                    { <div class="small text-muted">@l.Description</div> }
+                                </div>
+                                <a class="btn btn-sm btn-outline-primary" asp-controller="Student" asp-action="Lesson" asp-route-id="@l.Id">
+                                    <i class="fa fa-play"></i> Watch
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+
+        <div class="card mt-1">
+            <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                <h4 class="card-title mb-0">
+                    <i class="fa fa-folder-open mr-1 text-info"></i> Class materials
+                    <span class="badge badge-pill badge-secondary ml-1">@(materials?.Count ?? 0)</span>
+                </h4>
+            </div>
+            <div class="card-body p-0">
+                @if (materials == null || !materials.Any())
+                {
+                    <p class="text-muted text-center py-3 mb-0">No materials uploaded yet.</p>
+                }
+                else
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var m in materials)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>@m.Title</strong>
+                                    <span class="badge badge-pill badge-light ml-1">@m.Type</span>
+                                    <div class="small text-muted">@m.UploadedAt.ToString("dd MMM yyyy")</div>
+                                </div>
+                                <div>
+                                    @if (!string.IsNullOrWhiteSpace(m.Url))
+                                    { <a href="@m.Url" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary"><i class="fa fa-external-link"></i></a> }
+                                    @if (!string.IsNullOrWhiteSpace(m.FilePath))
+                                    { <a href="@Url.Content(m.FilePath)" target="_blank" class="btn btn-sm btn-outline-success"><i class="fa fa-download"></i></a> }
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4 mb-3">
+        <div class="card">
+            <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                <h4 class="card-title mb-0"><i class="fa fa-tasks mr-1 text-success"></i> Progress</h4>
+            </div>
+            <div class="card-body">
+                <div class="small text-muted mb-1">Lessons completed</div>
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar bg-success" style="width:@Model.LessonProgressPercent%"></div>
+                </div>
+                <small class="text-muted">@Model.LessonsCompleted / @Model.LessonsCount lessons (@Model.LessonProgressPercent%)</small>
+            </div>
+        </div>
+
+        <div class="card mt-1">
+            <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                <h4 class="card-title mb-0"><i class="fa fa-money mr-1 text-success"></i> Course fee</h4>
+            </div>
+            <div class="card-body">
+                @if (Model.FeeAccount != null)
+                {
+                    var fa = Model.FeeAccount;
+                    <dl class="row mb-2">
+                        <dt class="col-6 text-muted small">Course fee</dt>
+                        <dd class="col-6">৳ @fa.FinalFee.ToString("N0")</dd>
+
+                        <dt class="col-6 text-muted small">Paid</dt>
+                        <dd class="col-6">৳ @fa.AmountPaid.ToString("N0")</dd>
+
+                        <dt class="col-6 text-muted small">Balance</dt>
+                        <dd class="col-6"><strong>৳ @fa.Balance.ToString("N0")</strong></dd>
+                    </dl>
+                    <div>
+                        <span class="badge badge-pill @(balance > 0 ? "badge-warning" : "badge-success")">
+                            @(balance > 0 ? "Outstanding" : "Paid in full")
+                        </span>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted mb-0 small">Fee account not yet created.</p>
+                }
+            </div>
+            @if (balance > 0 && Model.FeeAccount != null)
+            {
+                <div class="card-footer text-right p-2">
+                    <a class="btn btn-sm btn-success" asp-controller="StudentFinance" asp-action="Pay" asp-route-accountId="@Model.FeeAccount.Id">
+                        <i class="fa fa-paper-plane mr-1"></i> Pay now
+                    </a>
+                </div>
+            }
+        </div>
+
+        <div class="card mt-1">
+            <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                <h4 class="card-title mb-0"><i class="fa fa-calendar mr-1 text-info"></i> Weekly schedule</h4>
+            </div>
+            <div class="card-body p-0">
+                @if (slots == null || !slots.Any())
+                {
+                    <p class="text-muted text-center py-3 mb-0">No routine published.</p>
+                }
+                else
+                {
+                    var grouped = slots.GroupBy(s => s.Day).OrderBy(g => g.Key);
+                    <ul class="list-group list-group-flush">
+                        @foreach (var g in grouped)
+                        {
+                            <li class="list-group-item">
+                                <strong>@g.Key</strong>
+                                <ul class="list-unstyled mb-0 mt-1">
+                                    @foreach (var slot in g.OrderBy(s => s.StartTime))
+                                    {
+                                        <li class="small">
+                                            <i class="fa fa-clock-o text-muted mr-1"></i>
+                                            @slot.StartTime.ToString(@"hh\:mm") – @slot.EndTime.ToString(@"hh\:mm")
+                                            @if (slot.Topic != null) { <text> · @slot.Topic.Title</text> }
+                                        </li>
+                                    }
+                                </ul>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+
+        <div class="card mt-1">
+            <div class="card-header border-bottom-blue-grey border-bottom-lighten-5">
+                <h4 class="card-title mb-0"><i class="fa fa-info-circle mr-1 text-secondary"></i> Enrollment</h4>
+            </div>
+            <div class="card-body small">
+                <dl class="row mb-0">
+                    <dt class="col-6 text-muted">Enrolled on</dt>
+                    <dd class="col-6">@e.EnrolledOn.ToString("dd MMM yyyy")</dd>
+
+                    <dt class="col-6 text-muted">Price paid</dt>
+                    <dd class="col-6">৳ @e.PriceAtEnrollment.ToString("N0")</dd>
+
+                    <dt class="col-6 text-muted">Status</dt>
+                    <dd class="col-6">@e.Status</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>

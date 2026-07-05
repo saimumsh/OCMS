@@ -1,0 +1,67 @@
+@model IList<OptimumCoaching.core.ExamResult>
+@using OptimumCoaching.core
+@{
+    ViewData["Title"] = "My Results";
+    var student = (Student)ViewBag.Student;
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-12 mb-1">
+        <h3 class="content-header-title mb-0">
+            <i class="fa fa-trophy mr-1 text-success"></i> My Results
+            <span class="badge badge-pill badge-secondary ml-1">@Model.Count</span>
+        </h3>
+        @if (!string.IsNullOrWhiteSpace(student.StudentCode))
+        { <small class="text-muted">@student.StudentCode</small> }
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="card"><div class="card-body text-center py-3"><p class="text-muted mb-0">No published results yet.</p></div></div>
+    return;
+}
+
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover table-condensed mb-0 user-table">
+            <thead>
+                <tr>
+                    <th>Exam</th>
+                    <th>Type</th>
+                    <th>Date</th>
+                    <th class="text-right">Marks</th>
+                    <th class="text-right">%</th>
+                    <th class="text-center">Result</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var r in Model)
+                {
+                    var passing = r.IsPresent && r.MarksObtained.HasValue && r.MarksObtained.Value >= r.Exam.PassMarks;
+                    var pct = r.IsPresent && r.MarksObtained.HasValue && r.Exam.TotalMarks > 0
+                        ? Math.Round(r.MarksObtained.Value / r.Exam.TotalMarks * 100m, 1)
+                        : (decimal?)null;
+                    <tr>
+                        <td class="align-middle"><strong>@r.Exam.Title</strong>
+                            <div class="small text-muted">@(r.Exam.Batch?.Subject?.Name ?? "")</div>
+                        </td>
+                        <td class="align-middle"><span class="badge badge-light">@r.Exam.Type</span></td>
+                        <td class="align-middle">@r.Exam.ExamDate.ToString("dd MMM yyyy")</td>
+                        <td class="align-middle text-right">
+                            @if (!r.IsPresent) { <span class="text-muted">Absent</span> }
+                            else if (r.MarksObtained.HasValue) { <strong>@r.MarksObtained / @r.Exam.TotalMarks</strong> }
+                            else { <span class="text-muted">—</span> }
+                        </td>
+                        <td class="align-middle text-right">@(pct?.ToString("0.0") + "%" ?? "—")</td>
+                        <td class="align-middle text-center">
+                            @if (!r.IsPresent) { <span class="badge badge-pill badge-secondary">Absent</span> }
+                            else if (passing) { <span class="badge badge-pill badge-success">Pass</span> }
+                            else { <span class="badge badge-pill badge-danger">Fail</span> }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

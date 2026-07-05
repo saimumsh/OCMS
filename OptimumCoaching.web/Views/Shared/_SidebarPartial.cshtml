@@ -9,6 +9,8 @@
 
     var hasDomainProfile = false;
     var pendingStudent = false;
+    // True only for approved Students — gates the student-only "My Payments" link.
+    var isApprovedStudent = false;
     if (Model != null && Model.IsAuthenticated && !isAdminArea)
     {
         Guid.TryParse(Model.Id(), out var uid);
@@ -19,6 +21,7 @@
             {
                 hasDomainProfile = true;
                 pendingStudent = s.ApprovalStatus != OptimumCoaching.core.StudentApprovalStatus.Approved;
+                isApprovedStudent = s.ApprovalStatus == OptimumCoaching.core.StudentApprovalStatus.Approved;
             }
             else if (await GuardianSvc.GetByUserIdAsync(uid) != null) hasDomainProfile = true;
             else if (await TeacherSvc.GetByUserIdAsync(uid) != null) hasDomainProfile = true;
@@ -41,7 +44,8 @@
     var canSeeClassroomTopics    = Model != null && Model.HasPermission(Permissions.Topics.ListView);
     var canSeeClassroomMaterials = Model != null && Model.HasPermission(Permissions.Materials.ListView);
     var canSeeClassroomRoutine   = Model != null && Model.HasPermission(Permissions.Routine.ListView);
-    var canSeeClassroom = canSeeClassroomTopics || canSeeClassroomMaterials || canSeeClassroomRoutine;
+    var canSeeClassroomAttend    = Model != null && Model.HasPermission(Permissions.Attendance.ListView);
+    var canSeeClassroom = canSeeClassroomTopics || canSeeClassroomMaterials || canSeeClassroomRoutine || canSeeClassroomAttend;
 
     var canSeeFinance      = Model != null && Model.HasPermission(Permissions.Finance.ListView);
     var canSeeFinSalaries  = Model != null && Model.HasPermission(Permissions.Finance.ViewSalaries);
@@ -62,6 +66,13 @@
                 <a href="@Url.Action("Index", "Home", new { area = "" })">
                     <i class="fa fa-home"></i>
                     <span class="menu-title" data-i18n="">Home</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="@Url.Action("Index", "Courses", new { area = "" })">
+                    <i class="fa fa-graduation-cap"></i>
+                    <span class="menu-title" data-i18n="">Browse Courses</span>
                 </a>
             </li>
 
@@ -165,10 +176,48 @@
                 @if (Model.HasPermission(Permissions.Notices.ListView))
                 {
                     <li class="nav-item">
-                        <a href="@Url.Action("Index", "Notices", new { area = "" })">
-                            <i class="fa fa-bullhorn"></i>
-                            <span class="menu-title" data-i18n="">Notices</span>
+                        <a href="#"><i class="fa fa-bullhorn"></i><span class="menu-title" data-i18n="">Notices</span></a>
+                        <ul class="menu-content">
+                            <li><a class="menu-item" asp-area="" asp-controller="Notices" asp-action="Index">All Notices</a></li>
+                            @if (Model.HasPermission(Permissions.Notices.AddEdit))
+                            {
+                                <li><a class="menu-item" asp-area="Admin" asp-controller="NoticeConfig" asp-action="Index">Notice Settings</a></li>
+                                <li><a class="menu-item" asp-area="Admin" asp-controller="NoticeConfig" asp-action="Templates">Templates</a></li>
+                            }
+                        </ul>
+                    </li>
+                }
+
+                @* Student-only: My Course (routine, materials, attendance, exams, results, notices). *@
+                @if (isApprovedStudent)
+                {
+                    <li class="nav-item">
+                        <a asp-area="" asp-controller="MyOnlineCourses" asp-action="Index">
+                            <i class="fa fa-video-camera"></i>
+                            <span class="menu-title" data-i18n="">My Online Courses</span>
                         </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="#"><i class="fa fa-graduation-cap"></i><span class="menu-title" data-i18n="">My Course</span></a>
+                        <ul class="menu-content">
+                            <li><a class="menu-item" asp-area="" asp-controller="Student" asp-action="Routine">Class Routine</a></li>
+                            <li><a class="menu-item" asp-area="" asp-controller="Student" asp-action="Materials">Class Materials</a></li>
+                            <li><a class="menu-item" asp-area="" asp-controller="Student" asp-action="Lessons">Online Lessons</a></li>
+                            <li><a class="menu-item" asp-area="" asp-controller="Student" asp-action="Assignments">Assignments</a></li>
+                            <li><a class="menu-item" asp-area="" asp-controller="Student" asp-action="Attendance">My Attendance</a></li>
+                            <li><a class="menu-item" asp-area="" asp-controller="Student" asp-action="Exams">Exam Schedule</a></li>
+                            <li><a class="menu-item" asp-area="" asp-controller="Student" asp-action="Results">My Results</a></li>
+                            <li><a class="menu-item" asp-area="" asp-controller="Student" asp-action="Notices">Notices</a></li>
+                        </ul>
+                    </li>
+
+                    <li class="nav-item">
+                        <a href="#"><i class="fa fa-money"></i><span class="menu-title" data-i18n="">My Payments</span></a>
+                        <ul class="menu-content">
+                            <li><a class="menu-item" asp-area="" asp-controller="StudentFinance" asp-action="Pay">Submit a Payment</a></li>
+                            <li><a class="menu-item" asp-area="" asp-controller="StudentFinance" asp-action="MyPayments">My Submissions</a></li>
+                        </ul>
                     </li>
                 }
 
@@ -193,6 +242,12 @@
                             { <li><a class="menu-item" asp-area="Admin" asp-controller="Materials" asp-action="Index">Materials</a></li> }
                             @if (canSeeClassroomRoutine)
                             { <li><a class="menu-item" asp-area="Admin" asp-controller="Routine" asp-action="Index">Routine</a></li> }
+                            @if (Model.HasPermission(Permissions.Lessons.ListView))
+                            { <li><a class="menu-item" asp-area="Admin" asp-controller="Lessons" asp-action="Index">Online Lessons</a></li> }
+                            @if (Model.HasPermission(Permissions.Assignments.ListView))
+                            { <li><a class="menu-item" asp-area="Admin" asp-controller="Assignments" asp-action="Index">Assignments</a></li> }
+                            @if (canSeeClassroomAttend)
+                            { <li><a class="menu-item" asp-area="Admin" asp-controller="Attendance" asp-action="Index">Attendance</a></li> }
                         </ul>
                     </li>
                 }
@@ -205,9 +260,17 @@
                             @if (canSeeFinance)
                             { <li><a class="menu-item" asp-area="Admin" asp-controller="Finance" asp-action="Index">Overview</a></li> }
                             @if (canSeeFinance)
-                            { <li><a class="menu-item" asp-area="Admin" asp-controller="Finance" asp-action="StudentFees">Student Fees</a></li> }
+                            { <li><a class="menu-item" asp-area="Admin" asp-controller="Finance" asp-action="Students">Fees by Student</a></li> }
+                            @if (canSeeFinance)
+                            { <li><a class="menu-item" asp-area="Admin" asp-controller="Finance" asp-action="StudentFees">Fees by Batch</a></li> }
                             @if (canSeeFinSalaries)
                             { <li><a class="menu-item" asp-area="Admin" asp-controller="Finance" asp-action="Salaries">Teacher Salaries</a></li> }
+                            @if (canSeeFinance)
+                            { <li><a class="menu-item" asp-area="Admin" asp-controller="Finance" asp-action="Dues">Overdue / Dues</a></li> }
+                            @if (canSeeFinance)
+                            { <li><a class="menu-item" asp-area="Admin" asp-controller="Finance" asp-action="PendingRequests">Pending Payments</a></li> }
+                            @if (canSeeFinance)
+                            { <li><a class="menu-item" asp-area="Admin" asp-controller="PaymentConfig" asp-action="Index">Payment Settings</a></li> }
                         </ul>
                     </li>
                 }

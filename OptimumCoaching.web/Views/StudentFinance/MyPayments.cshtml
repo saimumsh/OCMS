@@ -1,0 +1,69 @@
+@model IList<OptimumCoaching.core.FeePaymentRequest>
+@using OptimumCoaching.core
+@{
+    ViewData["Title"] = "My payment submissions";
+}
+
+<div class="content-header row">
+    <div class="content-header-left col-md-8 col-12 mb-1">
+        <h3 class="content-header-title mb-0"><i class="fa fa-list-alt mr-1 text-info"></i> My payment submissions</h3>
+    </div>
+    <div class="content-header-right col-md-4 col-12 mb-1 text-md-right">
+        <a class="btn btn-custom" asp-action="Pay"><i class="fa fa-plus"></i> New payment</a>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null) { <div class="alert alert-success">@TempData["SuccessMessage"]</div> }
+@if (TempData["ErrorMessage"]   != null) { <div class="alert alert-danger">@TempData["ErrorMessage"]</div> }
+
+@if (!Model.Any())
+{
+    <div class="card"><div class="card-body text-center py-3"><p class="text-muted mb-0">You haven't submitted any payments yet.</p></div></div>
+    return;
+}
+
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-condensed mb-0 user-table">
+            <thead>
+                <tr>
+                    <th>Submitted</th>
+                    <th>Batch</th>
+                    <th class="text-right">Amount</th>
+                    <th>Method</th>
+                    <th>Reference</th>
+                    <th>Receipt</th>
+                    <th class="text-center">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var r in Model)
+                {
+                    var badge = r.Status switch
+                    {
+                        FeePaymentRequestStatus.Approved => ("badge-success", "Approved"),
+                        FeePaymentRequestStatus.Rejected => ("badge-danger",  "Rejected"),
+                        _                                => ("badge-warning", "Pending")
+                    };
+                    <tr>
+                        <td class="align-middle"><small>@r.SubmittedAt.ToString("dd MMM yyyy, HH:mm")</small></td>
+                        <td class="align-middle">@r.Account.Batch.Name</td>
+                        <td class="align-middle text-right"><strong>@r.Amount.ToString("N2")</strong></td>
+                        <td class="align-middle"><span class="badge badge-light">@r.Method</span></td>
+                        <td class="align-middle small">@(r.TransactionReference ?? "—")</td>
+                        <td class="align-middle">
+                            @if (!string.IsNullOrWhiteSpace(r.ReceiptImagePath))
+                            { <a href="@Url.Content(r.ReceiptImagePath)" target="_blank" class="btn btn-sm btn-outline-primary"><i class="fa fa-eye"></i></a> }
+                            else { <span class="text-muted">—</span> }
+                        </td>
+                        <td class="align-middle text-center">
+                            <span class="badge badge-pill @badge.Item1">@badge.Item2</span>
+                            @if (r.Status == FeePaymentRequestStatus.Rejected && !string.IsNullOrWhiteSpace(r.RejectionReason))
+                            { <div class="small text-danger mt-1">@r.RejectionReason</div> }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

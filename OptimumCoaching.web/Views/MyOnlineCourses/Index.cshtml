@@ -1,0 +1,103 @@
+@model IList<OptimumCoaching.service.OnlineEnrollmentSummary>
+@using OptimumCoaching.core
+@{
+    ViewData["Title"] = "My Online Courses";
+    Layout = "_DashboardLayout";
+}
+
+<style>
+    .moc-card { transition: transform .15s ease, box-shadow .15s ease; }
+    .moc-card:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(0,0,0,.10); }
+    .moc-thumb { height: 150px; background:#f1f5f9; overflow:hidden; position: relative; }
+    .moc-thumb img { width:100%; height:100%; object-fit:cover; }
+    .moc-thumb .mode { position:absolute; top:8px; right:8px; }
+    .moc-progress { height: 6px; }
+</style>
+
+<div class="content-header row">
+    <div class="content-header-left col-12 mb-1">
+        <h3 class="content-header-title mb-0">
+            <i class="fa fa-video-camera text-info mr-1"></i> My Online Courses
+            <span class="badge badge-pill badge-secondary ml-1">@Model.Count</span>
+        </h3>
+        <small class="text-muted">Self-paced lessons, live class links, materials and assignments for every course you've enrolled in.</small>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null) { <div class="alert alert-success">@TempData["SuccessMessage"]</div> }
+@if (TempData["ErrorMessage"]   != null) { <div class="alert alert-danger">@TempData["ErrorMessage"]</div> }
+
+@if (!Model.Any())
+{
+    <div class="card">
+        <div class="card-body text-center py-4">
+            <i class="fa fa-shopping-cart fa-3x text-muted mb-2"></i>
+            <p class="text-muted mb-2">You haven't enrolled in any online courses yet.</p>
+            <a class="btn btn-custom" asp-controller="Courses" asp-action="Index">
+                <i class="fa fa-search mr-1"></i> Browse the catalog
+            </a>
+        </div>
+    </div>
+    return;
+}
+
+<div class="row">
+    @foreach (var item in Model)
+    {
+        var b = item.Batch;
+        var img = string.IsNullOrWhiteSpace(b.CoverImageUrl) ? "/images/no-image.jpg" : b.CoverImageUrl;
+        var modeBadge = b.DeliveryMode == DeliveryMode.Online
+            ? ("badge-success", "Online")
+            : ("badge-info", "Hybrid");
+        var balance = item.FeeAccount?.Balance ?? 0m;
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card moc-card h-100">
+                <div class="moc-thumb">
+                    <img src="@img" alt="@b.Name" />
+                    <span class="badge badge-pill @modeBadge.Item1 mode">@modeBadge.Item2</span>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title mb-1">@b.Name</h5>
+                    <small class="text-muted d-block mb-2">
+                        @(b.Department?.Name ?? "—")
+                        @if (b.Teacher != null) { <text> · @b.Teacher.FullName</text> }
+                    </small>
+
+                    <div class="small text-muted">Lessons progress</div>
+                    <div class="progress moc-progress mb-1">
+                        <div class="progress-bar bg-success" style="width:@item.LessonProgressPercent%"></div>
+                    </div>
+                    <small class="text-muted">@item.LessonsCompleted / @item.LessonsCount lessons</small>
+
+                    @if (item.FeeAccount != null)
+                    {
+                        <div class="mt-2 small">
+                            <span class="text-muted">Fee balance:</span>
+                            @if (balance > 0)
+                            { <strong class="text-danger">৳ @balance.ToString("N0")</strong> }
+                            else
+                            { <span class="text-success">Paid in full</span> }
+                        </div>
+                    }
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <a class="btn btn-sm btn-custom" asp-action="Details" asp-route-id="@item.Enrollment.Id">
+                        <i class="fa fa-arrow-right mr-1"></i> Open
+                    </a>
+                    @if (b.DeliveryMode != DeliveryMode.Offline && !string.IsNullOrWhiteSpace(b.MeetingUrl))
+                    {
+                        <a class="btn btn-sm btn-success" asp-controller="Live" asp-action="Join" asp-route-id="@b.Id" target="_blank">
+                            <i class="fa fa-video-camera mr-1"></i> Join Live
+                        </a>
+                    }
+                    @if (balance > 0)
+                    {
+                        <a class="btn btn-sm btn-outline-warning" asp-controller="StudentFinance" asp-action="Pay" asp-route-accountId="@item.FeeAccount!.Id">
+                            <i class="fa fa-money mr-1"></i> Pay
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>

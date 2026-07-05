@@ -35,6 +35,10 @@ namespace OptimumCoaching.core
 
         public DateTime? FullyPaidOn { get; set; }
 
+        // Timestamp of the last auto-generated due-alert notice for this
+        // account. The auto-alert service uses it to stay idempotent.
+        public DateTime? LastDueAlertAt { get; set; }
+
         public decimal Balance => FinalFee - AmountPaid;
 
         public IList<FeePayment> Payments { get; set; } = new List<FeePayment>();

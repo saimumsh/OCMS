@@ -12,6 +12,8 @@
     var canSeeBatches     = Model != null && Model.HasPermission(Permissions.Batches.ListView);
     var canSeeAnyConfig   = canSeeDepartments || canSeeSubjects || canSeeBatches;
 
+    var canSeeOnlineCourses = Model != null && Model.HasPermission(Permissions.OnlineCourses.ListView);
+
     var canSeeNotices    = Model != null && Model.HasPermission(Permissions.Notices.ListView);
     var canSeeUsers      = Model != null && Model.HasPermission(Permissions.Users.ListView);
     var canSeeExams      = Model != null && Model.HasPermission(Permissions.Exams.ListView);
@@ -23,6 +25,7 @@
     var canSeeFinance    = Model != null && Model.HasPermission(Permissions.Finance.ListView);
     var canSeeSalaries   = Model != null && Model.HasPermission(Permissions.Finance.ViewSalaries);
     var canSeeAnyFinance = canSeeFinance || canSeeSalaries;
+    var canSeeAttendance = Model != null && Model.HasPermission(Permissions.Attendance.ListView);
     var isSuperOrDev     = Model != null && (Model.HasRole(Roles.SuperAdmin) || Model.HasRole(Roles.Dev));
 
     var unreadMessages = 0;
@@ -70,9 +73,12 @@
             @if (canSeeNotices)
             {
                 <li class="nav-item">
-                    <a asp-area="" asp-controller="Notices" asp-action="Index">
-                        <i class="fa fa-bullhorn"></i><span class="menu-title" data-i18n="">Notices</span>
-                    </a>
+                    <a href="#"><i class="fa fa-bullhorn"></i><span class="menu-title" data-i18n="">Notices</span></a>
+                    <ul class="menu-content">
+                        <li><a class="menu-item" asp-area="" asp-controller="Notices" asp-action="Index">All Notices</a></li>
+                        <li><a class="menu-item" asp-area="Admin" asp-controller="NoticeConfig" asp-action="Index">Notice Settings</a></li>
+                        <li><a class="menu-item" asp-area="Admin" asp-controller="NoticeConfig" asp-action="Templates">Templates</a></li>
+                    </ul>
                 </li>
             }
 
@@ -82,6 +88,19 @@
                     <a asp-area="Admin" asp-controller="Exams" asp-action="Index">
                         <i class="fa fa-pencil-square-o"></i><span class="menu-title" data-i18n="">Exams</span>
                     </a>
+                </li>
+            }
+
+            @if (canSeeOnlineCourses)
+            {
+                <li class="nav-item">
+                    <a href="#"><i class="fa fa-video-camera"></i><span class="menu-title" data-i18n="">Online Courses</span></a>
+                    <ul class="menu-content">
+                        <li><a class="menu-item" asp-area="Admin" asp-controller="OnlineCourses" asp-action="Index">All Online Courses</a></li>
+                        @if (Model != null && Model.HasPermission(Permissions.OnlineCourses.AddEdit))
+                        { <li><a class="menu-item" asp-area="Admin" asp-controller="OnlineCourses" asp-action="Create">New Online Course</a></li> }
+                        <li><a class="menu-item" asp-area="" asp-controller="Courses" asp-action="Index">Public Catalog</a></li>
+                    </ul>
                 </li>
             }
 
@@ -96,6 +115,12 @@
                         { <li><a class="menu-item" asp-area="Admin" asp-controller="Materials" asp-action="Index">Materials</a></li> }
                         @if (canSeeRoutine)
                         { <li><a class="menu-item" asp-area="Admin" asp-controller="Routine" asp-action="Index">Routine</a></li> }
+                        @if (Model != null && Model.HasPermission(Permissions.Lessons.ListView))
+                        { <li><a class="menu-item" asp-area="Admin" asp-controller="Lessons" asp-action="Index">Online Lessons</a></li> }
+                        @if (Model != null && Model.HasPermission(Permissions.Assignments.ListView))
+                        { <li><a class="menu-item" asp-area="Admin" asp-controller="Assignments" asp-action="Index">Assignments</a></li> }
+                        @if (canSeeAttendance)
+                        { <li><a class="menu-item" asp-area="Admin" asp-controller="Attendance" asp-action="Index">Attendance</a></li> }
                     </ul>
                 </li>
             }
@@ -108,9 +133,17 @@
                         @if (canSeeFinance)
                         { <li><a class="menu-item" asp-area="Admin" asp-controller="Finance" asp-action="Index">Overview</a></li> }
                         @if (canSeeFinance)
-                        { <li><a class="menu-item" asp-area="Admin" asp-controller="Finance" asp-action="StudentFees">Student Fees</a></li> }
+                        { <li><a class="menu-item" asp-area="Admin" asp-controller="Finance" asp-action="Students">Fees by Student</a></li> }
+                        @if (canSeeFinance)
+                        { <li><a class="menu-item" asp-area="Admin" asp-controller="Finance" asp-action="StudentFees">Fees by Batch</a></li> }
                         @if (canSeeSalaries)
                         { <li><a class="menu-item" asp-area="Admin" asp-controller="Finance" asp-action="Salaries">Teacher Salaries</a></li> }
+                        @if (canSeeFinance)
+                        { <li><a class="menu-item" asp-area="Admin" asp-controller="Finance" asp-action="Dues">Overdue / Dues</a></li> }
+                        @if (canSeeFinance)
+                        { <li><a class="menu-item" asp-area="Admin" asp-controller="Finance" asp-action="PendingRequests">Pending Payments</a></li> }
+                        @if (canSeeFinance)
+                        { <li><a class="menu-item" asp-area="Admin" asp-controller="PaymentConfig" asp-action="Index">Payment Settings</a></li> }
                     </ul>
                 </li>
             }
